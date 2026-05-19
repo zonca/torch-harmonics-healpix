@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "torch-harmonics-healpix"
+version = "0.1.0"
+description = "Bridge HEALPix to torch-harmonics for spherical CNNs on CMB maps"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Andrea Zonca", email = "zonca@sdsc.edu"},
+]
+dependencies = [
+    "torch>=2.0",
+    "torch-harmonics>=0.8.0",
+    "healpy>=1.16",
+    "numpy",
+    "scipy",
+    "h5py",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
