@@ -47,9 +47,14 @@ class SpectralConvBlock(nn.Module):
 
         # Spectral weights: [out_channels, in_channels, lmax, mmax]
         # torch-harmonics RealSHT output shape is (lmax, mmax), NOT (lmax+1, mmax+1)
+        # Coefficients are complex, so weights must be complex too
         lmax = forward_transform.lmax
         mmax = forward_transform.mmax
-        self.weight = nn.Parameter(
+        self.weight_real = nn.Parameter(
+            torch.randn(out_channels, in_channels, lmax, mmax)
+            * (1.0 / (in_channels * lmax))
+        )
+        self.weight_imag = nn.Parameter(
             torch.randn(out_channels, in_channels, lmax, mmax)
             * (1.0 / (in_channels * lmax))
         )
@@ -63,16 +68,19 @@ class SpectralConvBlock(nn.Module):
         Returns:
             [batch, out_channels, nlat, nlon]
         """
-        # SHT forward: [batch, in_channels, nlat, nlon] -> [batch, in_channels, lmax+1, mmax_eff+1]
+        # SHT forward: [batch, in_channels, nlat, nlon] -> complex [batch, in_channels, lmax, mmax]
         coeff = self.forward_transform(x)
 
-        # Spectral convolution: multiply by learned weights
-        # coeff: [B, C_in, L, M]
-        # weight: [C_out, C_in, L, M]
-        # output: [B, C_out, L, M]
-        coeff_out = torch.einsum("bilm,oilm->bolm", coeff, self.weight)
+        # Build complex weight from real and imaginary parts
+        weight = torch.complex(self.weight_real, self.weight_imag)
 
-        # ISHT inverse: [batch, out_channels, L, M] -> [batch, out_channels, nlat, nlon]
+        # Spectral convolution: multiply by learned complex weights
+        # coeff: [B, C_in, L, M] (complex)
+        # weight: [C_out, C_in, L, M] (complex)
+        # output: [B, C_out, L, M] (complex)
+        coeff_out = torch.einsum("bilm,oilm->bolm", coeff, weight)
+
+        # ISHT inverse: complex [batch, out_channels, L, M] -> [batch, out_channels, nlat, nlon]
         out = self.inverse_transform(coeff_out)
         return out
 
