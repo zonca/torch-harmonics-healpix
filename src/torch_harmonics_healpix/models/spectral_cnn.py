@@ -45,13 +45,21 @@ class SpectralConvBlock(nn.Module):
         self.forward_transform = forward_transform
         self.inverse_transform = inverse_transform
 
-        # Spectral weights: [out_channels, in_channels, lmax+1, mmax+1]
+        # Determine actual SHT output shape by running a dummy forward pass
+        # RealSHT clips mmax to nlon//2 internally, so we must match
+        with torch.no_grad():
+            dummy = torch.zeros(1, in_channels,
+                                forward_transform.nlat,
+                                forward_transform.nlon)
+            coeff_shape = forward_transform(dummy).shape  # [1, C, lmax+1, mmax_eff+1]
+            self._lmax_out = coeff_shape[-2]
+            self._mmax_out = coeff_shape[-1]
+
+        # Spectral weights: [out_channels, in_channels, lmax_eff+1, mmax_eff+1]
         # These are the learned convolution kernels in harmonic space
-        lmax = forward_transform.lmax
-        mmax = forward_transform.mmax
         self.weight = nn.Parameter(
-            torch.randn(out_channels, in_channels, lmax + 1, mmax + 1)
-            * (1.0 / (in_channels * (lmax + 1)))
+            torch.randn(out_channels, in_channels, self._lmax_out, self._mmax_out)
+            * (1.0 / (in_channels * self._lmax_out))
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -63,16 +71,16 @@ class SpectralConvBlock(nn.Module):
         Returns:
             [batch, out_channels, nlat, nlon]
         """
-        # SHT forward: [batch, in_channels, nlat, nlon] -> [batch, in_channels, lmax+1, mmax+1]
+        # SHT forward: [batch, in_channels, nlat, nlon] -> [batch, in_channels, lmax+1, mmax_eff+1]
         coeff = self.forward_transform(x)
 
         # Spectral convolution: multiply by learned weights
-        # coeff: [B, C_in, lmax+1, mmax+1]
-        # weight: [C_out, C_in, lmax+1, mmax+1]
-        # output: [B, C_out, lmax+1, mmax+1]
+        # coeff: [B, C_in, L, M]
+        # weight: [C_out, C_in, L, M]
+        # output: [B, C_out, L, M]
         coeff_out = torch.einsum("bilm,oilm->bolm", coeff, self.weight)
 
-        # ISHT inverse: [batch, out_channels, lmax+1, mmax+1] -> [batch, out_channels, nlat, nlon]
+        # ISHT inverse: [batch, out_channels, L, M] -> [batch, out_channels, nlat, nlon]
         out = self.inverse_transform(coeff_out)
         return out
 
@@ -117,12 +125,17 @@ class SpectralCNN(nn.Module):
         self.nlon = nlon
         self.lmax = lmax
 
+        # RealSHT internally clips mmax = min(mmax, nlon//2)
+        # We pass mmax=lmax and let it clip — SpectralConvBlock detects
+        # the actual output shape via a dummy forward pass.
+        mmax = lmax
+
         # HEALPix → equiangular conversion
         self.to_equi = HealpixToEquiangular(nside, nlat, nlon)
 
         # SHT transforms
-        self.sht = RealSHT(nlat, nlon, lmax=lmax, mmax=lmax, grid="equiangular")
-        self.isht = InverseRealSHT(nlat, nlon, lmax=lmax, mmax=lmax, grid="equiangular")
+        self.sht = RealSHT(nlat, nlon, lmax=lmax, mmax=mmax, grid="equiangular")
+        self.isht = InverseRealSHT(nlat, nlon, lmax=lmax, mmax=mmax, grid="equiangular")
 
         # Spectral convolution blocks
         self.blocks = nn.ModuleList()
