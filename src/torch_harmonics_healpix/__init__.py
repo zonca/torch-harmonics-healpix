@@ -11,7 +11,13 @@ from .data_generation_test2 import (
     generate_test2_dataset,
 )
 from .mcmc_baseline import mcmc_estimate_ell_p, evaluate_mcmc_baseline
-from .models import SpectralCNN
+
+# Model imports are lazy to avoid requiring torch-harmonics for basic usage
+def __getattr__(name):
+    if name == "SpectralCNN":
+        from .models import SpectralCNN
+        return SpectralCNN
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     "HealpixToEquiangular",

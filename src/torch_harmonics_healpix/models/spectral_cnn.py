@@ -1,17 +1,80 @@
 """Spectral CNN model for ℓ_p estimation from HEALPix temperature maps.
 
-Uses SpectralConvS2 from torch-harmonics for rotation-equivariant
-spectral convolutions on equiangular grids, with HEALPix↔equiangular
-resampling at input/output.
+Uses spectral convolutions via SHT (RealSHT + InverseRealSHT) from
+torch-harmonics with learned spectral weights, combined with HEALPix↔equiangular
+resampling.
 
-Architecture: HEALPix → HealpixToEquiangular → SpectralConvS2 blocks → FC head → ℓ_p
+Architecture: HEALPix → HealpixToEquiangular → SpectralConv blocks → FC head → ℓ_p
+
+Note: torch-harmonics 0.8.0 does not have SpectralConvS2 in the main package.
+We implement spectral convolution manually using RealSHT + learned weights + InverseRealSHT.
 """
 
 import torch
 import torch.nn as nn
-from torch_harmonics import RealSHT, InverseRealSHT, SpectralConvS2
+from torch_harmonics import RealSHT, InverseRealSHT
 
 from .healpix_resample import HealpixToEquiangular
+
+
+class SpectralConvBlock(nn.Module):
+    """Spectral convolution block: SHT → learned weights → ISHT.
+
+    Implements spectral convolution as:
+    1. Forward SHT: spatial → harmonic coefficients (a_lm)
+    2. Multiply by learned weights per (l, m) channel
+    3. Inverse SHT: harmonic → spatial
+
+    This is rotation-equivariant by construction.
+
+    Args:
+        forward_transform: RealSHT instance.
+        inverse_transform: InverseRealSHT instance.
+        in_channels: Number of input channels.
+        out_channels: Number of output channels.
+    """
+
+    def __init__(
+        self,
+        forward_transform: RealSHT,
+        inverse_transform: InverseRealSHT,
+        in_channels: int,
+        out_channels: int,
+    ):
+        super().__init__()
+        self.forward_transform = forward_transform
+        self.inverse_transform = inverse_transform
+
+        # Spectral weights: [out_channels, in_channels, lmax+1, mmax+1]
+        # These are the learned convolution kernels in harmonic space
+        lmax = forward_transform.lmax
+        mmax = forward_transform.mmax
+        self.weight = nn.Parameter(
+            torch.randn(out_channels, in_channels, lmax + 1, mmax + 1)
+            * (1.0 / (in_channels * (lmax + 1)))
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply spectral convolution.
+
+        Args:
+            x: [batch, in_channels, nlat, nlon]
+
+        Returns:
+            [batch, out_channels, nlat, nlon]
+        """
+        # SHT forward: [batch, in_channels, nlat, nlon] -> [batch, in_channels, lmax+1, mmax+1]
+        coeff = self.forward_transform(x)
+
+        # Spectral convolution: multiply by learned weights
+        # coeff: [B, C_in, lmax+1, mmax+1]
+        # weight: [C_out, C_in, lmax+1, mmax+1]
+        # output: [B, C_out, lmax+1, mmax+1]
+        coeff_out = torch.einsum("bilm,oilm->bolm", coeff, self.weight)
+
+        # ISHT inverse: [batch, out_channels, lmax+1, mmax+1] -> [batch, out_channels, nlat, nlon]
+        out = self.inverse_transform(coeff_out)
+        return out
 
 
 class SpectralCNN(nn.Module):
@@ -19,7 +82,7 @@ class SpectralCNN(nn.Module):
 
     Architecture:
         1. HEALPix → equiangular resampling
-        2. 3 spectral convolution blocks with ReLU and batch norm
+        2. Spectral convolution blocks with ReLU and batch norm
         3. Global average pooling + FC head for regression
 
     Args:
@@ -57,23 +120,19 @@ class SpectralCNN(nn.Module):
         # HEALPix → equiangular conversion
         self.to_equi = HealpixToEquiangular(nside, nlat, nlon)
 
+        # SHT transforms
+        self.sht = RealSHT(nlat, nlon, lmax=lmax, mmax=lmax, grid="equiangular")
+        self.isht = InverseRealSHT(nlat, nlon, lmax=lmax, mmax=lmax, grid="equiangular")
+
         # Spectral convolution blocks
-        # Block 1: 1 input channel → hidden_channels
         self.blocks = nn.ModuleList()
         self.batchnorms = nn.ModuleList()
 
         in_ch = 1
         for i in range(num_blocks):
-            out_ch = hidden_channels if i < num_blocks - 1 else hidden_channels
+            out_ch = hidden_channels
             self.blocks.append(
-                SpectralConvS2(
-                    in_shape=(nlat, nlon),
-                    out_shape=(nlat, nlon),
-                    in_channels=in_ch,
-                    out_channels=out_ch,
-                    lmax=lmax,
-                    mmax=lmax,  # full mmax for now
-                )
+                SpectralConvBlock(self.sht, self.isht, in_ch, out_ch)
             )
             self.batchnorms.append(nn.BatchNorm2d(out_ch))
             in_ch = out_ch
@@ -82,7 +141,6 @@ class SpectralCNN(nn.Module):
         self.relu = nn.ReLU()
 
         # FC regression head
-        # After spectral convs, global average pool over spatial dims
         self.fc = nn.Sequential(
             nn.Linear(hidden_channels, 64),
             nn.ReLU(),
