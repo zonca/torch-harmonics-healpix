@@ -45,13 +45,13 @@ class SpectralConvBlock(nn.Module):
         self.forward_transform = forward_transform
         self.inverse_transform = inverse_transform
 
-        # Spectral weights: [out_channels, in_channels, lmax+1, mmax+1]
-        # mmax is already clipped to nlon//2 by SpectralCNN
+        # Spectral weights: [out_channels, in_channels, lmax, mmax]
+        # torch-harmonics RealSHT output shape is (lmax, mmax), NOT (lmax+1, mmax+1)
         lmax = forward_transform.lmax
         mmax = forward_transform.mmax
         self.weight = nn.Parameter(
-            torch.randn(out_channels, in_channels, lmax + 1, mmax + 1)
-            * (1.0 / (in_channels * (lmax + 1)))
+            torch.randn(out_channels, in_channels, lmax, mmax)
+            * (1.0 / (in_channels * lmax))
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -117,9 +117,9 @@ class SpectralCNN(nn.Module):
         self.nlon = nlon
         self.lmax = lmax
 
-        # RealSHT clips mmax to nlon//2 internally; pass that explicitly
-        # to avoid shape mismatch between precomputed weights and coefficients
-        mmax = min(lmax, nlon // 2)
+        # RealSHT uses mmax as the *size* of the m dimension, default = nlon//2+1
+        # and lmax as the *size* of the l dimension, default = nlat
+        mmax = min(lmax, nlon // 2 + 1)
 
         # HEALPix → equiangular conversion
         self.to_equi = HealpixToEquiangular(nside, nlat, nlon)
