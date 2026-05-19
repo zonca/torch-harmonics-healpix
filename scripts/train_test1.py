@@ -20,7 +20,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
 from torch_harmonics_healpix.data_generation import generate_map, generate_power_spectrum
-from torch_harmonics_healpix.mcmc_baseline import estimate_ell_p_mcmc
+from torch_harmonics_healpix.mcmc_baseline import mcmc_estimate_ell_p
 from torch_harmonics_healpix.models.spectral_cnn import SpectralCNN
 
 
@@ -75,7 +75,8 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device):
 
 
 @torch.no_grad()
-def evaluate(model, dataloader, device, nside=NSIDE, sigma_p=SIGMA_P, lmax=LMAX):
+def evaluate(model, dataloader, device, nside=NSIDE, sigma_p=SIGMA_P, lmax=LMAX,
+             noise_std=0.0):
     """Evaluate model and MCMC baseline on the same test maps."""
     model.eval()
     cnn_errors = []
@@ -97,8 +98,9 @@ def evaluate(model, dataloader, device, nside=NSIDE, sigma_p=SIGMA_P, lmax=LMAX)
 
             # MCMC baseline
             t0 = time.time()
-            ell_p_mcmc = estimate_ell_p_mcmc(
-                maps_np[i], nside=nside, sigma_p=sigma_p, lmax=lmax
+            ell_p_mcmc = mcmc_estimate_ell_p(
+                maps_np[i], nside=nside, sigma_p=sigma_p, lmax=lmax,
+                noise_std=noise_std
             )
             dt = time.time() - t0
             mcmc_times.append(dt)
@@ -208,7 +210,8 @@ def main():
     # Load best model and evaluate
     model.load_state_dict(best_state)
     print(f"\n=== Evaluation on {args.n_test} test maps (noise σ_n={args.noise_std}) ===")
-    results = evaluate(model, test_loader, device, nside=args.nside)
+    results = evaluate(model, test_loader, device, nside=args.nside,
+                       noise_std=args.noise_std)
 
     print(f"\nCNN  mean % error: {results['cnn_pct_error']:.1f}%")
     print(f"MCMC mean % error: {results['mcmc_pct_error']:.1f}%")
