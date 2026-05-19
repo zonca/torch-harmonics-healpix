@@ -15,10 +15,10 @@ C_ℓ = exp(-(ℓ - ℓ_p)² / (2σ²_p)) + 10⁻⁵, with σ_p=5, ℓ_p ∈ [5,
 
 | Noise σ_n | NNhealpix | MCMC (paper) | MCMC (ours) | SpectralCNN (ours) |
 |-----------|-----------|-------------|-------------|-------------------|
-| 0         | 1.3%      | 0.7%        | _pending_   | _pending_         |
-| 5         | 2.9%      | 2.5%        | _pending_   | _pending_         |
-| 10        | 5.2%      | 4.8%        | _pending_   | _pending_         |
-| 15        | 8.4%      | 7.8%        | _pending_   | _pending_         |
+| 0         | 1.3%      | 0.7%        | 2.7%        | _pending_         |
+| 5         | 2.9%      | 2.5%        | 3.1%        | _pending_         |
+| 10        | 5.2%      | 4.8%        | 3.5%        | _pending_         |
+| 15        | 8.4%      | 7.8%        | 7.2%        | _pending_         |
 
 **Method:** Mean % error = avg(|ℓ_p_pred - ℓ_p_true| / ℓ_p_true × 100) over test set.
 
@@ -86,11 +86,12 @@ with noise. Our approach:
 |------------------------------|-------------|------------------------------------------|
 | HEALPix ↔ equiangular resample | ✅ Done    | Nearest-neighbor, Phase 1               |
 | Data generation (Test 1)     | ✅ Done     | generate_test1_data.py                   |
-| MCMC baseline (Test 1)       | ✅ Done     | mcmc_baseline.py                         |
-| SpectralCNN model            | ✅ Done     | models/spectral_cnn.py                   |
+| MCMC baseline (Test 1)       | ✅ Done     | mcmc_baseline.py, benchmarked on Expanse |
+| SpectralCNN model            | ✅ Done     | models/spectral_cnn.py, GPU tests pass   |
+| Unit tests (CPU + GPU)       | ✅ Done     | 34/34 passing on Expanse V100            |
+| Data generation (Test 2)     | ✅ Done     | data_generation_test2.py, spin-2 + masks |
+| Data generation (Test 3)     | ✅ Done     | data_generation_test3.py, CAMB spectra   |
 | Training script (Test 1)     | 🔲 Next     | Need to implement train_test1.py         |
-| Data generation (Test 2)     | 🔲 Planned  | Spin-2 fields, partial sky masks         |
-| Data generation (Test 3)     | 🔲 Planned  | CAMB spectra, τ parameter                |
 | Training scripts (Test 2/3)  | 🔲 Planned  |                                          |
 | Evaluation + comparison plots| 🔲 Planned  | Scatter plots, error bars vs paper       |
 
