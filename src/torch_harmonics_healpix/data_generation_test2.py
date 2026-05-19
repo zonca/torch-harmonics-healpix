@@ -79,14 +79,17 @@ def generate_polarization_map(
     # synfast expects array of shape (6, lmax+1): TT, EE, BB, TE, EB, TB
     cl_full = np.array([cl_tt, cl_ee, cl_bb, cl_te, cl_eb, cl_tb])
 
+    # Reproducibility via numpy random state
     if rng is not None:
+        rand_state = np.random.get_state()
         seed = int(rng.integers(0, 2**31))
-        alm = hp.synalm(cl_full, lmax=lmax, new=True, seed=seed)
-    else:
-        alm = hp.synalm(cl_full, lmax=lmax, new=True)
+        np.random.seed(seed)
 
-    # Generate T, Q, U maps
-    maps = hp.alm2map(alm, nside=nside, verbose=False)
+    maps = hp.synfast(cl_full, nside=nside, lmax=lmax)
+
+    if rng is not None:
+        np.random.set_state(rand_state)
+
     q_map = maps[1].astype(np.float32)
     u_map = maps[2].astype(np.float32)
 

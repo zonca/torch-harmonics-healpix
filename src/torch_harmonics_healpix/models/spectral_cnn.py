@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 from torch_harmonics import RealSHT, InverseRealSHT
 
-from .healpix_resample import HealpixToEquiangular
+from ..healpix_resample import HealpixToEquiangular
 
 
 class SpectralConvBlock(nn.Module):

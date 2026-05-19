@@ -59,13 +59,18 @@ def generate_map(
     """
     cl = generate_power_spectrum(ell_p, sigma_p, lmax)
 
+    # Reproducibility: set numpy random state before healpy calls
+    # (healpy uses numpy's global random state internally)
     if rng is not None:
-        # Use the rng to create a seed for healpy's synfast
-        # healpy synfast doesn't accept rng objects, so we derive an integer seed
+        # Save and restore numpy random state
+        rand_state = np.random.get_state()
         seed = int(rng.integers(0, 2**31))
-        m = hp.synfast(cl, nside=nside, lmax=lmax, verbose=False, seed=seed)
-    else:
-        m = hp.synfast(cl, nside=nside, lmax=lmax, verbose=False)
+        np.random.seed(seed)
+
+    m = hp.synfast(cl, nside=nside, lmax=lmax)
+
+    if rng is not None:
+        np.random.set_state(rand_state)
 
     if noise_std > 0:
         if rng is not None:
