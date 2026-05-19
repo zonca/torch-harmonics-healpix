@@ -45,21 +45,13 @@ class SpectralConvBlock(nn.Module):
         self.forward_transform = forward_transform
         self.inverse_transform = inverse_transform
 
-        # Determine actual SHT output shape by running a dummy forward pass
-        # RealSHT clips mmax to nlon//2 internally, so we must match
-        with torch.no_grad():
-            dummy = torch.zeros(1, in_channels,
-                                forward_transform.nlat,
-                                forward_transform.nlon)
-            coeff_shape = forward_transform(dummy).shape  # [1, C, lmax+1, mmax_eff+1]
-            self._lmax_out = coeff_shape[-2]
-            self._mmax_out = coeff_shape[-1]
-
-        # Spectral weights: [out_channels, in_channels, lmax_eff+1, mmax_eff+1]
-        # These are the learned convolution kernels in harmonic space
+        # Spectral weights: [out_channels, in_channels, lmax+1, mmax+1]
+        # mmax is already clipped to nlon//2 by SpectralCNN
+        lmax = forward_transform.lmax
+        mmax = forward_transform.mmax
         self.weight = nn.Parameter(
-            torch.randn(out_channels, in_channels, self._lmax_out, self._mmax_out)
-            * (1.0 / (in_channels * self._lmax_out))
+            torch.randn(out_channels, in_channels, lmax + 1, mmax + 1)
+            * (1.0 / (in_channels * (lmax + 1)))
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -125,10 +117,9 @@ class SpectralCNN(nn.Module):
         self.nlon = nlon
         self.lmax = lmax
 
-        # RealSHT internally clips mmax = min(mmax, nlon//2)
-        # We pass mmax=lmax and let it clip — SpectralConvBlock detects
-        # the actual output shape via a dummy forward pass.
-        mmax = lmax
+        # RealSHT clips mmax to nlon//2 internally; pass that explicitly
+        # to avoid shape mismatch between precomputed weights and coefficients
+        mmax = min(lmax, nlon // 2)
 
         # HEALPix → equiangular conversion
         self.to_equi = HealpixToEquiangular(nside, nlat, nlon)
