@@ -178,18 +178,28 @@ to avoid significant aliasing.
 
 ### Spin-2 (Polarization) Handling
 
-For Q/U polarization maps, torch-harmonics provides vector SHT:
+For Q/U polarization maps, torch-harmonics provides `RealVectorSHT` /
+`InverseRealVectorSHT` for spin-2 fields:
 
 ```
 (Q ± iU) = ISHT[±_2 a_ℓm]   (spin-2 spherical harmonics)
 ```
 
 This naturally separates E-mode and B-mode power:
-- E-mode: even ℓ+m parity in _2a_ℓm
-- B-mode: odd ℓ+m parity in _2a_ℓm
+- E-mode: spheroidal component (coeffs[:, 0, :, :])
+- B-mode: toroidal component (coeffs[:, 1, :, :])
 
-NNhealpix lacks spin-weighted SHT and must learn E/B separation from
-pixel-space Q/U patterns, which is suboptimal.
+**However**, in torch-harmonics 0.8.0, the Vector SHT implementation is
+extremely slow (even at nlat=8, initialization takes >30s). This appears
+to be an optimization issue in the Legendre polynomial precomputation for
+spin-weighted harmonics. As a result, **our current implementation uses
+scalar SHT with Q/U stacked as independent channels**, which does NOT
+separate E/B modes. This is a significant limitation for Test 2 (polarization).
+
+NNhealpix also lacks spin-weighted SHT and must learn E/B separation from
+pixel-space Q/U patterns. So both architectures face the same challenge,
+but the spectral approach could theoretically gain more from proper E/B
+separation since it operates naturally in harmonic space.
 
 ---
 

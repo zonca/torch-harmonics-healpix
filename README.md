@@ -86,12 +86,17 @@ with varying sky fraction f_sky. 3-channel input: Q, U, mask.
 Estimate the optical depth to reionization τ from Q/U maps using
 realistic CAMB power spectra. τ ∈ [0.03, 0.08].
 
-## Key Innovation
+## Key Innovation (Theoretical)
 
-**torch-harmonics provides vector SHT for spin-2 fields** (Q/U → E/B),
-which NNhealpix lacks. For Test 2 (polarization), the SpectralCNN can
-directly operate on E/B modes rather than learning the decomposition
-from pixel patterns.
+**torch-harmonics provides VectorSHT for spin-2 fields** (Q/U → E/B),
+which NNhealpix lacks. For Test 2 (polarization), a spectral CNN with
+VectorSHT could directly operate on E/B modes rather than learning the
+decomposition from pixel patterns.
+
+**Current limitation:** torch-harmonics 0.8.0's VectorSHT is too slow for
+practical use (optimization issue in spin-weighted Legendre precomputation).
+Our Test 2 implementation uses scalar SHT with Q/U as independent channels,
+same as NNhealpix. This is a key area for future improvement.
 
 ## Known Issues
 
