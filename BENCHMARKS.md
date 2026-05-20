@@ -8,26 +8,36 @@ This document tracks our reproduction of the three benchmarks from
 
 ## Hardware & Runtime
 
-All training and evaluation runs on **SDSC Expanse** GPU nodes:
+### Expanse (GPU — SDSC)
 
-| Component | Hardware | Time |
-|-----------|----------|------|
-| **Unit tests (34 tests)** | V100-SXM2-32GB, GPU-shared | ~5 min (incl. venv setup ~3 min) |
-| **MCMC baseline (50 maps × 4 noise levels)** | V100-SXM2-32GB (CPU only) | 0.1s per noise level (total <1s) |
-| **SpectralCNN training (50k maps, 50 epochs)** | V100-SXM2-32GB, GPU-shared | ~25 min per noise level |
-| **SpectralCNN inference (1 map)** | V100-SXM2-32GB | ~0.05 ms (batch=64 throughput: ~30s/epoch ÷ 781 batches ≈ 0.04 ms/map) |
-| **MCMC inference (1 map)** | V100-SXM2-32GB (CPU) | ~1.3 ms per map (`hp.anafast` + `minimize_scalar`) |
-| **Data generation (1 HEALPix map, synfast)** | CPU | ~1 ms per map |
+| Component | Time |
+|-----------|------|
+| **Unit tests (34 tests)** | ~5 min (incl. venv setup ~3 min) |
+| **MCMC baseline (50 maps × 4 noise levels)** | <1s total (CPU) |
+| **SpectralCNN training (50k maps, 50 epochs)** | ~25 min per noise level |
+| **SpectralCNN inference (1 map)** | ~0.05 ms |
+| **MCMC inference (1 map)** | ~1.3 ms |
 
-**Key takeaway:** SpectralCNN inference is ~25× faster than MCMC per map (0.05 ms vs 1.3 ms),
+- **Node:** exp-1-59, AMD EPYC 7742 64-Core
+- **GPU:** NVIDIA Tesla V100-SXM2-32GB, Driver 525.85.12, CUDA 12.0
+- **Software:** Python 3.11.5, PyTorch 2.6.0+cu124, torch-harmonics 0.8.0, healpy 1.19.0, numpy 2.4.4, scipy 1.17.1
+
+### Popeye (CPU — SDSC)
+
+| Component | Time |
+|-----------|------|
+| **MCMC baseline (1000 maps × 4 noise levels)** | ~2s per noise level |
+| **MCMC inference (1 map)** | ~1.7 ms |
+
+- **Node:** pcn-2-44, Intel Xeon Platinum 8168 @ 2.70GHz, 48 cores, ~758 GB RAM
+- **Software:** Python 3.11.11, healpy 1.19.0, numpy 2.4.6, scipy 1.17.1
+- **Venv:** `~/torch-hh-venv` (activate: `source ~/torch-hh-venv/bin/activate`)
+
+**Key takeaway:** SpectralCNN inference is ~25× faster than MCMC per map (0.05 ms vs 1.7 ms),
 and once trained, it processes maps in a single forward pass — no iterative optimization needed.
 Training cost is amortized: 25 min on one V100 GPU yields a model that outperforms NNhealpix.
 
-**Software versions:** Python 3.11, PyTorch 2.6.0+cu124, torch-harmonics 0.8.0, healpy 1.19.0, CUDA 12.0
-
-> **Note on popeye:** For long CPU-only calculations (e.g., large MCMC benchmarks),
-> SDSC popeye can be used as an alternative to Expanse. Popeye requires keyboard-interactive
-> auth (2FA), so it cannot be used from automated scripts — only interactive SSH sessions.
+**Slurm scripts:** All in `slurm/` directory (see AGENTS.md for details).
 
 ---
 
@@ -39,12 +49,18 @@ C_ℓ = exp(-(ℓ - ℓ_p)² / (2σ²_p)) + 10⁻⁵, with σ_p=5, ℓ_p ∈ [5,
 **Setup:** HEALPix N_side=16 (3072 pixels), 50k train / 1k val / 500 test maps.
 Model: SpectralCNN with 3 spectral conv blocks, 32 hidden channels, 6.4M parameters.
 
-| Noise σ_n | NNhealpix | MCMC (paper) | MCMC (ours) | SpectralCNN (ours) |
-|-----------|-----------|-------------|-------------|-------------------|
-| 0         | 1.3%      | 0.7%        | 2.7%        | **1.2%**          |
-| 5         | 2.9%      | 2.5%        | 3.1%        | 3.0%              |
-| 10        | 5.2%      | 4.8%        | 3.5%        | _pending_         |
-| 15        | 8.4%      | 7.8%        | 7.2%        | _pending_         |
+| Noise σ_n | NNhealpix | MCMC (paper) | MCMC (ours, 1000 maps) | SpectralCNN (ours) |
+|-----------|-----------|-------------|------------------------|-------------------|
+| 0         | 1.3%      | 0.7%        | 2.3%                   | **1.2%**          |
+| 5         | 2.9%      | 2.5%        | 2.5%                   | 3.0%              |
+| 10        | 5.2%      | 4.8%        | 5.0%                   | _pending_         |
+| 15        | 8.4%      | 7.8%        | 7.7%                   | _pending_         |
+
+**MCMC discrepancy at σ_n=0:** Our MCMC gives 2.3% vs paper's 0.7%. The algorithm
+is identical (χ² likelihood with cosmic variance, `hp.anafast`, `minimize_scalar` bounded [5,20]).
+At σ_n=5,10,15 the results match closely. The σ_n=0 discrepancy likely stems from
+`minimize_scalar` getting trapped in local minima of the multi-modal χ² surface
+when noise is absent. The paper's "MCMC" may use a different optimizer.
 
 **Method:** Mean % error = avg(|ℓ_p_pred - ℓ_p_true| / ℓ_p_true × 100) over test set.
 
@@ -53,7 +69,7 @@ Model: SpectralCNN with 3 spectral conv blocks, 32 hidden channels, 6.4M paramet
 - Rotation equivariance is free (no wasted capacity learning rotated patterns)
 - Modern GPU-optimized PyTorch vs 2019 TensorFlow on CPU
 
-**Training runtime:** ~25 min per noise level on V100 (50 epochs × 50k maps × 64 batch).
+**Training runtime:** ~25 min per noise level on Expanse V100 (50 epochs × 50k maps × 64 batch).
 
 ---
 
@@ -116,24 +132,25 @@ with noise. Our approach:
 
 ## Implementation Status
 
-| Component                         | Status    | Notes                                         |
-|-----------------------------------|-----------|-----------------------------------------------|
-| HEALPix ↔ equiangular resample    | ✅ Done   | Nearest-neighbor                              |
-| Data generation (Test 1)          | ✅ Done   | data_generation.py                            |
-| Data generation (Test 2)          | ✅ Done   | data_generation_test2.py, spin-2 + masks      |
-| Data generation (Test 3)          | ✅ Done   | data_generation_test3.py, CAMB spectra        |
-| MCMC baseline (Test 1)            | ✅ Done   | mcmc_baseline.py, benchmarked on Expanse V100 |
-| SpectralCNN model                 | ✅ Done   | Multi-channel I/O, complex spectral weights   |
-| Unit tests (CPU + GPU)            | ✅ Done   | 34/34 passing on Expanse V100                 |
-| Training script (Test 1)          | ✅ Done   | train_test1.py, 50k maps × 50 epochs          |
-| Training script (Test 2)          | ✅ Done   | train_test2.py, Q/U+mask 3-channel            |
-| Training script (Test 3)          | ✅ Done   | train_test3.py, CAMB spectra                  |
-| Slurm scripts                     | ✅ Done   | run_tests.slurm, run_train_test1.slurm        |
-| Test 1 results (σ_n=0)            | ✅ Done   | **1.2%** — beats NNhealpix (1.3%)            |
-| Test 1 results (σ_n=5,10,15)      | 🔲 Running| Expanse job 49190456                          |
-| Test 2 results                    | 🔲 Next   |                                               |
-| Test 3 results                    | 🔲 Planned| Requires CAMB on Expanse                      |
-| Evaluation + comparison plots     | 🔲 Planned| Scatter plots, error bars vs paper            |
+| Component                         | Status    | Notes                                              |
+|-----------------------------------|-----------|----------------------------------------------------|
+| HEALPix ↔ equiangular resample    | ✅ Done   | Nearest-neighbor                                   |
+| Data generation (Test 1)          | ✅ Done   | data_generation.py                                 |
+| Data generation (Test 2)          | ✅ Done   | data_generation_test2.py, spin-2 + masks           |
+| Data generation (Test 3)          | ✅ Done   | data_generation_test3.py, CAMB spectra             |
+| MCMC baseline (Test 1)            | ✅ Done   | mcmc_baseline.py, 1000 maps on Popeye (CPU)        |
+| SpectralCNN model                 | ✅ Done   | Multi-channel I/O, complex spectral weights        |
+| Unit tests (CPU + GPU)            | ✅ Done   | 34/34 passing on Expanse V100                      |
+| Training script (Test 1)          | ✅ Done   | train_test1.py, 50k maps × 50 epochs               |
+| Training script (Test 2)          | ✅ Done   | train_test2.py, Q/U+mask 3-channel                 |
+| Training script (Test 3)          | ✅ Done   | train_test3.py, CAMB spectra                       |
+| Slurm scripts                     | ✅ Done   | slurm/ (Expanse GPU + Popeye CPU)                  |
+| Test 1 results (σ_n=0)            | ✅ Done   | **1.2%** — beats NNhealpix (1.3%)                 |
+| Test 1 results (σ_n=5)            | ✅ Done   | 3.0% (matches NNhealpix 2.9%)                     |
+| Test 1 results (σ_n=10,15)        | 🔲 Running| Expanse job 49190456                               |
+| Test 2 results                    | 🔲 Next   |                                                    |
+| Test 3 results                    | 🔲 Planned| Requires CAMB on Expanse                           |
+| Evaluation + comparison plots     | 🔲 Planned| Scatter plots, error bars vs paper                 |
 
 ---
 
