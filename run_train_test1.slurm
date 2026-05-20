@@ -18,11 +18,11 @@ nvidia-smi
 echo "=== Setting up venv on /tmp ==="
 WORKDIR=/tmp/zonca_torch_hh_train_$SLURM_JOB_ID
 mkdir -p $WORKDIR
+cd $WORKDIR
 
-# Create fresh venv with updated pip
-python3 -m venv $WORKDIR/.venv
-source $WORKDIR/.venv/bin/activate
-pip install --upgrade pip 2>&1 | tail -1
+# Use uv consistently for venv + pip
+UV_LINK_MODE=copy uv venv .venv --python 3.11
+source .venv/bin/activate
 
 echo "=== Installing packages ==="
 uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 2>&1 | tail -1
