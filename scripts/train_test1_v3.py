@@ -24,7 +24,7 @@ from torch.utils.data import Dataset, DataLoader
 from torch_harmonics_healpix.data_generation import (
     generate_map,
     generate_dataset,
-    NSIDE, LMAX, SIGMA_P, ELL_P_MIN, ELL_P_MAX,
+    NSIDE, LMAX, SIGMA_P, LP_MIN, LP_MAX,
 )
 from torch_harmonics_healpix.models.multires_spectral_cnn import MultiResSpectralCNN
 from torch_harmonics_healpix.mcmc_baseline import mcmc_estimate_ell_p
@@ -43,7 +43,7 @@ class OnTheFlyDataset(Dataset):
         self.rng = np.random.default_rng(seed)
 
         # Pre-generate target values (maps generated on-the-fly in __getitem__)
-        self.ell_p_true = self.rng.uniform(ELL_P_MIN, ELL_P_MAX, size=n_maps).astype(np.float32)
+        self.ell_p_true = self.rng.uniform(LP_MIN, LP_MAX, size=n_maps).astype(np.float32)
 
     def __len__(self):
         return self.n_maps
