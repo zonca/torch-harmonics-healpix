@@ -17,6 +17,7 @@ for parameter estimation from spherical CMB maps, as implemented in this project
 | Parameters | ~80k (Test 1) | 6.4M (3 blocks, 32 channels) | 1.5M (4 blocks, 32 channels) |
 | Multi-scale | Yes (Nside pooling) | No (fixed ℓ_max) | Yes (decreasing ℓ_max) |
 | Spin-weighted SHT | No | Yes (via torch-harmonics) | Yes (via torch-harmonics) |
+| Mask handling | Natural (zero pixels → zero contribution) | Inpainting before SHT | Inpainting before SHT |
 
 ---
 
@@ -85,6 +86,43 @@ Input: HEALPix map (N_side=16, 3072 pixels)
 - **Over-parameterized**: 6.4M vs 80k — spectral weights grow as O(ℓ_max²)
 - **Underperforms at high noise**: Pixel-space features are more noise-robust
 - **Resampling overhead**: HEALPix→equiangular conversion adds cost
+
+### Inpainting for Partial-Sky Observations
+
+The SHT is a **global** transform — it operates on every pixel. When the sky
+is partially observed (f_sky < 1), masked pixels set to zero are treated as
+valid signal by the SHT, corrupting the spectral coefficients. At low f_sky
+(≤ 0.2), 80-95% of pixels are zeros, making the SHT output meaningless.
+
+**Solution:** Before the SHT, replace zero-masked pixels with the mean of
+observed pixels (per channel, per map in the batch):
+
+```
+x_observed_mean = sum(x * mask) / sum(mask)
+x_inpainted = x * mask + x_observed_mean * (1 - mask)
+```
+
+This is:
+- **Differentiable** — the mean computation and conditional replacement
+  support gradient flow through autograd
+- **Simple** — ~10 lines of code, no extra parameters
+- **Effective** — replaces the sharp zero→signal discontinuity at the mask
+  boundary with a smooth (approximately) zero-mean field, yielding much
+  cleaner spectral coefficients
+- **Architecturally agnostic** — works for both SpectralCNN and
+  MultiResSpectralCNN
+
+**Limitations:**
+- The observed-pixel mean is a crude inpainting — it doesn't preserve the
+  angular power spectrum of the true (unmasked) signal
+- At very low f_sky (≤ 0.05), even the mean may not be representative
+- A learned inpainting network or iterative spectral inpainting (e.g.,
+  MRA/PR method) could perform better but adds complexity
+
+**NNhealpix comparison:** NNhealpix's pixel-space convolution naturally
+handles masks because masked pixels contribute zero to the convolution
+kernel — no inpainting needed. This is a fundamental advantage of
+pixel-space architectures for partial-sky analysis.
 
 ### Performance (Test 1, σ_p=5.0)
 

@@ -13,7 +13,7 @@ Reproduces and benchmarks all 3 tests from [Krachmalnicoff & Tomasi (2019)](http
 | 10  | 6.8%          | 6.7%                  | **5.2%**  | 4.8% |
 | 15  | 11.8%         | 11.3%                 | **8.4%**  | 7.8% |
 
-**Test 2 (Polarization) preliminary:** SpectralCNN at ℓ_Ep≈2.0%, ℓ_Bp≈1.8% — **beats NNhealpix's 2.7%/2.7%!**
+**Test 2 (Polarization):** SpectralCNN at ℓ_Ep=1.5%, ℓ_Bp=1.6% — **beats NNhealpix's 2.7%/2.7% at f_sky=1.0!** Partial-sky (f_sky<1) with inpainting: *running on Expanse*.
 
 See [BENCHMARKS.md](BENCHMARKS.md) for full results and [ARCHITECTURE.md](ARCHITECTURE.md) for detailed comparison.
 
@@ -48,21 +48,25 @@ torch-harmonics-healpix/
 │       ├── spectral_cnn.py          # SpectralCNN (fixed ℓ_max)
 │       └── multires_spectral_cnn.py # MultiResSpectralCNN (decreasing ℓ_max)
 ├── scripts/
-│   ├── train_test1.py               # v1 training (σ_p=3 bug, 50k maps)
 │   ├── train_test1_v2.py            # v2 paper-matching (σ_p=5, 100k maps)
 │   ├── train_test1_v3.py            # v3 multi-resolution spectral CNN
-│   ├── train_test2_v2.py            # Test 2: polarization ℓ_Ep/ℓ_Bp
-│   └── train_test3_v2.py            # Test 3: τ estimation
+│   ├── train_test2_v2.py            # Test 2: polarization ℓ_Ep/ℓ_Bp (with inpainting)
+│   ├── train_test3_v2.py            # Test 3: τ estimation (with inpainting)
+│   ├── run_mcmc_benchmark.py        # MCMC baseline runner
+│   └── summarize_results.py         # Automated benchmark summary
 ├── slurm/
 │   ├── run_train_test1_v2.slurm     # Expanse GPU, Test 1 v2
 │   ├── run_train_test1_v3.slurm     # Expanse GPU, Test 1 v3
-│   ├── run_train_test2_3_v2.slurm   # Expanse GPU, Tests 2+3
+│   ├── run_train_test2_3_v2.slurm   # Expanse GPU, Tests 2+3 (no inpainting)
+│   ├── run_train_test2_3_inpaint.slurm  # Expanse GPU, Tests 2+3 (with inpainting)
 │   └── run_mcmc_benchmark_popeye.slurm  # Popeye CPU, MCMC
 ├── tests/
-│   ├── test_healpix_resample.py
-│   ├── test_spectral_cnn.py
-│   ├── test_data_generation.py
-│   └── test_test2_test3.py
+│   ├── test_resample.py              # HEALPix ↔ equiangular resampling
+│   ├── test_data_generation.py       # Data generation functions
+│   ├── test_model_gpu.py             # SpectralCNN GPU forward/backward
+│   ├── test_mcmc_baseline.py         # MCMC baseline
+│   ├── test_test2_test3.py           # Test 2/3 data generation
+│   └── test_inpainting.py            # Inpainting for masked pixels
 ├── results/
 │   ├── test1_spectralcnn_v1.json    # v1 results (σ_p=3 bug)
 │   ├── test1_spectralcnn_v2.json    # v2 results (paper-matching)
@@ -107,3 +111,4 @@ same as NNhealpix. This is a key area for future improvement.
 - MCMC baseline at σ_n=0 gives 2.3% vs paper's 0.7% (likely minimize_scalar local minima)
 - HEALPix→equiangular resampling uses nearest-neighbor (introduces approximation error)
 - VectorSHT (spin-2) in torch-harmonics 0.8.0 too slow for training — using scalar SHT for Test 2
+- Inpainting uses observed-pixel mean (crude but effective); learned inpainting could improve low f_sky further

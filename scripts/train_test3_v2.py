@@ -251,6 +251,7 @@ def main():
             "early_stopping_patience": args.patience,
             "tau_pct_error": float(results["tau_pct_error"]),
             "n_params": int(n_params),
+            "inpaint": bool(args.f_sky < 1.0),
         }, f, indent=2)
     print(f"\nResults saved to {args.output}")
 

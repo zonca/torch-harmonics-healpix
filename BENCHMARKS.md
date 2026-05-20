@@ -93,13 +93,13 @@ from polarization Q/U maps, with varying sky fraction f_sky.
 **Setup:** HEALPix N_side=16, spin-2 fields, Q/U+mask stacked as 3 input channels.
 v2: 100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
 
-|| f_sky | NNhealpix (ℓ_Ep/ℓ_Bp) | MCMC (paper) | SpectralCNN v2 (ℓ_Ep/ℓ_Bp) | Epochs | Delta vs NNhealpix |
-|-------|----------------------|-------------|---------------------------|--------|-------------------|
-| 1.0   | 2.7% / 2.7%          | 0.7% / 0.7% | **1.5% / 1.6%**          | 80     | **-44% / -41%**   |
-| 0.5   | 3.9% / 3.9%          | —           | **4.0% / 2.8%**          | 52     | +3% / **-28%**    |
-| 0.2   | 5.3% / 5.3%          | —           | 28.3% / 19.0%            | 41     | ⚠️ much worse     |
-| 0.1   | 6.4% / 6.4%          | —           | 24.1% / 29.4%            | 23     | ⚠️ much worse     |
-| 0.05  | 8.4% / 8.4%          | —           | _running_                | —      | —                 |
+| f_sky | NNhealpix (ℓ_Ep/ℓ_Bp) | MCMC (paper) | SpectralCNN v2 (ℓ_Ep/ℓ_Bp) | Epochs | Delta vs NNhealpix | Inpaint? |
+|-------|----------------------|-------------|---------------------------|--------|-------------------|----------|
+| 1.0   | 2.7% / 2.7%          | 0.7% / 0.7% | **1.5% / 1.6%**          | 80     | **-44% / -41%**   | No (full sky) |
+| 0.5   | 3.9% / 3.9%          | —           | **4.0% / 2.8%**          | 52     | +3% / **-28%**    | No |
+| 0.2   | 5.3% / 5.3%          | —           | 28.3% / 19.0%            | 41     | ⚠️ much worse     | No |
+| 0.1   | 6.4% / 6.4%          | —           | 24.1% / 29.4%            | 23     | ⚠️ much worse     | No |
+| 0.05  | 8.4% / 8.4%          | —           | _running_                | —      | —                 | No |
 
 **Key advantage:** torch-harmonics has vector SHT for spin-2 fields (E/B separation),
 which NNhealpix lacks — it had to learn E/B from Q/U pixel patterns.
@@ -112,6 +112,23 @@ NNhealpix's pixel-space convolution naturally handles masks because masked pixel
 contribute zero to the convolution — a fundamental advantage for partial-sky analysis.
 The proper fix would require either: (1) masked SHT (inpainting before transform),
 or (2) vector SHT with proper spin-2 handling that accounts for the mask boundary.
+
+### Test 2 with Inpainting (re-run in progress)
+
+To address the f_sky ≤ 0.2 failure, we added inpainting: before the SHT,
+zero-masked pixels are replaced with the mean of observed pixels. This
+eliminates the sharp zero→signal discontinuity at the mask boundary,
+yielding cleaner spectral coefficients.
+
+| f_sky | SpectralCNN v2 no-inpaint | SpectralCNN v2 + inpaint | NNhealpix | Status |
+|-------|--------------------------|-------------------------|-----------|--------|
+| 1.0   | 1.5% / 1.6%             | _n/a (full sky)_        | 2.7% / 2.7% | ✅ Done |
+| 0.5   | 4.0% / 2.8%             | _running_               | 3.9% / 3.9% | 🔄 Running |
+| 0.2   | 28.3% / 19.0%           | _running_               | 5.3% / 5.3% | 🔄 Running |
+| 0.1   | 24.1% / 29.4%           | _running_               | 6.4% / 6.4% | 🔄 Running |
+| 0.05  | _running_               | _queued_                | 8.4% / 8.4% | 🔄 Queued |
+
+Expanse job `49229707` (Slurm script: `slurm/run_train_test2_3_inpaint.slurm`).
 
 ---
 
@@ -142,18 +159,21 @@ v2: 100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
 | Data generation (Test 3)          | ✅ Done   | data_generation_test3.py, 5000 CAMB spectra cached |
 | MCMC baseline (Test 1)            | ✅ Done   | mcmc_baseline.py, 1000 maps on Popeye (CPU)        |
 | SpectralCNN model                 | ✅ Done   | Multi-channel I/O, complex spectral weights        |
+| Inpainting for masked pixels      | ✅ Done   | Observed-pixel mean replacement before SHT         |
+| Inpainting unit tests             | ✅ Done   | test_inpainting.py (8 tests)                       |
 | Unit tests (CPU + GPU)            | ✅ Done   | 34/34 passing on Expanse V100                      |
 | Training scripts v1               | ✅ Done   | 50k maps, cosine LR, 50 epochs                     |
 | Training scripts v2               | ✅ Done   | 100k maps, ReduceLROnPlateau, early stopping       |
 | Slurm scripts                     | ✅ Done   | slurm/ (Expanse GPU + Popeye CPU)                  |
 | Test 1 v1 results                 | ✅ Done   | σ_p=3 bug, saved in results/                       |
-|| Test 1 v2 results                 | ✅ Done   | σ_n=0: 1.3%, σ_n=5: 3.5%, σ_n=10: 6.8%, σ_n=15: 11.8% |
-|| Test 1 v3 MultiRes results        | ✅ Done   | σ_n=0: 1.5%, σ_n=5: 3.5%, σ_n=10: 6.7%, σ_n=15: 11.3% — no improvement |
-|| Test 2 f_sky=1.0                  | ✅ Done   | ℓ_Ep=1.5%, ℓ_Bp=1.6% — **SpectralCNN beats NNhealpix by 43%!** |
-|| Test 2 f_sky=0.5                  | ✅ Done   | ℓ_Ep=4.0%, ℓ_Bp=2.8% — ℓ_Bp 28% better, ℓ_Ep similar |
-|| Test 2 f_sky=0.2, 0.1            | ✅ Done   | ⚠️ Much worse than NNhealpix (28/19% vs 5.3/5.3%) — mask issue? |
-|| Test 2 f_sky=0.05                 | 🔄 Running| Currently training, ~40% error at epoch 9 |
-|| Test 3 results                    | 🔲 Queued | After Test 2 in job 49224438 |
+| Test 1 v2 results                 | ✅ Done   | σ_n=0: 1.3%, σ_n=5: 3.5%, σ_n=10: 6.8%, σ_n=15: 11.8% |
+| Test 1 v3 MultiRes results        | ✅ Done   | σ_n=0: 1.5%, σ_n=5: 3.5%, σ_n=10: 6.7%, σ_n=15: 11.3% — no improvement |
+| Test 2 f_sky=1.0                  | ✅ Done   | ℓ_Ep=1.5%, ℓ_Bp=1.6% — **SpectralCNN beats NNhealpix by 43%!** |
+| Test 2 f_sky=0.5                  | ✅ Done   | ℓ_Ep=4.0%, ℓ_Bp=2.8% — ℓ_Bp 28% better, ℓ_Ep similar |
+| Test 2 f_sky=0.2, 0.1            | ✅ Done   | ⚠️ Much worse than NNhealpix (28/19% vs 5.3/5.3%) — no inpainting |
+| Test 2 f_sky=0.05                 | 🔄 Running| No-inpaint run in previous job                     |
+| Test 2 w/ inpainting              | 🔄 Running| Expanse job 49229707: f_sky=0.5, 0.2, 0.1, 0.05   |
+| Test 3 results                    | 🔄 Running| After inpainting Test 2 in same job                |
 | Evaluation + comparison plots     | 🔲 Planned| Scatter plots, error bars vs paper                 |
 
 ---
