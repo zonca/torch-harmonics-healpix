@@ -31,28 +31,51 @@ from torch_harmonics_healpix.mcmc_baseline import mcmc_estimate_ell_p
 
 
 class OnTheFlyDataset(Dataset):
-    """On-the-fly map generation to avoid storing 100k maps in memory."""
+    """On-the-fly map generation to avoid storing 100k maps in memory.
+
+    For training: maps are generated on-the-fly with a shared rng.
+    For test/eval: optionally pre-cache maps so MCMC and CNN evaluate
+    on the same maps.
+    """
 
     def __init__(self, n_maps, nside=NSIDE, lmax=LMAX, sigma_p=SIGMA_P,
-                 noise_std=0.0, seed=42):
+                 noise_std=0.0, seed=42, cache_maps=False):
         self.n_maps = n_maps
         self.nside = nside
         self.lmax = lmax
         self.sigma_p = sigma_p
         self.noise_std = noise_std
-        self.rng = np.random.default_rng(seed)
+        self.cache_maps = cache_maps
 
-        # Pre-generate target values (maps generated on-the-fly in __getitem__)
-        self.ell_p_true = self.rng.uniform(LP_MIN, LP_MAX, size=n_maps).astype(np.float32)
+        # Use separate rng for ell_p generation and map generation
+        self.ell_p_rng = np.random.default_rng(seed)
+        self.map_rng = np.random.default_rng(seed + 1000)
+
+        # Pre-generate target values
+        self.ell_p_true = self.ell_p_rng.uniform(LP_MIN, LP_MAX, size=n_maps).astype(np.float32)
+
+        # Optionally pre-cache all maps (needed for MCMC comparison)
+        self._cached_maps = None
+        if cache_maps:
+            self._cached_maps = []
+            for i in range(n_maps):
+                m = generate_map(
+                    self.ell_p_true[i], self.nside, self.lmax, self.sigma_p,
+                    self.noise_std, self.map_rng
+                )
+                self._cached_maps.append(m)
 
     def __len__(self):
         return self.n_maps
 
     def __getitem__(self, idx):
-        m = generate_map(
-            self.ell_p_true[idx], self.nside, self.lmax, self.sigma_p,
-            self.noise_std, self.rng
-        )
+        if self._cached_maps is not None:
+            m = self._cached_maps[idx]
+        else:
+            m = generate_map(
+                self.ell_p_true[idx], self.nside, self.lmax, self.sigma_p,
+                self.noise_std, self.map_rng
+            )
         return torch.from_numpy(m), torch.tensor(self.ell_p_true[idx])
 
 
@@ -113,10 +136,10 @@ def main():
     print(f"Early stopping: patience={args.patience}")
     print(f"Model: MultiResSpectralCNN (4 blocks, ℓ_max = 47→23→11→5)")
 
-    # Create datasets
+    # Create datasets (test set cached for consistent MCMC comparison)
     train_dataset = OnTheFlyDataset(args.n_train, NSIDE, LMAX, SIGMA_P, args.noise_std, seed=42)
     val_dataset = OnTheFlyDataset(args.n_val, NSIDE, LMAX, SIGMA_P, args.noise_std, seed=1234)
-    test_dataset = OnTheFlyDataset(args.n_test, NSIDE, LMAX, SIGMA_P, args.noise_std, seed=9999)
+    test_dataset = OnTheFlyDataset(args.n_test, NSIDE, LMAX, SIGMA_P, args.noise_std, seed=9999, cache_maps=True)
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=0)
