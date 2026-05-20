@@ -13,6 +13,8 @@
     "nside": 16,
     "lmax": 47,
     "sigma_p": 5,
+    "sigma_p_actual_train": 3.0,
+    "sigma_p_bug_note": "Training script used sigma_p=3.0 instead of paper's 5.0. MCMC evaluated with correct sigma_p=5.0, creating data mismatch.",
     "ell_p_range": [5, 20]
   },
   "results": {
