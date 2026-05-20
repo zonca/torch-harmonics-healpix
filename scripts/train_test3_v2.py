@@ -34,7 +34,11 @@ from torch_harmonics_healpix.models.spectral_cnn import SpectralCNN
 
 
 class TauDataset(Dataset):
-    """On-the-fly τ map generation."""
+    """On-the-fly τ map generation using pre-computed CAMB spectra.
+
+    Paper approach: pre-compute 5000 CAMB spectra, then randomly pick
+    one spectrum for each map (much faster than calling CAMB per map).
+    """
 
     def __init__(self, n_maps, nside=NSIDE, lmax=LMAX,
                  noise_std=0.0, f_sky=1.0, seed=42):
@@ -45,8 +49,16 @@ class TauDataset(Dataset):
         self.f_sky = f_sky
         self.rng = np.random.default_rng(seed)
 
-        # Pre-generate τ values
-        self.tau_values = self.rng.uniform(TAU_MIN, TAU_MAX, size=n_maps).astype(np.float32)
+        # Pre-compute 5000 CAMB spectra (paper approach)
+        from torch_harmonics_healpix.data_generation_test3 import precompute_camb_spectra, N_CAMB_SPECTRA
+        print(f"  Pre-computing {N_CAMB_SPECTRA} CAMB spectra for TauDataset...")
+        tau_spectra, self.cl_ee_array, self.cl_bb_array = precompute_camb_spectra(
+            N_CAMB_SPECTRA, lmax, seed=seed + 100
+        )
+
+        # Randomly choose from pre-computed spectra for each map
+        self.spectrum_indices = self.rng.integers(0, N_CAMB_SPECTRA, size=n_maps)
+        self.tau_values = tau_spectra[self.spectrum_indices]
 
         # Pre-generate sky mask
         from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
@@ -56,9 +68,12 @@ class TauDataset(Dataset):
         return self.n_maps
 
     def __getitem__(self, idx):
+        spec_idx = self.spectrum_indices[idx]
         q, u, mask = generate_tau_map(
             self.tau_values[idx],
-            self.nside, self.lmax, self.noise_std, self.f_sky, self.rng
+            self.nside, self.lmax, self.noise_std, self.f_sky, self.rng,
+            cl_ee=self.cl_ee_array[spec_idx],
+            cl_bb=self.cl_bb_array[spec_idx],
         )
 
         # Stack Q, U, mask as 3 channels: [3, npix]
