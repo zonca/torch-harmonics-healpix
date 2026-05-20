@@ -1,0 +1,59 @@
+{
+  "config": {
+    "model": "SpectralCNN",
+    "architecture": "3 SpectralConvBlocks, 32 hidden channels, 6.4M params",
+    "n_train": 50000,
+    "n_val": 1000,
+    "n_test": 500,
+    "epochs": 50,
+    "batch_size": 64,
+    "lr": 0.001,
+    "lr_schedule": "CosineAnnealingLR",
+    "optimizer": "Adam",
+    "nside": 16,
+    "lmax": 47,
+    "sigma_p": 5,
+    "ell_p_range": [5, 20]
+  },
+  "results": {
+    "noise_0": {
+      "cnn_pct_error": 1.18,
+      "mcmc_pct_error_500maps": 0.51,
+      "mcmc_pct_error_1000maps_popeye": 2.34
+    },
+    "noise_5": {
+      "cnn_pct_error": 2.96,
+      "mcmc_pct_error_500maps": 2.35,
+      "mcmc_pct_error_1000maps_popeye": 2.55
+    },
+    "noise_10": {
+      "cnn_pct_error": 6.32,
+      "mcmc_pct_error_500maps": 4.18,
+      "mcmc_pct_error_1000maps_popeye": 5.01
+    },
+    "noise_15": {
+      "cnn_pct_error": 11.82,
+      "mcmc_pct_error_500maps": 6.77,
+      "mcmc_pct_error_1000maps_popeye": 7.72
+    }
+  },
+  "paper_baselines": {
+    "NNhealpix": {"noise_0": 1.3, "noise_5": 2.9, "noise_10": 5.2, "noise_15": 8.4},
+    "MCMC": {"noise_0": 0.7, "noise_5": 2.5, "noise_10": 4.8, "noise_15": 7.8}
+  },
+  "paper_config": {
+    "n_train": 100000,
+    "n_val": 10000,
+    "n_test": 1000,
+    "batch_size": 32,
+    "lr_schedule": "ReduceLROnPlateau (patience=5, factor=0.1)",
+    "max_epochs": "~70 (early stop: 20 epochs no improvement)",
+    "architecture": "4 NBBs (Nside 16->1), 32 filters, FC 48 neurons"
+  },
+  "runtime": {
+    "training_per_noise_level": "25 min on V100-SXM2-32GB",
+    "inference_per_map": "0.05 ms",
+    "mcmc_per_map_expanse": "1.2 ms",
+    "mcmc_per_map_popeye": "1.7 ms"
+  }
+}

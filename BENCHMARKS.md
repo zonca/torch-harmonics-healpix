@@ -54,7 +54,7 @@ Model: SpectralCNN with 3 spectral conv blocks, 32 hidden channels, 6.4M paramet
 | 0         | 1.3%      | 0.7%        | 2.3%                   | **1.2%**          |
 | 5         | 2.9%      | 2.5%        | 2.5%                   | 3.0%              |
 | 10        | 5.2%      | 4.8%        | 5.0%                   | 6.3%              |
-| 15        | 8.4%      | 7.8%        | 7.7%                   | _pending_         |
+| 15        | 8.4%      | 7.8%        | 7.7%                   | 11.8%             |
 
 **MCMC discrepancy at σ_n=0:** Our MCMC gives 2.3% vs paper's 0.7%. The algorithm
 is identical (χ² likelihood with cosmic variance, `hp.anafast`, `minimize_scalar` bounded [5,20]).
