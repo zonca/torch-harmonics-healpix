@@ -1,105 +1,101 @@
 # torch-harmonics-healpix
 
-Bridge HEALPix to [torch-harmonics](https://github.com/PhilChodrow/torch-harmonics) for spherical CNNs on CMB data.
+Bridge HEALPix to torch-harmonics for spherical CNNs on CMB data.
 
-Reproduces and extends benchmarks from **Krachmalnicoff & Tomasi (2019)**, ["Convolutional Neural Networks on the HEALPix sphere"](https://arxiv.org/abs/1902.04083), A&A — replacing their pixel-based NNhealpix CNN with spectral convolution via the Spherical Harmonic Transform.
+Reproduces and benchmarks all 3 tests from [Krachmalnicoff & Tomasi (2019)](https://arxiv.org/abs/1902.04083) using spectral convolution networks instead of pixel-based NNhealpix.
 
-## Quick Start
+## Quick Results (Test 1: ℓ_p estimation from T maps)
+
+| σ_n | SpectralCNN v2 | MultiResSpectralCNN v3 | NNhealpix | MCMC |
+|-----|---------------|----------------------|-----------|------|
+| 0   | **1.3%**      | 1.5%                  | 1.3%      | 0.7% |
+| 5   | 3.5%          | _running_             | **2.9%**  | 2.5% |
+| 10  | 6.8%          | _running_             | **5.2%**  | 4.8% |
+| 15  | 11.8%         | _running_             | **8.4%**  | 7.8% |
+
+See [BENCHMARKS.md](BENCHMARKS.md) for full results and [ARCHITECTURE.md](ARCHITECTURE.md) for detailed comparison.
+
+## Setup
 
 ```bash
-pip install -e ".[dev]"
+# Create venv
+uv venv .venv --python 3.11
+source .venv/bin/activate
+
+# Install dependencies
+uv pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
+uv pip install torch-harmonics==0.8.0 --no-deps
+uv pip install healpy h5py scipy
+
+# Install in dev mode
+uv pip install -e .
 ```
-
-Requires: PyTorch ≥2.0, torch-harmonics, healpy, numpy, scipy.
-
-**⚠️ torch-harmonics must be pinned to 0.8.0 with `--no-deps`** on V100 GPUs — version ≥0.9.0 has a C++ ABI incompatibility with `disco_helpers`.
-
-## Architecture
-
-**SpectralCNN** — spectral convolution on the sphere via SHT:
-
-1. **HEALPix → Equiangular** resampling (nearest-neighbor)
-2. **Forward SHT** (`RealSHT`) — pixel space → harmonic space
-3. **Spectral convolution** — learned complex-valued weights multiply harmonic coefficients
-4. **Inverse SHT** (`InverseRealSHT`) — harmonic space → pixel space
-5. **ReLU + residual connection**
-6. Stack 3 blocks, then FC head (64 neurons, dropout 0.2)
-
-**Key advantages over pixel-based CNNs (NNhealpix):**
-- **Rotation equivariance** — spectral convolution is inherently equivariant
-- **Direct ℓ-space operation** — spectral parameters like ℓ_p are estimated where they live
-- **GPU-optimized** — SHT + matrix multiply vs pixel-neighbor gather
-
-**Multi-channel support:** `in_channels` / `out_channels` params allow:
-- Test 1: 1→1 (scalar T map → ℓ_p)
-- Test 2: 3→2 (Q, U, mask → ℓ_Ep, ℓ_Bp)
-- Test 3: 2→1 (Q, U → τ)
-
-## Benchmarks
-
-See [BENCHMARKS.md](BENCHMARKS.md) for full comparison tables, hardware specs, and runtime analysis.
-
-### Test 1: ℓ_p estimation from scalar (T) maps
-
-| Noise σ_n | NNhealpix | MCMC (paper) | SpectralCNN (v1) |
-|-----------|-----------|-------------|------------------|
-| 0         | 1.3%      | 0.7%        | **1.2%** ✅      |
-| 5         | **2.9%**  | 2.5%        | 3.0%             |
-| 10        | **5.2%**  | 4.8%        | 6.3%             |
-| 15        | **8.4%**  | 7.8%        | 11.8%            |
-
-**v1 setup:** 50k train, batch 64, cosine LR, 50 epochs.
-
-At σ_n=0, SpectralCNN beats NNhealpix. At higher noise, the 50k training set is insufficient — a paper-matching run (100k train, ReduceLROnPlateau, batch 32, early stopping) is in progress.
-
-### Test 2: ℓ_Ep / ℓ_Bp from polarization Q/U maps — *pending*
-### Test 3: τ estimation from Q/U maps — *pending*
 
 ## Project Structure
 
 ```
-src/torch_harmonics_healpix/
-├── __init__.py
-├── resample.py              # HEALPix ↔ equiangular resampling
-├── models/
-│   └── spectral_cnn.py      # SpectralCNN with multi-channel I/O
-├── data_generation.py       # Test 1: Gaussian peak power spectra
-├── data_generation_test2.py # Test 2: Q/U polarization + masks
-├── data_generation_test3.py # Test 3: CAMB spectra + τ
-└── mcmc_baseline.py         # χ² MCMC baseline (hp.anafast + minimize_scalar)
-scripts/
-├── train_test1.py           # Training loop for Test 1
-├── train_test2.py           # Training loop for Test 2
-└── train_test3.py           # Training loop for Test 3
-slurm/                       # Slurm submission scripts
-├── run_tests.slurm                  # Expanse GPU: test suite
-├── run_train_test1.slurm            # Expanse GPU: Test 1 training
-└── run_mcmc_benchmark_popeye.slurm  # Popeye CPU: MCMC benchmark
-results/                     # JSON result files
-tests/
-└── test_resample.py         # Unit tests (34 tests, CPU + GPU)
+torch-harmonics-healpix/
+├── src/torch_harmonics_healpix/
+│   ├── __init__.py
+│   ├── healpix_resample.py          # HEALPix ↔ equiangular resampling
+│   ├── data_generation.py           # Test 1: scalar power spectrum maps
+│   ├── data_generation_test2.py     # Test 2: polarization Q/U maps
+│   ├── data_generation_test3.py     # Test 3: CAMB spectra + τ maps
+│   ├── mcmc_baseline.py             # MCMC ℓ_p estimation baseline
+│   └── models/
+│       ├── spectral_cnn.py          # SpectralCNN (fixed ℓ_max)
+│       └── multires_spectral_cnn.py # MultiResSpectralCNN (decreasing ℓ_max)
+├── scripts/
+│   ├── train_test1.py               # v1 training (σ_p=3 bug, 50k maps)
+│   ├── train_test1_v2.py            # v2 paper-matching (σ_p=5, 100k maps)
+│   ├── train_test1_v3.py            # v3 multi-resolution spectral CNN
+│   ├── train_test2_v2.py            # Test 2: polarization ℓ_Ep/ℓ_Bp
+│   └── train_test3_v2.py            # Test 3: τ estimation
+├── slurm/
+│   ├── run_train_test1_v2.slurm     # Expanse GPU, Test 1 v2
+│   ├── run_train_test1_v3.slurm     # Expanse GPU, Test 1 v3
+│   ├── run_train_test2_3_v2.slurm   # Expanse GPU, Tests 2+3
+│   └── run_mcmc_benchmark_popeye.slurm  # Popeye CPU, MCMC
+├── tests/
+│   ├── test_healpix_resample.py
+│   ├── test_spectral_cnn.py
+│   ├── test_data_generation.py
+│   └── test_test2_test3.py
+├── results/
+│   ├── test1_spectralcnn_v1.json    # v1 results (σ_p=3 bug)
+│   ├── test1_spectralcnn_v2.json    # v2 results (paper-matching)
+│   ├── test1_v3_noise{0,5,10,15}.json  # v3 results (multi-res)
+│   └── mcmc_1000maps_popeye.json    # MCMC baseline
+├── ARCHITECTURE.md                  # Detailed architecture comparison
+├── BENCHMARKS.md                    # Full benchmark results + hardware
+├── AGENTS.md                        # Compute policies + Slurm tips
+└── README.md                        # This file
 ```
 
-## Remote Compute
+## The Three Tests
 
-| Platform | Use case | Partition | Access |
-|----------|----------|-----------|--------|
-| **Expanse** (SDSC) | GPU training/testing | `gpu-shared`, account `sds166` | `ssh expanse` |
-| **Popeye** (SDSC) | CPU benchmarks (MCMC, data gen) | `gen` | `ssh popeye` (key auth) |
+### Test 1: ℓ_p from scalar (T) maps
+Estimate the peak multipole ℓ_p of a Gaussian-peaked power spectrum
+from a noisy temperature map. ℓ_p ∈ [5, 20], σ_p=5, HEALPix Nside=16.
 
-Code sync: `git push` from local → `git pull` on remote. **No scp/rsync.**
+### Test 2: ℓ_Ep/ℓ_Bp from polarization (Q/U) maps
+Estimate E-mode and B-mode peak multipoles from Q/U polarization maps
+with varying sky fraction f_sky. 3-channel input: Q, U, mask.
 
-See [AGENTS.md](AGENTS.md) for detailed platform specs, software versions, and Slurm script documentation.
+### Test 3: τ from polarization maps
+Estimate the optical depth to reionization τ from Q/U maps using
+realistic CAMB power spectra. τ ∈ [0.03, 0.08].
 
-## Key Technical Notes
+## Key Innovation
 
-- **`RealSHT`/`InverseRealSHT`**: `lmax` and `mmax` are **dimension sizes** (not max indices). Output is complex.
-- **`hp.synfast()`**: No `seed` kwarg in healpy ≥1.18 — use `np.random.default_rng()` or `np.random.seed()`.
-- **Complex weights**: `SpectralConvBlock` stores `weight_real` and `weight_imag` as separate `nn.Parameter`, combined via `torch.complex`.
-- **PYTHONUNBUFFERED=1**: Required in Slurm for real-time Python output.
+**torch-harmonics provides vector SHT for spin-2 fields** (Q/U → E/B),
+which NNhealpix lacks. For Test 2 (polarization), the SpectralCNN can
+directly operate on E/B modes rather than learning the decomposition
+from pixel patterns.
 
-## References
+## Known Issues
 
-1. Krachmalnicoff & Tomasi (2019), A&A, arXiv:1902.04083
-2. torch-harmonics: https://github.com/PhilChodrow/torch-harmonics
-3. NNhealpix: https://github.com/ai4cmb/NNhealpix
+- v1 training had σ_p=3.0 instead of paper's 5.0 (fixed in v2)
+- SpectralCNN underperforms NNhealpix at high noise (multi-resolution v3 testing)
+- MCMC baseline at σ_n=0 gives 2.3% vs paper's 0.7% (likely minimize_scalar local minima)
+- HEALPix→equiangular resampling uses nearest-neighbor (introduces approximation error)
