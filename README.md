@@ -10,8 +10,8 @@ Reproduces and benchmarks all 3 tests from [Krachmalnicoff & Tomasi (2019)](http
 |-----|---------------|----------------------|-----------|------|
 | 0   | **1.3%**      | 1.5%                  | 1.3%      | 0.7% |
 | 5   | 3.5%          | 3.5%                  | **2.9%**  | 2.5% |
-| 10  | 6.8%          | _running_             | **5.2%**  | 4.8% |
-| 15  | 11.8%         | _pending_             | **8.4%**  | 7.8% |
+| 10  | 6.8%          | 6.7%                  | **5.2%**  | 4.8% |
+| 15  | 11.8%         | 11.3%                 | **8.4%**  | 7.8% |
 
 **Test 2 (Polarization) preliminary:** SpectralCNN at ℓ_Ep≈2.0%, ℓ_Bp≈1.8% — **beats NNhealpix's 2.7%/2.7%!**
 

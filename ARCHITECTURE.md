@@ -212,7 +212,7 @@ separation since it operates naturally in harmonic space.
 | 0 | 1.3% | 0.7% | 1.2% | 1.3% | 1.5% |
 | 5 | 2.9% | 2.5% | 3.0% | 3.5% | 3.5% |
 | 10 | 5.2% | 4.8% | 6.3% | 6.8% | 6.7% |
-| 15 | 8.4% | 7.8% | 11.8% | 11.8% | _running_ |
+| 15 | 8.4% | 7.8% | 11.8% | 11.8% | 11.3% |
 
 ### Key Observations
 
@@ -222,11 +222,12 @@ separation since it operates naturally in harmonic space.
 2. **High noise degradation**: SpectralCNN degrades faster than NNhealpix
    with increasing noise. The gap grows from 0% (σ_n=0) to 3.4% (σ_n=15).
 
-3. **Multi-resolution doesn't help**: v3 (MultiResSpectralCNN) gives identical
-   results to v2 at σ_n=5 (both 3.5%). The decreasing ℓ_max approach does NOT
-   close the gap with NNhealpix. The performance gap is likely due to a
-   fundamental difference between pixel-space local convolution (noise-robust)
-   and global spectral convolution (noise-sensitive), not multi-scale features.
+3. **Multi-resolution doesn't help**: v3 (MultiResSpectralCNN) gives marginal
+   improvement at σ_n=15 (11.3% vs 11.8%) but is identical at σ_n=5 (3.5% vs 3.5%).
+   The decreasing ℓ_max approach does NOT close the gap with NNhealpix.
+   The performance gap is likely due to a fundamental difference between
+   pixel-space local convolution (noise-robust) and global spectral
+   convolution (noise-sensitive), not multi-scale features.
 
 4. **σ_p bug had minimal impact**: v1 (σ_p=3.0) and v2 (σ_p=5.0) give
    similar results at σ_n=15 (both 11.8%).
