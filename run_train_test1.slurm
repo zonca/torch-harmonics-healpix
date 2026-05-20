@@ -25,8 +25,8 @@ UV_LINK_MODE=copy uv venv .venv --python 3.11
 source .venv/bin/activate
 
 echo "=== Installing packages ==="
-uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 2>&1 | tail -1
-uv pip install torch-harmonics 2>&1 | tail -1
+uv pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124 2>&1 | tail -1
+uv pip install torch-harmonics==0.8.0 --no-deps 2>&1 | tail -1
 uv pip install healpy h5py scipy matplotlib pytest pytest-cov 2>&1 | tail -1
 
 echo "=== Copying repo ==="
