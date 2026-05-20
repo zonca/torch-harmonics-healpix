@@ -110,9 +110,13 @@ class SpectralCNN(nn.Module):
         lmax: int = None,
         hidden_channels: int = 32,
         num_blocks: int = 3,
+        in_channels: int = 1,
+        out_channels: int = 1,
     ):
         super().__init__()
         self.nside = nside
+        self.in_channels = in_channels
+        self.out_channels = out_channels
 
         if nlat is None:
             nlat = 2 * nside
@@ -140,7 +144,7 @@ class SpectralCNN(nn.Module):
         self.blocks = nn.ModuleList()
         self.batchnorms = nn.ModuleList()
 
-        in_ch = 1
+        in_ch = in_channels
         for i in range(num_blocks):
             out_ch = hidden_channels
             self.blocks.append(
@@ -157,23 +161,38 @@ class SpectralCNN(nn.Module):
             nn.Linear(hidden_channels, 64),
             nn.ReLU(),
             nn.Dropout(0.2),
-            nn.Linear(64, 1),
+            nn.Linear(64, out_channels),
         )
 
     def forward(self, healpix_map: torch.Tensor) -> torch.Tensor:
-        """Estimate ℓ_p from HEALPix temperature map(s).
+        """Estimate parameter(s) from HEALPix map(s).
 
         Args:
-            healpix_map: [batch, npix] HEALPix map(s) in ring ordering.
+            healpix_map: [batch, npix] or [batch, in_channels, npix]
+                         HEALPix map(s) in ring ordering.
 
         Returns:
-            ell_p_pred: [batch] predicted ℓ_p values.
+            For out_channels=1: [batch] predicted values.
+            For out_channels>1: [batch, out_channels] predicted values.
         """
-        # HEALPix → equiangular [batch, nlat, nlon]
-        x = self.to_equi(healpix_map)
+        # Handle input shape: ensure [batch, channels, npix]
+        if healpix_map.dim() == 2:
+            # Single-channel input: [batch, npix] → [batch, 1, npix]
+            healpix_map = healpix_map.unsqueeze(1)
 
-        # Add channel dimension: [batch, 1, nlat, nlon]
-        x = x.unsqueeze(1)
+        # HEALPix → equiangular for each channel
+        # to_equi expects [batch, npix] → [batch, nlat, nlon]
+        # Apply per-channel then stack
+        if self.in_channels == 1:
+            x = self.to_equi(healpix_map.squeeze(1))  # [batch, nlat, nlon]
+            x = x.unsqueeze(1)  # [batch, 1, nlat, nlon]
+        else:
+            # Multi-channel: resample each channel separately
+            channels = []
+            for c in range(self.in_channels):
+                ch_eq = self.to_equi(healpix_map[:, c, :])  # [batch, nlat, nlon]
+                channels.append(ch_eq)
+            x = torch.stack(channels, dim=1)  # [batch, in_channels, nlat, nlon]
 
         # Spectral convolution blocks with ReLU + BatchNorm
         for i, (block, bn) in enumerate(zip(self.blocks, self.batchnorms)):
@@ -186,6 +205,11 @@ class SpectralCNN(nn.Module):
         # → [batch, channels]
         x = x.mean(dim=(-2, -1))
 
-        # FC head → [batch, 1] → [batch]
-        x = self.fc(x).squeeze(-1)
+        # FC head → [batch, out_channels]
+        x = self.fc(x)
+
+        # For single-output, squeeze last dim
+        if self.out_channels == 1:
+            x = x.squeeze(-1)
+
         return x
