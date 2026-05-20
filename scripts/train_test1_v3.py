@@ -49,7 +49,7 @@ class OnTheFlyDataset(Dataset):
         return self.n_maps
 
     def __getitem__(self, idx):
-        m, _ = generate_map(
+        m = generate_map(
             self.ell_p_true[idx], self.nside, self.lmax, self.sigma_p,
             self.noise_std, self.rng
         )
