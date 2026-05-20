@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=thh-mcmc
 #SBATCH --partition=gen
-#SBATCH --output=~/torch-harmonics-healpix/results/mcmc_benchmark_%j.out
+#SBATCH --output=$HOME/torch-harmonics-healpix/results/mcmc_benchmark_%j.out
 #SBATCH --time=01:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -35,7 +35,7 @@ git pull origin main
 echo "=== Reinstalling package ==="
 pip install -e . --no-deps 2>&1 | tail -1
 
-RESULTS_DIR=~/torch-harmonics-healpix/results
+RESULTS_DIR=$HOME/torch-harmonics-healpix/results
 mkdir -p $RESULTS_DIR
 
 echo "=== Running MCMC benchmark with 1000 test maps ==="
@@ -50,7 +50,7 @@ results = {}
 for noise_std in [0, 5, 10, 15]:
     print(f'\\n=== noise_std = {noise_std} ===')
     np.random.seed(42 + int(noise_std))
-    maps, ell_p_true = generate_dataset(n_maps=1000, noise_std=noise_std, seed_start=0)
+    maps, ell_p_true = generate_dataset(n_maps=1000, noise_std=noise_std, seed=42+int(noise_std))
     t0 = time.time()
     err = evaluate_mcmc_baseline(maps, ell_p_true, noise_std=noise_std)
     t1 = time.time()
