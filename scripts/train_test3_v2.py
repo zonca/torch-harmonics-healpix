@@ -41,7 +41,7 @@ class TauDataset(Dataset):
     """
 
     def __init__(self, n_maps, nside=NSIDE, lmax=LMAX,
-                 noise_std=0.0, f_sky=1.0, seed=42):
+                 noise_std=0.0, f_sky=1.0, seed=42, mask=None):
         self.n_maps = n_maps
         self.nside = nside
         self.lmax = lmax
@@ -60,9 +60,12 @@ class TauDataset(Dataset):
         self.spectrum_indices = self.rng.integers(0, N_CAMB_SPECTRA, size=n_maps)
         self.tau_values = tau_spectra[self.spectrum_indices]
 
-        # Pre-generate sky mask
+        # Use provided mask or generate one (shared mask critical for SpectralCNN)
         from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
-        self.mask = create_sky_mask(f_sky, nside, self.rng).astype(np.float32)
+        if mask is not None:
+            self.mask = mask
+        else:
+            self.mask = create_sky_mask(f_sky, nside, self.rng).astype(np.float32)
 
     def __len__(self):
         return self.n_maps
@@ -111,11 +114,14 @@ def evaluate(model, dataloader, device):
         pred = model(batch_x).cpu()
 
         # Percentage error for comparison
-        tau_pct = (pred - batch_y.squeeze(-1)).abs() / batch_y.squeeze(-1) * 100
+        # Clamp denominator to avoid division by near-zero τ values
+        tau_denom = batch_y.squeeze(-1).abs().clamp(min=0.01)
+        tau_pct = (pred - batch_y.squeeze(-1)).abs() / tau_denom * 100
         tau_errors.extend(tau_pct.tolist())
 
     return {
         "tau_pct_error": np.mean(tau_errors),
+        "tau_median_pct_error": float(np.median(tau_errors)),
     }
 
 
@@ -149,17 +155,25 @@ def main():
 
     # Create datasets
     print("\nGenerating datasets (CAMB spectra needed)...")
+    # Shared mask for train/val/test (critical for SpectralCNN — see train_test2_v2.py)
+    from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
+    shared_rng = np.random.default_rng(0)
+    shared_mask = create_sky_mask(args.f_sky, args.nside, shared_rng).astype(np.float32)
+
     train_dataset = TauDataset(
         args.n_train, args.nside, LMAX,
         args.noise_std, args.f_sky, seed=42,
+        mask=shared_mask,
     )
     val_dataset = TauDataset(
         args.n_val, args.nside, LMAX,
         args.noise_std, args.f_sky, seed=1234,
+        mask=shared_mask,
     )
     test_dataset = TauDataset(
         args.n_test, args.nside, LMAX,
         args.noise_std, args.f_sky, seed=9999,
+        mask=shared_mask,
     )
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size,

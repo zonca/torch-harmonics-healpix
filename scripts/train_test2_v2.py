@@ -38,7 +38,7 @@ class PolarizationDataset(Dataset):
     """On-the-fly Q/U polarization map generation."""
 
     def __init__(self, n_maps, nside=NSIDE, lmax=LMAX, sigma_p=SIGMA_P,
-                 noise_std=0.0, f_sky=1.0, seed=42):
+                 noise_std=0.0, f_sky=1.0, seed=42, mask=None):
         self.n_maps = n_maps
         self.nside = nside
         self.lmax = lmax
@@ -51,8 +51,12 @@ class PolarizationDataset(Dataset):
         self.ell_ep = self.rng.uniform(LEP_MIN, LEP_MAX, size=n_maps).astype(np.float32)
         self.ell_bp = self.rng.uniform(LBP_MIN, LBP_MAX, size=n_maps).astype(np.float32)
 
-        # Pre-generate sky mask (same for all maps)
-        self.mask = create_sky_mask(f_sky, nside, self.rng).astype(np.float32)
+        # Use provided mask or generate one (shared mask is critical for
+        # SpectralCNN generalization — see train_test2_v2.py comments)
+        if mask is not None:
+            self.mask = mask
+        else:
+            self.mask = create_sky_mask(f_sky, nside, self.rng).astype(np.float32)
 
     def __len__(self):
         return self.n_maps
@@ -104,14 +108,22 @@ def evaluate(model, dataloader, device):
         pred = model(batch_x).cpu()
 
         # Percentage errors for E and B separately
-        ep_pct = (pred[:, 0] - batch_y[:, 0]).abs() / batch_y[:, 0] * 100
-        bp_pct = (pred[:, 1] - batch_y[:, 1]).abs() / batch_y[:, 1] * 100
+        # Clamp denominator to avoid division by near-zero true values,
+        # which produces astronomically large % errors for maps with
+        # very small ℓ_Ep or ℓ_Bp. This is especially problematic at
+        # low f_sky where many realizations have near-zero polarization.
+        ep_denom = batch_y[:, 0].abs().clamp(min=1.0)
+        bp_denom = batch_y[:, 1].abs().clamp(min=1.0)
+        ep_pct = (pred[:, 0] - batch_y[:, 0]).abs() / ep_denom * 100
+        bp_pct = (pred[:, 1] - batch_y[:, 1]).abs() / bp_denom * 100
         ep_errors.extend(ep_pct.tolist())
         bp_errors.extend(bp_pct.tolist())
 
     return {
         "ep_pct_error": np.mean(ep_errors),
         "bp_pct_error": np.mean(bp_errors),
+        "ep_median_pct_error": float(np.median(ep_errors)),
+        "bp_median_pct_error": float(np.median(bp_errors)),
     }
 
 
@@ -144,18 +156,29 @@ def main():
     print(f"LR schedule: ReduceLROnPlateau (patience={args.lr_patience}, factor={args.lr_factor})")
     print(f"Early stopping: patience={args.patience}")
 
+    # Create a shared sky mask for all datasets (train/val/test).
+    # This is critical for SpectralCNN because the SHT is a global operation —
+    # the spectral coefficients encode the absolute position of the mask boundary.
+    # If train and test use different mask centers, the model cannot generalize.
+    # The paper (Krachmalnicoff & Tomasi 2019) uses a single fixed mask per f_sky.
+    shared_rng = np.random.default_rng(0)
+    shared_mask = create_sky_mask(args.f_sky, NSIDE, shared_rng).astype(np.float32)
+
     # Create datasets
     train_dataset = PolarizationDataset(
         args.n_train, args.nside, LMAX, SIGMA_P,
         args.noise_std, args.f_sky, seed=42,
+        mask=shared_mask,
     )
     val_dataset = PolarizationDataset(
         args.n_val, args.nside, LMAX, SIGMA_P,
         args.noise_std, args.f_sky, seed=1234,
+        mask=shared_mask,
     )
     test_dataset = PolarizationDataset(
         args.n_test, args.nside, LMAX, SIGMA_P,
         args.noise_std, args.f_sky, seed=9999,
+        mask=shared_mask,
     )
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
