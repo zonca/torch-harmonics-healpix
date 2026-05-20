@@ -164,12 +164,15 @@ def main():
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=0)
 
     # Model: 3 input channels (Q, U, mask), 2 output channels (ℓ_Ep, ℓ_Bp)
+    # Enable inpainting for partial-sky observations to prevent zero-masked
+    # pixels from corrupting the SHT spectral coefficients
     model = SpectralCNN(
         in_channels=3,
         out_channels=2,
         nside=args.nside,
         hidden_channels=args.hidden_channels,
         num_blocks=args.num_blocks,
+        inpaint=(args.f_sky < 1.0),
     ).to(device)
 
     n_params = sum(p.numel() for p in model.parameters())
@@ -249,6 +252,7 @@ def main():
             "ep_pct_error": float(results["ep_pct_error"]),
             "bp_pct_error": float(results["bp_pct_error"]),
             "n_params": int(n_params),
+            "inpaint": True,
         }, f, indent=2)
     print(f"\nResults saved to {args.output}")
 

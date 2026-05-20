@@ -86,12 +86,23 @@ class SpectralConvBlock(nn.Module):
 
 
 class SpectralCNN(nn.Module):
-    """Spectral convolution CNN for scalar HEALPix map parameter estimation.
+    """Spectral convolution CNN for HEALPix map parameter estimation.
 
     Architecture:
         1. HEALPix → equiangular resampling
-        2. Spectral convolution blocks with ReLU and batch norm
-        3. Global average pooling + FC head for regression
+        2. (Optional) Inpainting: replace zero-masked pixels with mean of observed pixels
+        3. Spectral convolution blocks with ReLU and batch norm
+        4. Global average pooling + FC head for regression
+
+    Inpainting is critical for partial-sky (f_sky < 1) observations. The SHT treats
+    all pixels as valid signal, so zero-masked pixels corrupt the spectral coefficients.
+    By replacing masked pixels with the mean of observed pixels (per channel, per map),
+    the SHT receives a smooth, approximately zero-mean field that yields much cleaner
+    spectral coefficients. This is a simple but effective differentiable approximation
+    to a proper masked SHT.
+
+    For multi-channel input (e.g., Q, U, mask), inpainting is applied only to the
+    signal channels (all channels except the last, which is assumed to be the mask).
 
     Args:
         nside: HEALPix Nside (default 16 for Test 1).
@@ -100,6 +111,10 @@ class SpectralCNN(nn.Module):
         lmax: Maximum multipole for SHT. Default: 3*nside-1.
         hidden_channels: Number of channels in hidden layers.
         num_blocks: Number of spectral convolution blocks.
+        in_channels: Number of input channels (1 for T-only, 3 for Q/U+mask).
+        out_channels: Number of output parameters.
+        inpaint: If True, replace zero-masked pixels with observed-pixel mean
+                 before SHT. Recommended for partial-sky (f_sky < 1).
     """
 
     def __init__(
@@ -112,11 +127,13 @@ class SpectralCNN(nn.Module):
         num_blocks: int = 3,
         in_channels: int = 1,
         out_channels: int = 1,
+        inpaint: bool = False,
     ):
         super().__init__()
         self.nside = nside
         self.in_channels = in_channels
         self.out_channels = out_channels
+        self.inpaint = inpaint
 
         if nlat is None:
             nlat = 2 * nside
@@ -164,6 +181,52 @@ class SpectralCNN(nn.Module):
             nn.Linear(64, out_channels),
         )
 
+    def _inpaint_masked_pixels(self, x: torch.Tensor) -> torch.Tensor:
+        """Replace zero-valued pixels with the mean of non-zero pixels.
+
+        For multi-channel input [batch, channels, nlat, nlon], the last channel
+        is assumed to be the mask. Inpainting is applied to all other channels.
+
+        The mask channel is used to identify zero pixels: pixels where the mask
+        channel is zero are considered masked. For single-channel input (no mask
+        channel), all zero-valued pixels are inpainted.
+
+        This is differentiable — the mean computation and conditional replacement
+        both support gradient flow.
+
+        Args:
+            x: [batch, channels, nlat, nlon] equiangular grid.
+
+        Returns:
+            Same shape, with masked pixels replaced by observed-pixel mean.
+        """
+        if self.in_channels == 1:
+            # Single channel: zero pixels are masked
+            # observed_mask: [batch, 1, nlat, nlon] — 1 where observed, 0 where masked
+            observed_mask = (x != 0).float()
+            n_observed = observed_mask.sum(dim=(-2, -1), keepdim=True).clamp(min=1)
+            observed_mean = (x * observed_mask).sum(dim=(-2, -1), keepdim=True) / n_observed
+            x = x * observed_mask + observed_mean * (1 - observed_mask)
+        else:
+            # Multi-channel: last channel is the mask
+            # mask_channel: [batch, 1, nlat, nlon]
+            mask_channel = x[:, -1:, :, :]
+            observed_mask = (mask_channel > 0).float()
+
+            # Inpaint all signal channels (all except the last mask channel)
+            signal_channels = x[:, :-1, :, :]
+            n_observed = observed_mask.sum(dim=(-2, -1), keepdim=True).clamp(min=1)
+
+            # Mean of observed pixels per channel
+            # observed_mask is [batch, 1, nlat, nlon], broadcast over signal channels
+            observed_mean = (signal_channels * observed_mask).sum(dim=(-2, -1), keepdim=True) / n_observed
+            signal_inpainted = signal_channels * observed_mask + observed_mean * (1 - observed_mask)
+
+            # Reassemble: inpainted signal channels + original mask channel
+            x = torch.cat([signal_inpainted, x[:, -1:, :, :]], dim=1)
+
+        return x
+
     def forward(self, healpix_map: torch.Tensor) -> torch.Tensor:
         """Estimate parameter(s) from HEALPix map(s).
 
@@ -193,6 +256,10 @@ class SpectralCNN(nn.Module):
                 ch_eq = self.to_equi(healpix_map[:, c, :])  # [batch, nlat, nlon]
                 channels.append(ch_eq)
             x = torch.stack(channels, dim=1)  # [batch, in_channels, nlat, nlon]
+
+        # Inpaint masked pixels before SHT (if enabled)
+        if self.inpaint:
+            x = self._inpaint_masked_pixels(x)
 
         # Spectral convolution blocks with ReLU + BatchNorm
         for i, (block, bn) in enumerate(zip(self.blocks, self.batchnorms)):
