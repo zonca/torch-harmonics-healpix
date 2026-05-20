@@ -225,14 +225,14 @@ def main():
         import json
         with open(args.output, "w") as f:
             json.dump({
-                "noise_std": args.noise_std,
+                "noise_std": float(args.noise_std),
                 "n_train": args.n_train,
                 "n_test": args.n_test,
                 "epochs": args.epochs,
-                "cnn_pct_error": results["cnn_pct_error"],
-                "mcmc_pct_error": results["mcmc_pct_error"],
-                "mcmc_time_per_map": results["mcmc_time"],
-                "n_params": n_params,
+                "cnn_pct_error": float(results["cnn_pct_error"]),
+                "mcmc_pct_error": float(results["mcmc_pct_error"]),
+                "mcmc_time_per_map": float(results["mcmc_time"]),
+                "n_params": int(n_params),
             }, f, indent=2)
         print(f"\nResults saved to {args.output}")
 

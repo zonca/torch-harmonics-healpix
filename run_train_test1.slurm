@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus=1
-#SBATCH --time=01:00:00
+#SBATCH --time=03:00:00
 #SBATCH --output=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/train_%j.out
 
 set -e
