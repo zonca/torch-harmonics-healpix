@@ -67,7 +67,7 @@ early stopping (patience=20).
 | 0         | 1.3%      | 0.7%        | 2.3%                 | **1.3%**       | 63     |
 | 5         | **2.9%**  | 2.5%        | 2.5%                 | 3.5%           | 72     |
 | 10        | **5.2%**  | 4.8%        | 5.0%                 | 6.8%           | 41     |
-| 15        | **8.4%**  | 7.8%        | 7.7%                 | _running_      | —      |
+| 15        | **8.4%**  | 7.8%        | 7.7%                 | 11.8%          | 48     |
 
 **Analysis:** SpectralCNN matches NNhealpix at σ_n=0 but underperforms at higher noise.
 The spectral convolution architecture captures global frequency content well in the
@@ -138,7 +138,8 @@ v2: 100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
 | Training scripts v2               | ✅ Done   | 100k maps, ReduceLROnPlateau, early stopping       |
 | Slurm scripts                     | ✅ Done   | slurm/ (Expanse GPU + Popeye CPU)                  |
 | Test 1 v1 results                 | ✅ Done   | σ_p=3 bug, saved in results/                       |
-| Test 1 v2 results                 | 🔄 Running| Expanse job 49192871, σ_n=0,5,10 done, 15 running |
+| Test 1 v2 results                 | ✅ Done   | σ_n=0: 1.3%, σ_n=5: 3.5%, σ_n=10: 6.8%, σ_n=15: 11.8% |
+| Test 1 v3 MultiRes results        | 🔄 Running| Expanse job 49220070, σ_n=0: 1.5%, rest in progress     |
 | Test 2 results                    | 🔲 Next   | Scripts ready, Slurm ready                         |
 | Test 3 results                    | 🔲 Planned| Scripts ready, Slurm ready, needs CAMB on Expanse  |
 | Evaluation + comparison plots     | 🔲 Planned| Scatter plots, error bars vs paper                 |

@@ -33,10 +33,9 @@
       "early_stop_epoch": 41
     },
     "noise_15": {
-      "cnn_pct_error": null,
+      "cnn_pct_error": 11.8,
       "mcmc_pct_error_1000maps_popeye": 7.72,
-      "early_stop_epoch": null,
-      "status": "running (Expanse job 49192871)"
+      "early_stop_epoch": 48
     }
   },
   "paper_baselines": {
