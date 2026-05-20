@@ -9,6 +9,7 @@
 #SBATCH --output=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/train_%j.out
 
 set -e
+export PYTHONUNBUFFERED=1
 
 echo "=== Node info ==="
 hostname
