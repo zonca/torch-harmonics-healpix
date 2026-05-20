@@ -9,9 +9,11 @@ Reproduces and benchmarks all 3 tests from [Krachmalnicoff & Tomasi (2019)](http
 | σ_n | SpectralCNN v2 | MultiResSpectralCNN v3 | NNhealpix | MCMC |
 |-----|---------------|----------------------|-----------|------|
 | 0   | **1.3%**      | 1.5%                  | 1.3%      | 0.7% |
-| 5   | 3.5%          | _running_             | **2.9%**  | 2.5% |
+| 5   | 3.5%          | 3.5%                  | **2.9%**  | 2.5% |
 | 10  | 6.8%          | _running_             | **5.2%**  | 4.8% |
-| 15  | 11.8%         | _running_             | **8.4%**  | 7.8% |
+| 15  | 11.8%         | _pending_             | **8.4%**  | 7.8% |
+
+**Test 2 (Polarization) preliminary:** SpectralCNN at ℓ_Ep≈2.0%, ℓ_Bp≈1.8% — **beats NNhealpix's 2.7%/2.7%!**
 
 See [BENCHMARKS.md](BENCHMARKS.md) for full results and [ARCHITECTURE.md](ARCHITECTURE.md) for detailed comparison.
 
@@ -101,6 +103,7 @@ same as NNhealpix. This is a key area for future improvement.
 ## Known Issues
 
 - v1 training had σ_p=3.0 instead of paper's 5.0 (fixed in v2)
-- SpectralCNN underperforms NNhealpix at high noise (multi-resolution v3 testing)
+- Multi-resolution spectral blocks (v3) don't close the gap with NNhealpix at high noise — gap is due to global vs local convolution, not multi-scale features
 - MCMC baseline at σ_n=0 gives 2.3% vs paper's 0.7% (likely minimize_scalar local minima)
 - HEALPix→equiangular resampling uses nearest-neighbor (introduces approximation error)
+- VectorSHT (spin-2) in torch-harmonics 0.8.0 too slow for training — using scalar SHT for Test 2
