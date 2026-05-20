@@ -42,7 +42,7 @@ Model: SpectralCNN with 3 spectral conv blocks, 32 hidden channels, 6.4M paramet
 | Noise σ_n | NNhealpix | MCMC (paper) | MCMC (ours) | SpectralCNN (ours) |
 |-----------|-----------|-------------|-------------|-------------------|
 | 0         | 1.3%      | 0.7%        | 2.7%        | **1.2%**          |
-| 5         | 2.9%      | 2.5%        | 3.1%        | _pending_         |
+| 5         | 2.9%      | 2.5%        | 3.1%        | 3.0%              |
 | 10        | 5.2%      | 4.8%        | 3.5%        | _pending_         |
 | 15        | 8.4%      | 7.8%        | 7.2%        | _pending_         |
 
