@@ -209,10 +209,10 @@ separation since it operates naturally in harmonic space.
 
 | σ_n | NNhealpix | MCMC (paper) | v1 (σ_p=3) | v2 (σ_p=5) | v3 (multi-res) |
 |-----|-----------|-------------|-----------|-----------|----------------|
-| 0   | 1.3%      | 0.7%        | 1.2%      | 1.3%      | 1.5%           |
-| 5   | 2.9%      | 2.5%        | 3.0%      | 3.5%      | _running_      |
-| 10  | 5.2%      | 4.8%        | 6.3%      | 6.8%      | _running_      |
-| 15  | 8.4%      | 7.8%        | 11.8%     | 11.8%     | _running_      |
+| 0 | 1.3% | 0.7% | 1.2% | 1.3% | 1.5% |
+| 5 | 2.9% | 2.5% | 3.0% | 3.5% | 3.5% |
+| 10 | 5.2% | 4.8% | 6.3% | 6.8% | _running_ |
+| 15 | 8.4% | 7.8% | 11.8% | 11.8% | _pending_ |
 
 ### Key Observations
 
@@ -222,16 +222,23 @@ separation since it operates naturally in harmonic space.
 2. **High noise degradation**: SpectralCNN degrades faster than NNhealpix
    with increasing noise. The gap grows from 0% (σ_n=0) to 3.4% (σ_n=15).
 
-3. **σ_p bug had minimal impact**: v1 (σ_p=3.0) and v2 (σ_p=5.0) give
-   similar results at σ_n=15 (both 11.8%), suggesting the σ_p difference
-   is not the main factor.
+3. **Multi-resolution doesn't help**: v3 (MultiResSpectralCNN) gives identical
+   results to v2 at σ_n=5 (both 3.5%). The decreasing ℓ_max approach does NOT
+   close the gap with NNhealpix. The performance gap is likely due to a
+   fundamental difference between pixel-space local convolution (noise-robust)
+   and global spectral convolution (noise-sensitive), not multi-scale features.
 
-4. **Spectral architecture limitation**: The fixed-resolution spectral
-   convolution lacks the multi-scale information that NNhealpix's
-   progressive pooling provides.
+4. **σ_p bug had minimal impact**: v1 (σ_p=3.0) and v2 (σ_p=5.0) give
+   similar results at σ_n=15 (both 11.8%).
 
-5. **v3 hypothesis**: Multi-resolution spectral blocks should close the
-   gap by providing multi-scale feature extraction in harmonic space.
+5. **SpectralCNN excels at polarization**: Test 2 (f_sky=1.0) preliminary
+   results show SpectralCNN at ℓ_Ep≈2.0%, ℓ_Bp≈1.8%, significantly better
+   than NNhealpix's 2.7%/2.7%. The SHT captures global Q/U patterns effectively
+   even without explicit E/B mode separation.
+
+6. **v3 architecture limitation**: The bilinear spatial downsampling between
+   spectral blocks may lose information. Spectral truncation (zeroing high-ℓ
+   coefficients) instead of spatial downsampling could be more appropriate.
 
 ---
 

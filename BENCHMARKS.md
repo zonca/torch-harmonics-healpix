@@ -139,7 +139,8 @@ v2: 100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
 | Slurm scripts                     | ✅ Done   | slurm/ (Expanse GPU + Popeye CPU)                  |
 | Test 1 v1 results                 | ✅ Done   | σ_p=3 bug, saved in results/                       |
 | Test 1 v2 results                 | ✅ Done   | σ_n=0: 1.3%, σ_n=5: 3.5%, σ_n=10: 6.8%, σ_n=15: 11.8% |
-| Test 1 v3 MultiRes results        | 🔄 Running| Expanse job 49220070, σ_n=0: 1.5%, rest in progress     |
+| Test 1 v3 MultiRes results        | 🔄 Running| σ_n=0: 1.5%, σ_n=5: 3.5%, σ_n=10: running, σ_n=15: pending |
+| Test 2 f_sky=1.0                  | 🔄 Running| ℓ_Ep≈2.0%, ℓ_Bp≈1.8% (NNhealpix: 2.7%/2.7%) — **SpectralCNN leads!** |
 | Test 2 results                    | 🔲 Next   | Scripts ready, Slurm ready                         |
 | Test 3 results                    | 🔲 Planned| Scripts ready, Slurm ready, needs CAMB on Expanse  |
 | Evaluation + comparison plots     | 🔲 Planned| Scatter plots, error bars vs paper                 |
