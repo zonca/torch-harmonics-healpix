@@ -1,0 +1,16 @@
+{
+  "version": "v3_multires",
+  "model": "MultiResSpectralCNN",
+  "architecture": "4 blocks, lmax=47->23->11->5, 32 hidden channels",
+  "noise_std": 5.0,
+  "n_train": 100000,
+  "n_val": 10000,
+  "n_test": 1000,
+  "epochs_reached": 52,
+  "batch_size": 32,
+  "lr_schedule": "ReduceLROnPlateau",
+  "cnn_pct_error": 3.496998856493272,
+  "mcmc_pct_error": 104.99740099829869,
+  "mcmc_time_per_map": 0.0015466797351837158,
+  "n_params": 1525665
+}
