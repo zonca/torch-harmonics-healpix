@@ -93,16 +93,25 @@ from polarization Q/U maps, with varying sky fraction f_sky.
 **Setup:** HEALPix N_side=16, spin-2 fields, Q/U+mask stacked as 3 input channels.
 v2: 100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
 
-| f_sky | NNhealpix (ℓ_Ep/ℓ_Bp) | MCMC (paper) | SpectralCNN v2 |
-|-------|----------------------|-------------|----------------|
-| 1.0   | 2.7% / 2.7%          | 0.7% / 0.7% | _pending_      |
-| 0.5   | 3.9% / 3.9%          | —           | _pending_      |
-| 0.2   | 5.3% / 5.3%          | —           | _pending_      |
-| 0.1   | 6.4% / 6.4%          | —           | _pending_      |
-| 0.05  | 8.4% / 8.4%          | —           | _pending_      |
+|| f_sky | NNhealpix (ℓ_Ep/ℓ_Bp) | MCMC (paper) | SpectralCNN v2 (ℓ_Ep/ℓ_Bp) | Epochs | Delta vs NNhealpix |
+|-------|----------------------|-------------|---------------------------|--------|-------------------|
+| 1.0   | 2.7% / 2.7%          | 0.7% / 0.7% | **1.5% / 1.6%**          | 80     | **-44% / -41%**   |
+| 0.5   | 3.9% / 3.9%          | —           | **4.0% / 2.8%**          | 52     | +3% / **-28%**    |
+| 0.2   | 5.3% / 5.3%          | —           | 28.3% / 19.0%            | 41     | ⚠️ much worse     |
+| 0.1   | 6.4% / 6.4%          | —           | 24.1% / 29.4%            | 23     | ⚠️ much worse     |
+| 0.05  | 8.4% / 8.4%          | —           | _running_                | —      | —                 |
 
 **Key advantage:** torch-harmonics has vector SHT for spin-2 fields (E/B separation),
 which NNhealpix lacks — it had to learn E/B from Q/U pixel patterns.
+
+**Key finding:** SpectralCNN excels at f_sky ≥ 0.5 where mask effects are modest,
+but dramatically underperforms at f_sky ≤ 0.2. The likely cause: **the scalar SHT
+treats zero-masked pixels as valid signal**, corrupting spectral coefficients. At
+low f_sky, masked pixels dominate (80-95% of sky), making the SHT output meaningless.
+NNhealpix's pixel-space convolution naturally handles masks because masked pixels
+contribute zero to the convolution — a fundamental advantage for partial-sky analysis.
+The proper fix would require either: (1) masked SHT (inpainting before transform),
+or (2) vector SHT with proper spin-2 handling that accounts for the mask boundary.
 
 ---
 
@@ -138,11 +147,13 @@ v2: 100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
 | Training scripts v2               | ✅ Done   | 100k maps, ReduceLROnPlateau, early stopping       |
 | Slurm scripts                     | ✅ Done   | slurm/ (Expanse GPU + Popeye CPU)                  |
 | Test 1 v1 results                 | ✅ Done   | σ_p=3 bug, saved in results/                       |
-| Test 1 v2 results                 | ✅ Done   | σ_n=0: 1.3%, σ_n=5: 3.5%, σ_n=10: 6.8%, σ_n=15: 11.8% |
-| Test 1 v3 MultiRes results        | 🔄 Running| σ_n=0: 1.5%, σ_n=5: 3.5%, σ_n=10: running, σ_n=15: pending |
-| Test 2 f_sky=1.0                  | 🔄 Running| ℓ_Ep≈2.0%, ℓ_Bp≈1.8% (NNhealpix: 2.7%/2.7%) — **SpectralCNN leads!** |
-| Test 2 results                    | 🔲 Next   | Scripts ready, Slurm ready                         |
-| Test 3 results                    | 🔲 Planned| Scripts ready, Slurm ready, needs CAMB on Expanse  |
+|| Test 1 v2 results                 | ✅ Done   | σ_n=0: 1.3%, σ_n=5: 3.5%, σ_n=10: 6.8%, σ_n=15: 11.8% |
+|| Test 1 v3 MultiRes results        | ✅ Done   | σ_n=0: 1.5%, σ_n=5: 3.5%, σ_n=10: 6.7%, σ_n=15: 11.3% — no improvement |
+|| Test 2 f_sky=1.0                  | ✅ Done   | ℓ_Ep=1.5%, ℓ_Bp=1.6% — **SpectralCNN beats NNhealpix by 43%!** |
+|| Test 2 f_sky=0.5                  | ✅ Done   | ℓ_Ep=4.0%, ℓ_Bp=2.8% — ℓ_Bp 28% better, ℓ_Ep similar |
+|| Test 2 f_sky=0.2, 0.1            | ✅ Done   | ⚠️ Much worse than NNhealpix (28/19% vs 5.3/5.3%) — mask issue? |
+|| Test 2 f_sky=0.05                 | 🔄 Running| Currently training, ~40% error at epoch 9 |
+|| Test 3 results                    | 🔲 Queued | After Test 2 in job 49224438 |
 | Evaluation + comparison plots     | 🔲 Planned| Scatter plots, error bars vs paper                 |
 
 ---
