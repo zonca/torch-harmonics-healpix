@@ -201,6 +201,47 @@ pixel-space Q/U patterns. So both architectures face the same challenge,
 but the spectral approach could theoretically gain more from proper E/B
 separation since it operates naturally in harmonic space.
 
+### Masked Sky (Partial f_sky) Handling — Inpainting
+
+torch-harmonics does NOT support masked SHT (no mask/apodization/window
+parameters). The SHT treats all pixels as valid signal. For partial-sky
+observations (f_sky < 1), masked pixels are set to zero, which creates
+sharp discontinuities that corrupt the spectral coefficients — especially
+at low f_sky where 80–95% of pixels are zeros.
+
+**Our solution: mean inpainting.** Before the SHT, masked (zero-valued)
+pixels are replaced with the per-channel, per-map mean of observed pixels:
+
+```
+x_inpainted = x * mask + μ_obs * (1 - mask)
+where μ_obs = Σ(x * mask) / Σ(mask)
+```
+
+This is:
+- **Differentiable**: The mean computation and pixel replacement both
+  support gradient flow through autograd.
+- **Simple**: ~5 lines of code, no additional parameters.
+- **Effective**: Eliminates the sharp zero-boundary that was corrupting
+  SHT coefficients. The inpainted map has a smooth, approximately
+  constant value in the masked region, which contributes only to the
+  a_00 (monopole) coefficient — easily ignored by the spectral weights.
+
+**Limitations:**
+- Mean inpainting doesn't recover the true spectral content of masked pixels.
+- More sophisticated approaches (e.g., constrained realization inpainting,
+  pseudo-Cl deconvolution, or learned inpainting networks) could perform better.
+- The mask channel is still passed as input so the network can learn to
+  weight observed vs inpainted regions differently.
+
+**Alternative approaches not implemented:**
+1. **Pseudo-Cl deconvolution**: Precompute the ℓ-ℓ' mode-coupling matrix for
+   a fixed mask, then apply a correction layer after SHT. More accurate but
+   requires matrix inversion and is mask-dependent.
+2. **Constrained realization inpainting**: Sample masked pixels from the
+   conditional Gaussian distribution given observed pixels. More accurate
+   but computationally expensive per map.
+3. **Masked SHT**: Would require upstream changes to torch-harmonics.
+
 ---
 
 ## Benchmark Summary (Test 1)
@@ -232,12 +273,17 @@ separation since it operates naturally in harmonic space.
 4. **σ_p bug had minimal impact**: v1 (σ_p=3.0) and v2 (σ_p=5.0) give
    similar results at σ_n=15 (both 11.8%).
 
-5. **SpectralCNN excels at polarization**: Test 2 (f_sky=1.0) preliminary
-   results show SpectralCNN at ℓ_Ep≈2.0%, ℓ_Bp≈1.8%, significantly better
+5. **SpectralCNN excels at polarization (full sky)**: Test 2 (f_sky=1.0) shows
+   SpectralCNN at ℓ_Ep=1.5%, ℓ_Bp=1.6%, significantly better
    than NNhealpix's 2.7%/2.7%. The SHT captures global Q/U patterns effectively
    even without explicit E/B mode separation.
 
-6. **v3 architecture limitation**: The bilinear spatial downsampling between
+6. **Partial-sky challenge (f_sky < 0.2)**: Without inpainting, SpectralCNN
+   dramatically underperforms NNhealpix at low f_sky (28%/19% vs 5.3%/5.3%
+   at f_sky=0.2) because zero-masked pixels corrupt the SHT. Mean inpainting
+   is being tested to address this.
+
+7. **v3 architecture limitation**: The bilinear spatial downsampling between
    spectral blocks may lose information. Spectral truncation (zeroing high-ℓ
    coefficients) instead of spatial downsampling could be more appropriate.
 
