@@ -42,4 +42,4 @@ All Slurm scripts are in `slurm/`:
 - `RealSHT`/`InverseRealSHT`: `lmax` and `mmax` are **dimension sizes**, not max indices. Output is complex.
 - `hp.synfast()` does NOT accept `seed` kwarg in healpy 1.19.0 — use `np.random.seed()` save/restore.
 - Slurm Python scripts: always set `PYTHONUNBUFFERED=1` for real-time output.
-- In Slurm `--output` paths, use `$HOME` not `~` (tilde doesn't expand in SBATCH directives).
+- In Slurm `--output` paths, use absolute paths (e.g. `/expanse/lustre/...`), not `$HOME` or `~` — they don't expand in SBATCH directives.

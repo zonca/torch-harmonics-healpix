@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus=1
 #SBATCH --time=12:00:00
-#SBATCH --output=$HOME/torch-harmonics-healpix/results/train_v2_%j.out
+#SBATCH --output=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/train_v2_%j.out
 
 set -e
 export PYTHONUNBUFFERED=1
@@ -31,7 +31,7 @@ uv pip install torch-harmonics==0.8.0 --no-deps 2>&1 | tail -1
 uv pip install healpy h5py scipy matplotlib 2>&1 | tail -1
 
 echo "=== Copying repo ==="
-REPO_SRC=$HOME/torch-harmonics-healpix
+REPO_SRC=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/repo_latest
 cp -r $REPO_SRC $WORKDIR/repo
 
 echo "=== Installing torch-harmonics-healpix in dev mode ==="
@@ -50,7 +50,7 @@ print(f'numpy: {numpy.__version__}')
 print(f'scipy: {scipy.__version__}')
 "
 
-RESULTS_DIR=$HOME/torch-harmonics-healpix/results
+RESULTS_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results
 mkdir -p $RESULTS_DIR
 
 # Train for each noise level with paper-matching params
