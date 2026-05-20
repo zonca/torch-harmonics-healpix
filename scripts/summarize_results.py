@@ -152,7 +152,13 @@ def main():
   MultiResSpectralCNN (v3): Tests multi-resolution hypothesis
                     Decreasing ℓ_max (47→23→11→5) mimics NNhealpix pooling
                     1.5M params vs 6.4M (more parameter-efficient)
-                    Preliminary: no improvement over v2 at σ_n=5
+                    Complete: no meaningful improvement over v2
+                    σ_n=0: 1.5%, σ_n=5: 3.5%, σ_n=10: 6.7%, σ_n=15: 11.3%
+                    Multi-resolution is NOT the missing ingredient
+
+  SpectralCNN on Polarization: Significantly outperforms NNhealpix!
+                    f_sky=1.0: ℓ_Ep=1.5%, ℓ_Bp=1.6% (NNhealpix: 2.7%/2.7%)
+                    ~43% improvement from global SHT features on Q/U maps
 
   Key limitation: torch-harmonics 0.8.0 VectorSHT (spin-2) is too slow
   for practical training. Both architectures use scalar Q/U processing
