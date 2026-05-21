@@ -41,8 +41,10 @@ def mcmc_estimate_ell_ep_bp(
         (estimated_ℓ_Ep, estimated_ℓ_Bp)
     """
     # Compute polarization power spectra
-    # healpy.anafast on QU maps returns: [TT, EE, BB, TE, EB, TB]
-    cl = hp.anafast([q_map, u_map], lmax=lmax, pol=True)
+    # healpy.anafast with pol=True needs [T, Q, U] (3 maps)
+    # Use zeros for T since we only have polarization
+    t_map = np.zeros_like(q_map)
+    cl = hp.anafast([t_map, q_map, u_map], lmax=lmax, pol=True)
     cl_ee = cl[1]  # EE spectrum
     cl_bb = cl[2]  # BB spectrum
 
@@ -195,7 +197,9 @@ def evaluate_mcmc_test3(
         )
 
         # Compute EE power spectrum
-        cl = hp.anafast([q, u], lmax=lmax, pol=True)
+        # healpy.anafast with pol=True needs [T, Q, U]
+        t_map = np.zeros_like(q)
+        cl = hp.anafast([t_map, q, u], lmax=lmax, pol=True)
         cl_ee_obs = cl[1]
 
         # Find best-fit τ by minimizing chi-squared over template grid
