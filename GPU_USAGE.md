@@ -1,6 +1,6 @@
 # GPU Usage & Model Parameters
 
-## GPU Usage Tally (Expanse, V100-SMX2-32GB, gpu-shared partition)
+## GPU Usage Tally (Expanse, V100-SXM2-32GB, gpu-shared partition)
 
 | Category | Jobs | GPU-hours | Notes |
 |----------|------|-----------|-------|
@@ -11,8 +11,9 @@
 | T1 v3 Training | 3 | 4.21 | MultiResSpectralCNN (ablation) ✅ |
 | T2/T3 No-inpaint | 1 | 8.18 | ❌ Different masks per dataset (bug) |
 | T2/T3 Inpaint (bug) | 1 | 13.75 | ❌ Shared mask not fixed yet |
-| T2/T3 Full fix re-run | 1 | 5.83+ | ✅ Running (job 49283390) |
-| **TOTAL** | **30** | **39.35+** | |
+| T2/T3 Full fix re-run | 1 | 24.00 | ✅ Timed out but Test 1+2 complete |
+| Test 3 only | 1 | ~8.00 | ✅ Test 3 complete (3.76%) |
+| **TOTAL** | **31** | **~65.5** | |
 
 ### Wasted GPU Time
 
@@ -20,26 +21,20 @@
 |-----|-------|--------|
 | T2/T3 No-inpaint (49224438) | 8.18 | Different masks per dataset — test eval meaningless |
 | T2/T3 Inpaint (49229707) | 13.75 | Same mask bug + CAMB error; cancelled after 13.75h |
-| **Total wasted** | **21.93** | ~56% of total GPU time |
+| **Total wasted** | **21.93** | ~33% of total GPU time |
 
-### Estimated Final Total
-
-- Current: 39.35h (with job 49283390 at 5.83h and running)
-- Job 49283390 estimated total: ~20h
-- **Estimated final total: ~53-54 GPU-hours**
-- **Productive GPU-hours: ~31-32** (excluding wasted)
+### Productive GPU Time: ~43.5 hours
 
 ## Popeye CPU Usage
 
 | Job | Purpose | Walltime | Status |
 |-----|---------|----------|--------|
-| 2426199 | MCMC Test 1 only (first attempt) | ~2 min | ✅ Done |
 | 2426200 | MCMC Tests 1+2+3 (all) | ~10 min | ✅ Done |
 
 ## Model Parameters
 
-| Architecture | Test 1 | Test 2 | Notes |
-|-------------|--------|--------|-------|
+| Architecture | Test 1 | Test 2/3 | Notes |
+|-------------|--------|----------|-------|
 | **SpectralCNN v2** | 6,454,529 | 9,829,634 | 3 spectral blocks, 32 channels |
 | **MultiResSpectralCNN v3** | 1,545,601 | — | Multi-resolution ablation |
 | **NNhealpix** (paper) | ~80,000 | ~240,000 | Pixel-space CNN, O(filter²) |
@@ -51,7 +46,7 @@ SpectralCNN parameters scale as O(ℓ_max² × n_channels²) per layer because s
 weights are full (ℓ, m) matrices. NNhealpix scales as O(filter_size² × n_channels²).
 This gives SpectralCNN a **40-80× parameter overhead** over NNhealpix.
 
-Despite this, SpectralCNN excels at full-sky polarization (Test 2 f_sky=1.0:
-1.5%/1.6% vs 2.7%/2.7%) but struggles with noise (Test 1 σ≥5) and partial sky
-without inpainting. The spectral representation provides a strong prior for
-clean, full-sky data but is sensitive to artifacts that corrupt high-ℓ modes.
+Despite this overhead, SpectralCNN dominates for polarization estimation (Tests 2 & 3)
+where the spectral prior is physically well-motivated. For noisy scalar maps (Test 1),
+the extra parameters provide no advantage — pixel-space convolution is inherently
+more noise-robust.
