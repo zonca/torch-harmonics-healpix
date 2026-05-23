@@ -128,7 +128,7 @@ other cosmological parameters fixed to Planck best-fit.
 | Method         | Mean % error |
 |----------------|-------------|
 | MCMC (paper)   | **2.8%**    |
-| SpectralCNN v2 | **3.76%**   |
+| SpectralCNN | **3.6%** |
 | NNhealpix      | 4.0%        |
 | MCMC (ours)    | 19.3%       |
 

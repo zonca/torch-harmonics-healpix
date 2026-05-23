@@ -21,7 +21,7 @@ Reproduces and benchmarks all 3 tests from [Krachmalnicoff & Tomasi (2019)](http
 | Method | τ % error |
 |--------|----------|
 | MCMC (paper) | **2.8%** |
-| SpectralCNN | **3.76%** |
+| SpectralCNN | **3.6%** |
 | NNhealpix | 4.0% |
 
 ### Test 1 (Scalar maps) — NNhealpix better at high noise
@@ -48,7 +48,7 @@ Trained model weights are available on Hugging Face:
 |-------|------|------|------|-------|------------|------|
 | SpectralCNN T1 | `models/test1_v2_fix_noise0.pt` | 1 (σ=0) | ℓ_peak from T map | 1.27% | 6.4M | 25MB |
 | SpectralCNN T2 | `models/test2_v2_fix_fsky1.0.pt` | 2 (f_sky=1.0) | ℓ_Ep/ℓ_Bp from Q/U | 1.69%/1.53% | 9.8M | 38MB |
-| SpectralCNN T3 | `models/test3_v2_fix.pt` | 3 (full sky) | τ from Q/U | 3.76% | 9.8M | ~38MB |
+| SpectralCNN T3 | `models/test3_v2_fix.pt` | 3 (full sky) | τ from Q/U | 3.6% | 9.8M | ~38MB |
 
 ### Downloading Weights
 
