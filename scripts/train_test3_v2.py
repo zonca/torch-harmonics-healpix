@@ -75,6 +75,7 @@ class TauDataset(Dataset):
         return self.n_maps
 
     def __getitem__(self, idx):
+        """Generate and return a single (QUMap, [τ]) pair on-the-fly."""
         spec_idx = self.spectrum_indices[idx]
         q, u, mask = generate_tau_map(
             self.tau_values[idx],
@@ -91,6 +92,7 @@ class TauDataset(Dataset):
 
 
 def train_one_epoch(model, dataloader, optimizer, device):
+    """Train model for one epoch. Returns mean loss."""
     model.train()
     total_loss = 0
     n_batches = 0
@@ -111,6 +113,7 @@ def train_one_epoch(model, dataloader, optimizer, device):
 
 @torch.no_grad()
 def evaluate(model, dataloader, device):
+    """Evaluate τ estimation. Returns dict with tau_pct_error."""
     model.eval()
     tau_errors = []
     for batch_x, batch_y in dataloader:

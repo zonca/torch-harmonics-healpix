@@ -24,7 +24,12 @@ NOISE_LEVELS = [0, 5, 10, 15]
 
 
 def run_benchmark(n_test=N_TEST, seed=42):
-    """Run MCMC baseline for all noise levels."""
+    """Run MCMC baseline for all noise levels.
+
+    Args:
+        n_test (int): Number of test maps per noise level.
+        seed (int): Random seed for reproducibility.
+    """
     rng = np.random.default_rng(seed)
 
     print(f"MCMC Baseline Benchmark (n_test={n_test})")

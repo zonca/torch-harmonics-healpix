@@ -69,6 +69,7 @@ class OnTheFlyDataset(Dataset):
         return self.n_maps
 
     def __getitem__(self, idx):
+        """Return a single (map, target) pair from pre-cached data."""
         if self._cached_maps is not None:
             m = self._cached_maps[idx]
         else:
@@ -80,6 +81,7 @@ class OnTheFlyDataset(Dataset):
 
 
 def train_one_epoch(model, dataloader, optimizer, device):
+    """Train model for one epoch. Returns mean loss."""
     model.train()
     total_loss = 0
     n_batches = 0
@@ -100,6 +102,7 @@ def train_one_epoch(model, dataloader, optimizer, device):
 
 @torch.no_grad()
 def evaluate(model, dataloader, device):
+    """Evaluate model on dataset. Returns mean % error."""
     model.eval()
     pct_errors = []
     for batch_x, batch_y in dataloader:

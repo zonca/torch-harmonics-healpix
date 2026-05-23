@@ -21,7 +21,21 @@ from ..healpix_resample import HealpixToEquiangular
 
 
 class SpectralConvBlock(nn.Module):
-    """Spectral convolution block: SHT → learned weights → ISHT."""
+    """Spectral convolution block: SHT → learned weights → ISHT.
+
+    Implements spectral convolution as:
+    1. Forward SHT: spatial → harmonic coefficients (a_lm)
+    2. Multiply by learned weights per (l, m) channel
+    3. Inverse SHT: harmonic → spatial
+
+    This is rotation-equivariant by construction.
+
+    Args:
+        forward_transform: RealSHT instance.
+        inverse_transform: InverseRealSHT instance.
+        in_channels: Number of input channels.
+        out_channels: Number of output channels.
+    """
 
     def __init__(
         self,
@@ -34,6 +48,9 @@ class SpectralConvBlock(nn.Module):
         self.forward_transform = forward_transform
         self.inverse_transform = inverse_transform
 
+        # Spectral weights: [out_channels, in_channels, lmax, mmax]
+        # torch-harmonics RealSHT output shape is (lmax, mmax), NOT (lmax+1, mmax+1)
+        # Coefficients are complex, so weights must be complex too
         lmax = forward_transform.lmax
         mmax = forward_transform.mmax
         self.weight_real = nn.Parameter(
@@ -46,9 +63,27 @@ class SpectralConvBlock(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply spectral convolution.
+
+        Args:
+            x: [batch, in_channels, nlat, nlon]
+
+        Returns:
+            [batch, out_channels, nlat, nlon]
+        """
+        # SHT forward: [batch, in_channels, nlat, nlon] -> complex [batch, in_channels, lmax, mmax]
         coeff = self.forward_transform(x)
+
+        # Build complex weight from real and imaginary parts
         weight = torch.complex(self.weight_real, self.weight_imag)
+
+        # Spectral convolution: multiply by learned complex weights
+        # coeff: [B, C_in, L, M] (complex)
+        # weight: [C_out, C_in, L, M] (complex)
+        # output: [B, C_out, L, M] (complex)
         coeff_out = torch.einsum("bilm,oilm->bolm", coeff, weight)
+
+        # ISHT inverse: complex [batch, out_channels, L, M] -> [batch, out_channels, nlat, nlon]
         out = self.inverse_transform(coeff_out)
         return out
 
@@ -94,6 +129,8 @@ class MultiResSpectralCNN(nn.Module):
             # Default: progressively halve ℓ_max
             lmax_ratios = [1.0 / (2 ** i) for i in range(num_blocks)]
 
+        # Each block i uses lmax_ratios[i] to scale the base ℓ_max, so we need
+        # at least num_blocks entries. Fewer entries would cause an IndexError later.
         assert len(lmax_ratios) >= num_blocks, \
             f"Need at least {num_blocks} lmax_ratios, got {len(lmax_ratios)}"
 
@@ -112,13 +149,19 @@ class MultiResSpectralCNN(nn.Module):
         prev_nlon = nlon_base
 
         for i in range(num_blocks):
-            # Compute resolution for this block
+            # Compute spectral/spatial resolution for this block.
+            # lmax is scaled down by lmax_ratios[i] relative to lmax_base,
+            # so later blocks see progressively larger angular scales.
+            # The floor of 4 ensures we always have at least l=0..3 modes.
             block_lmax = max(int(lmax_base * lmax_ratios[i]), 4)
+            # nlat must be >= lmax+1 to avoid aliasing; floor of 4 for stability.
             block_nlat = max(block_lmax + 1, 4)
             block_nlon = 2 * block_nlat
             block_mmax = min(block_lmax, block_nlon // 2 + 1)
 
-            # Create SHT/ISHT for this resolution
+            # Create SHT/ISHT for this block's resolution.
+            # Each block has its own transform pair, unlike SpectralCNN
+            # which shares a single pair across all blocks.
             sht = RealSHT(block_nlat, block_nlon, lmax=block_lmax, mmax=block_mmax, grid="equiangular")
             isht = InverseRealSHT(block_nlat, block_nlon, lmax=block_lmax, mmax=block_mmax, grid="equiangular")
 
@@ -126,13 +169,22 @@ class MultiResSpectralCNN(nn.Module):
             self.blocks.append(SpectralConvBlock(sht, isht, in_ch, out_ch))
             self.batchnorms.append(nn.BatchNorm2d(out_ch))
 
-            # Downsampler: interpolate from previous spatial resolution to this block's
+            # Downsampler: spatially interpolate the feature map from the
+            # previous block's grid to this block's (smaller) grid.
+            # nn.Upsample with mode='bilinear' is used as a resample/resize
+            # operation — despite the name, it supports both up- and
+            # down-sampling when an explicit `size` is given.
             if i > 0:
+                # Intermediate blocks: always downsample from previous block's
+                # (nlat, nlon) to this block's (block_nlat, block_nlon).
                 self.downsamplers.append(
                     nn.Upsample(size=(block_nlat, block_nlon), mode='bilinear', align_corners=False)
                 )
             else:
-                # First block: need to downsample from base to block_0 resolution
+                # First block: downsample from the base equiangular grid
+                # (nlat_base, nlon_base) to block_0's grid, but only if
+                # they differ (i.e., lmax_ratios[0] < 1.0).  When they
+                # match, no resampling is needed and we store None.
                 if block_nlat != nlat_base or block_nlon != nlon_base:
                     self.downsamplers.append(
                         nn.Upsample(size=(block_nlat, block_nlon), mode='bilinear', align_corners=False)

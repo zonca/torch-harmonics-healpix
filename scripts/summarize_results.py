@@ -25,6 +25,7 @@ def load_json(path):
 
 
 def main():
+    """Load all result JSONs and print summary comparison tables."""
     parser = argparse.ArgumentParser(description="Summarize benchmark results")
     parser.add_argument("--results_dir", default="results",
                         help="Directory containing result JSON files")

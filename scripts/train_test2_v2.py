@@ -62,6 +62,7 @@ class PolarizationDataset(Dataset):
         return self.n_maps
 
     def __getitem__(self, idx):
+        """Generate and return a single (QUMap, [ℓ_Ep, ℓ_Bp]) pair on-the-fly."""
         q, u = generate_polarization_map(
             self.ell_ep[idx], self.ell_bp[idx],
             self.nside, self.lmax, self.sigma_p,
@@ -80,6 +81,7 @@ class PolarizationDataset(Dataset):
 
 
 def train_one_epoch(model, dataloader, optimizer, device):
+    """Train model for one epoch. Returns mean loss."""
     model.train()
     total_loss = 0
     n_batches = 0
@@ -100,6 +102,7 @@ def train_one_epoch(model, dataloader, optimizer, device):
 
 @torch.no_grad()
 def evaluate(model, dataloader, device):
+    """Evaluate polarization estimation. Returns dict with ep_pct_error, bp_pct_error."""
     model.eval()
     ep_errors = []
     bp_errors = []

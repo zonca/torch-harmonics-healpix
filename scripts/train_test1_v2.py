@@ -52,6 +52,7 @@ class OnTheFlyDataset(Dataset):
         return self.n_maps
 
     def __getitem__(self, idx):
+        """Generate and return a single (map, target) pair on-the-fly."""
         # Random ℓ_p in [5, 20]
         ell_p = self.rng.uniform(5.0, 20.0)
         m = generate_map(
@@ -62,6 +63,7 @@ class OnTheFlyDataset(Dataset):
 
 
 def train_one_epoch(model, dataloader, optimizer, criterion, device):
+    """Train model for one epoch. Returns mean loss."""
     model.train()
     total_loss = 0.0
     n_batches = 0
