@@ -14,9 +14,9 @@ for parameter estimation from spherical CMB maps, as implemented in this project
 | Equivariance | None (learned) | Rotation-equivariant (by construction) | Rotation-equivariant |
 | Input grid | HEALPix ring-order | Equiangular (via resampling) | Equiangular (via resampling) |
 | Key operation | Pixel convolution + pooling | Spectral convolution (SHT → weights → ISHT) | Multi-resolution spectral convolution |
-| Parameters | ~80k (Test 1) | 6.4M (3 blocks, 32 channels) | 1.5M (4 blocks, 32 channels) |
+| Parameters | ~80k (Test 1), ~240k (Test 2/3) | 6.4M (T1), 9.8M (T2/3) | 1.5M (T1 only) |
 | Multi-scale | Yes (Nside pooling) | No (fixed ℓ_max) | Yes (decreasing ℓ_max) |
-| Spin-weighted SHT | No | Yes (via torch-harmonics) | Yes (via torch-harmonics) |
+| Spin-weighted SHT | No | Yes (via torch-harmonics, but too slow) | Yes (via torch-harmonics, but too slow) |
 | Mask handling | Natural (zero pixels → zero contribution) | Inpainting before SHT | Inpainting before SHT |
 
 ---
@@ -46,6 +46,7 @@ Input: HEALPix map (N_side=16, 3072 pixels)
 - Multi-scale pooling naturally captures angular scale information
 - Compact model trains quickly
 - Pixel-space features are robust to noise (local correlations)
+- Masked pixels contribute zero to convolution — natural mask handling
 - Proven benchmarks on all 3 tests from the paper
 
 ### Weaknesses
@@ -62,6 +63,7 @@ Input: HEALPix map (N_side=16, 3072 pixels)
 ```
 Input: HEALPix map (N_side=16, 3072 pixels)
   → HealpixToEquiangular (nearest-neighbor resampling)
+  → [Inpainting: replace masked pixels with observed-pixel mean]  (f_sky < 1.0)
   → SpectralConvBlock1: SHT(ℓ_max=47) → learned weights → ISHT + BN + ReLU
   → SpectralConvBlock2: SHT(ℓ_max=47) → learned weights → ISHT + BN + ReLU
   → SpectralConvBlock3: SHT(ℓ_max=47) → learned weights → ISHT + BN
@@ -73,21 +75,26 @@ Input: HEALPix map (N_side=16, 3072 pixels)
 - **Rotation equivariance**: Spectral weights commute with rotations by construction
 - **Fixed resolution**: All blocks use same ℓ_max=47 (3×Nside-1)
 - **Complex weights**: Real and imaginary parts learned separately for a_ℓm
-- **Larger model**: 6.4M parameters (spectral weights are dense: [C_out, C_in, ℓ_max, m_max])
+- **Larger model**: 6.4M parameters (Test 1), 9.8M (Test 2/3)
+- **Inpainting**: Differentiable mean replacement of masked pixels before SHT
 
 ### Strengths
 - Rotation equivariance (no data augmentation needed)
-- Native E/B mode separation for spin-2 fields (Q/U maps)
+- Native E/B mode separation for spin-2 fields (Q/U maps) — when VectorSHT is fast enough
 - Grid-independent (could work with any sampling that supports SHT)
-- Matches NNhealpix at zero noise
+- **Dominates for polarization estimation** (Tests 2 & 3) — +37-64% better than NNhealpix
+- Matches NNhealpix at zero noise (Test 1, σ=0)
 
 ### Weaknesses
 - **No multi-scale**: All blocks at same ℓ_max — no progressive scale extraction
 - **Over-parameterized**: 6.4M vs 80k — spectral weights grow as O(ℓ_max²)
-- **Underperforms at high noise**: Pixel-space features are more noise-robust
+- **Underperforms at high noise** (Test 1): SHT spreads noise across all modes
 - **Resampling overhead**: HEALPix→equiangular conversion adds cost
+- **Inpainting required**: Masked pixels must be handled explicitly (unlike pixel-space)
 
-### Inpainting for Partial-Sky Observations
+---
+
+## Inpainting for Partial-Sky Observations
 
 The SHT is a **global** transform — it operates on every pixel. When the sky
 is partially observed (f_sky < 1), masked pixels set to zero are treated as
@@ -106,75 +113,82 @@ This is:
 - **Differentiable** — the mean computation and conditional replacement
   support gradient flow through autograd
 - **Simple** — ~10 lines of code, no extra parameters
-- **Effective** — replaces the sharp zero→signal discontinuity at the mask
-  boundary with a smooth (approximately) zero-mean field, yielding much
-  cleaner spectral coefficients
-- **Architecturally agnostic** — works for both SpectralCNN and
-  MultiResSpectralCNN
+- **Effective** — eliminates the sharp zero→signal discontinuity at mask boundary
 
-**Limitations:**
-- The observed-pixel mean is a crude inpainting — it doesn't preserve the
-  angular power spectrum of the true (unmasked) signal
-- At very low f_sky (≤ 0.05), even the mean may not be representative
-- A learned inpainting network or iterative spectral inpainting (e.g.,
-  MRA/PR method) could perform better but adds complexity
+**Critical: Shared Mask**
+All datasets (train/val/test) must use the **exact same mask** (same center, same shape).
+The SHT is a global operation — spectral coefficients encode the absolute position
+of the mask boundary. With different masks per split, the model learns
+mask-position-specific features that don't generalize. This was our main bug:
+with random masks per split, f_sky=0.2 gave 4% val error but 17.7% test error.
+With a shared mask, both converged to ~2.2%.
 
 **NNhealpix comparison:** NNhealpix's pixel-space convolution naturally
 handles masks because masked pixels contribute zero to the convolution
-kernel — no inpainting needed. This is a fundamental advantage of
-pixel-space architectures for partial-sky analysis.
-
-### Performance (Test 1, σ_p=5.0)
-
-| σ_n | SpectralCNN | NNhealpix | Gap |
-|-----|------------|-----------|-----|
-| 0   | **1.3%**   | 1.3%      | 0.0% |
-| 5   | 3.5%       | **2.9%**  | +0.6% |
-| 10  | 6.8%       | **5.2%**  | +1.6% |
-| 15  | 11.8%      | **8.4%**  | +3.4% |
-
-The gap grows with noise, suggesting the spectral architecture is less robust
-to noise contamination.
+kernel — no inpainting needed, and random masks work fine because the
+convolution is local.
 
 ---
 
-## MultiResSpectralCNN Architecture (v3)
+## Performance Summary
 
-### Structure
-```
-Input: HEALPix map (N_side=16, 3072 pixels)
-  → HealpixToEquiangular (nearest-neighbor resampling)
-  → Block 1: Downsample → SHT(ℓ_max=47) → weights → ISHT + BN + ReLU
-  → Block 2: Downsample → SHT(ℓ_max=23) → weights → ISHT + BN + ReLU
-  → Block 3: Downsample → SHT(ℓ_max=11) → weights → ISHT + BN + ReLU
-  → Block 4: Downsample → SHT(ℓ_max=5)  → weights → ISHT + BN
-  → Global Average Pooling → FC(32→48→1)
-```
+### Test 1: ℓ_peak from T maps
 
-### Key Features
-- **Multi-resolution spectral**: Decreasing ℓ_max per block mimics NNhealpix's
-  Nside pooling in harmonic space
-- **Progressive scale extraction**: Block 1 captures small-scale (high-ℓ) features,
-  Block 4 captures large-scale (low-ℓ) features
-- **More parameter-efficient**: 1.5M params (lower ℓ_max → smaller spectral weights)
-- **Spatial downsampling**: Bilinear interpolation between blocks reduces spatial
-  grid to match each block's ℓ_max
+| σ_n | SpectralCNN | NNhealpix | Gap |
+|-----|------------|-----------|-----|
+| 0   | **1.27%**  | 1.3%      | -0.03% (tied) |
+| 5   | 3.58%      | **2.9%**  | +0.68% |
+| 10  | 6.81%      | **5.2%**  | +1.61% |
+| 15  | 11.98%     | **8.4%**  | +3.58% |
 
-### Rationale
-NNhealpix's success at high noise may stem from its multi-resolution architecture,
-which explicitly extracts features at different angular scales. By adding
-progressive ℓ_max reduction to SpectralCNN, we test whether multi-scale
-information is the key factor.
+SpectralCNN matches at σ=0 but degrades with noise. The SHT spreads noise
+across all spectral modes, while pixel-space convolution provides implicit
+low-pass filtering.
 
-### Expected Benefits
-- Better noise robustness (low-ℓ blocks less affected by noise)
-- More parameter-efficient (lower ℓ_max → O(ℓ²) weight savings)
-- Maintains rotation equivariance
+### Test 2: ℓ_Ep/ℓ_Bp from Q/U maps — SpectralCNN DOMINATES
 
-### Open Questions
-- Is bilinear downsampling between blocks appropriate for equiangular grids?
-- Should spectral truncation be used instead (just zero-pad high-ℓ coefficients)?
-- What is the optimal ℓ_max schedule?
+| f_sky | SpectralCNN | NNhealpix | Δ |
+|-------|------------|-----------|---|
+| 1.0   | **1.69%/1.53%** | 2.7%/2.7% | -37%/-43% |
+| 0.5   | **1.95%/1.91%** | 3.9%/3.9% | -50%/-51% |
+| 0.2   | **2.15%/2.17%** | 5.3%/5.3% | -59%/-59% |
+| 0.1   | **2.56%/2.70%** | 6.4%/6.4% | -60%/-58% |
+| 0.05  | **3.01%/3.11%** | 8.4%/8.4% | -64%/-63% |
+
+The advantage **increases** with smaller f_sky. The spectral representation's
+global context is overwhelmingly beneficial for partial-sky polarization.
+
+### Test 3: τ estimation
+
+| Method | τ % error |
+|--------|----------|
+| MCMC (paper) | **2.8%** |
+| SpectralCNN | **3.76%** |
+| NNhealpix | 4.0% |
+
+SpectralCNN beats NNhealpix by ~6%.
+
+### Key Observations
+
+1. **Polarization is the sweet spot**: SpectralCNN dominates for Q/U-based estimation
+   (Tests 2 & 3), even without proper spin-2 SHT. The spectral prior captures
+   global E/B polarization structure that pixel-space methods must learn from scratch.
+
+2. **Noise sensitivity is the weakness**: SpectralCNN underperforms for noisy scalar
+   maps (Test 1). The SHT is a global transform — noisy pixels contaminate all
+   spectral coefficients.
+
+3. **Shared mask is critical**: Different masks for train/test caused a 4× error
+   increase at f_sky=0.2 (4% → 17.7%). This is specific to global transforms —
+   NNhealpix doesn't have this issue.
+
+4. **Multi-resolution doesn't help**: v3 (MultiResSpectralCNN) gave marginal
+   improvement at σ_n=15 (11.3% vs 11.8%) but identical at σ_n=5.
+   The noise gap is fundamental to global vs local operations, not multi-scale.
+
+5. **Parameter overhead is large but justified**: SpectralCNN uses 40-80× more
+   parameters than NNhealpix. For polarization tasks, the extra capacity is
+   well-utilized. For noisy scalar tasks, it's wasted.
 
 ---
 
@@ -206,11 +220,6 @@ using nearest-neighbor interpolation:
 HEALPix (3072 pixels) → Equiangular (32×64 grid, nlat=2×Nside, nlon=4×Nside)
 ```
 
-This introduces:
-- **Approximation error**: Nearest-neighbor is not band-limited
-- **Aliasing**: High-ℓ power leaks to lower modes
-- **Cost**: O(N_pix) per resampling, negligible vs SHT
-
 For Nside=16 (ℓ_max=47), the equiangular grid has sufficient resolution
 to avoid significant aliasing.
 
@@ -228,102 +237,39 @@ This naturally separates E-mode and B-mode power:
 - B-mode: toroidal component (coeffs[:, 1, :, :])
 
 **However**, in torch-harmonics 0.8.0, the Vector SHT implementation is
-extremely slow (even at nlat=8, initialization takes >30s). This appears
-to be an optimization issue in the Legendre polynomial precomputation for
-spin-weighted harmonics. As a result, **our current implementation uses
-scalar SHT with Q/U stacked as independent channels**, which does NOT
-separate E/B modes. This is a significant limitation for Test 2 (polarization).
-
-NNhealpix also lacks spin-weighted SHT and must learn E/B separation from
-pixel-space Q/U patterns. So both architectures face the same challenge,
-but the spectral approach could theoretically gain more from proper E/B
-separation since it operates naturally in harmonic space.
-
-### Masked Sky (Partial f_sky) Handling — Inpainting
-
-torch-harmonics does NOT support masked SHT (no mask/apodization/window
-parameters). The SHT treats all pixels as valid signal. For partial-sky
-observations (f_sky < 1), masked pixels are set to zero, which creates
-sharp discontinuities that corrupt the spectral coefficients — especially
-at low f_sky where 80–95% of pixels are zeros.
-
-**Our solution: mean inpainting.** Before the SHT, masked (zero-valued)
-pixels are replaced with the per-channel, per-map mean of observed pixels:
-
-```
-x_inpainted = x * mask + μ_obs * (1 - mask)
-where μ_obs = Σ(x * mask) / Σ(mask)
-```
-
-This is:
-- **Differentiable**: The mean computation and pixel replacement both
-  support gradient flow through autograd.
-- **Simple**: ~5 lines of code, no additional parameters.
-- **Effective**: Eliminates the sharp zero-boundary that was corrupting
-  SHT coefficients. The inpainted map has a smooth, approximately
-  constant value in the masked region, which contributes only to the
-  a_00 (monopole) coefficient — easily ignored by the spectral weights.
-
-**Limitations:**
-- Mean inpainting doesn't recover the true spectral content of masked pixels.
-- More sophisticated approaches (e.g., constrained realization inpainting,
-  pseudo-Cl deconvolution, or learned inpainting networks) could perform better.
-- The mask channel is still passed as input so the network can learn to
-  weight observed vs inpainted regions differently.
-
-**Alternative approaches not implemented:**
-1. **Pseudo-Cl deconvolution**: Precompute the ℓ-ℓ' mode-coupling matrix for
-   a fixed mask, then apply a correction layer after SHT. More accurate but
-   requires matrix inversion and is mask-dependent.
-2. **Constrained realization inpainting**: Sample masked pixels from the
-   conditional Gaussian distribution given observed pixels. More accurate
-   but computationally expensive per map.
-3. **Masked SHT**: Would require upstream changes to torch-harmonics.
+extremely slow. Our current implementation uses scalar SHT with Q/U stacked
+as independent channels, which does NOT separate E/B modes. Despite this,
+SpectralCNN still outperforms NNhealpix on polarization tasks — suggesting
+that even scalar SHT provides a useful global spectral prior for Q/U data.
 
 ---
 
-## Benchmark Summary (Test 1)
+## MultiResSpectralCNN Architecture (v3) — Ablation
 
-### All Variants
+### Structure
+```
+Input: HEALPix map (N_side=16, 3072 pixels)
+  → HealpixToEquiangular (nearest-neighbor resampling)
+  → Block 1: Downsample → SHT(ℓ_max=47) → weights → ISHT + BN + ReLU
+  → Block 2: Downsample → SHT(ℓ_max=23) → weights → ISHT + BN + ReLU
+  → Block 3: Downsample → SHT(ℓ_max=11) → weights → ISHT + BN + ReLU
+  → Block 4: Downsample → SHT(ℓ_max=5)  → weights → ISHT + BN
+  → Global Average Pooling → FC(32→48→1)
+```
 
-| σ_n | NNhealpix | MCMC (paper) | v1 (σ_p=3) | v2 (σ_p=5) | v3 (multi-res) |
-|-----|-----------|-------------|-----------|-----------|----------------|
-| 0 | 1.3% | 0.7% | 1.2% | 1.3% | 1.5% |
-| 5 | 2.9% | 2.5% | 3.0% | 3.5% | 3.5% |
-| 10 | 5.2% | 4.8% | 6.3% | 6.8% | 6.7% |
-| 15 | 8.4% | 7.8% | 11.8% | 11.8% | 11.3% |
+### Results (Test 1 only — ablation)
 
-### Key Observations
+| σ_n | v2 (fixed ℓ_max) | v3 (multi-res) | Δ |
+|-----|------------------|----------------|---|
+| 0   | 1.27%            | 1.5%           | +0.2% (worse) |
+| 5   | 3.58%            | 3.5%           | -0.1% |
+| 10  | 6.81%            | 6.7%           | -0.1% |
+| 15  | 11.98%           | 11.3%          | -0.7% |
 
-1. **Noiseless case**: SpectralCNN (v2) matches NNhealpix exactly (1.3%).
-   Both architectures can extract spectral peak information when noise is absent.
-
-2. **High noise degradation**: SpectralCNN degrades faster than NNhealpix
-   with increasing noise. The gap grows from 0% (σ_n=0) to 3.4% (σ_n=15).
-
-3. **Multi-resolution doesn't help**: v3 (MultiResSpectralCNN) gives marginal
-   improvement at σ_n=15 (11.3% vs 11.8%) but is identical at σ_n=5 (3.5% vs 3.5%).
-   The decreasing ℓ_max approach does NOT close the gap with NNhealpix.
-   The performance gap is likely due to a fundamental difference between
-   pixel-space local convolution (noise-robust) and global spectral
-   convolution (noise-sensitive), not multi-scale features.
-
-4. **σ_p bug had minimal impact**: v1 (σ_p=3.0) and v2 (σ_p=5.0) give
-   similar results at σ_n=15 (both 11.8%).
-
-5. **SpectralCNN excels at polarization (full sky)**: Test 2 (f_sky=1.0) shows
-   SpectralCNN at ℓ_Ep=1.5%, ℓ_Bp=1.6%, significantly better
-   than NNhealpix's 2.7%/2.7%. The SHT captures global Q/U patterns effectively
-   even without explicit E/B mode separation.
-
-6. **Partial-sky challenge (f_sky < 0.2)**: Without inpainting, SpectralCNN
-   dramatically underperforms NNhealpix at low f_sky (28%/19% vs 5.3%/5.3%
-   at f_sky=0.2) because zero-masked pixels corrupt the SHT. Mean inpainting
-   is being tested to address this.
-
-7. **v3 architecture limitation**: The bilinear spatial downsampling between
-   spectral blocks may lose information. Spectral truncation (zeroing high-ℓ
-   coefficients) instead of spatial downsampling could be more appropriate.
+**Conclusion:** Multi-resolution spectral blocks provide marginal improvement
+at high noise but don't close the gap with NNhealpix. The noise sensitivity
+is fundamental to the global SHT operation, not the lack of multi-scale features.
+v3 was not pursued further.
 
 ---
 

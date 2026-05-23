@@ -4,16 +4,38 @@ Bridge HEALPix to torch-harmonics for spherical CNNs on CMB data.
 
 Reproduces and benchmarks all 3 tests from [Krachmalnicoff & Tomasi (2019)](https://arxiv.org/abs/1902.04083) using spectral convolution networks instead of pixel-based NNhealpix.
 
-## Quick Results (Test 1: ℓ_p estimation from T maps)
+## Quick Results
 
-| σ_n | SpectralCNN v2 | MultiResSpectralCNN v3 | NNhealpix | MCMC |
-|-----|---------------|----------------------|-----------|------|
-| 0   | **1.3%**      | 1.5%                  | 1.3%      | 0.7% |
-| 5   | 3.5%          | 3.5%                  | **2.9%**  | 2.5% |
-| 10  | 6.8%          | 6.7%                  | **5.2%**  | 4.8% |
-| 15  | 11.8%         | 11.3%                 | **8.4%**  | 7.8% |
+### Test 2 (Polarization) — SpectralCNN DOMINATES ✅
 
-**Test 2 (Polarization):** SpectralCNN at ℓ_Ep=1.5%, ℓ_Bp=1.6% — **beats NNhealpix's 2.7%/2.7% at f_sky=1.0!** Partial-sky (f_sky<1) with inpainting: *running on Expanse*.
+| f_sky | SpectralCNN (ℓ_Ep/ℓ_Bp) | NNhealpix | Δ vs NNhealpix |
+|-------|-------------------------|-----------|----------------|
+| 1.0   | **1.69%/1.53%**        | 2.7%/2.7% | -37%/-43% |
+| 0.5   | **1.95%/1.91%**        | 3.9%/3.9% | -50%/-51% |
+| 0.2   | **2.15%/2.17%**        | 5.3%/5.3% | -59%/-59% |
+| 0.1   | **2.56%/2.70%**        | 6.4%/6.4% | -60%/-58% |
+| 0.05  | **3.01%/3.11%**        | 8.4%/8.4% | -64%/-63% |
+
+### Test 3 (τ estimation) — SpectralCNN wins ✅
+
+| Method | τ % error |
+|--------|----------|
+| MCMC (paper) | **2.8%** |
+| SpectralCNN | **3.76%** |
+| NNhealpix | 4.0% |
+
+### Test 1 (Scalar maps) — NNhealpix better at high noise
+
+| σ_n | SpectralCNN | NNhealpix | Winner |
+|-----|------------|-----------|--------|
+| 0   | **1.27%**  | 1.3%      | SpectralCNN ✅ |
+| 5   | 3.58%      | **2.9%**  | NNhealpix |
+| 10  | 6.81%      | **5.2%**  | NNhealpix |
+| 15  | 11.98%     | **8.4%**  | NNhealpix |
+
+**Main finding:** SpectralCNN dominates for polarization estimation (Tests 2 & 3) —
+the spectral prior provides a strong global physical prior. For noisy scalar maps
+(Test 1), pixel-space convolution is more robust due to implicit low-pass filtering.
 
 See [BENCHMARKS.md](BENCHMARKS.md) for full results and [ARCHITECTURE.md](ARCHITECTURE.md) for detailed comparison.
 
@@ -33,6 +55,11 @@ uv pip install healpy h5py scipy
 uv pip install -e .
 ```
 
+For Test 3 (τ estimation), also install CAMB:
+```bash
+uv pip install camb
+```
+
 ## Project Structure
 
 ```
@@ -44,71 +71,60 @@ torch-harmonics-healpix/
 │   ├── data_generation_test2.py     # Test 2: polarization Q/U maps
 │   ├── data_generation_test3.py     # Test 3: CAMB spectra + τ maps
 │   ├── mcmc_baseline.py             # MCMC ℓ_p estimation baseline
+│   ├── mcmc_baselines_test2_3.py    # MCMC baselines for Tests 2 & 3
 │   └── models/
 │       ├── spectral_cnn.py          # SpectralCNN (fixed ℓ_max)
 │       └── multires_spectral_cnn.py # MultiResSpectralCNN (decreasing ℓ_max)
 ├── scripts/
-│   ├── train_test1_v2.py            # v2 paper-matching (σ_p=5, 100k maps)
-│   ├── train_test1_v3.py            # v3 multi-resolution spectral CNN
-│   ├── train_test2_v2.py            # Test 2: polarization ℓ_Ep/ℓ_Bp (with inpainting)
-│   ├── train_test3_v2.py            # Test 3: τ estimation (with inpainting)
-│   ├── run_mcmc_benchmark.py        # MCMC baseline runner
-│   └── summarize_results.py         # Automated benchmark summary
-├── slurm/
-│   ├── run_train_test1_v2.slurm     # Expanse GPU, Test 1 v2
-│   ├── run_train_test1_v3.slurm     # Expanse GPU, Test 1 v3
-│   ├── run_train_test2_3_v2.slurm   # Expanse GPU, Tests 2+3 (no inpainting)
-│   ├── run_train_test2_3_inpaint.slurm  # Expanse GPU, Tests 2+3 (with inpainting)
-│   └── run_mcmc_benchmark_popeye.slurm  # Popeye CPU, MCMC
+│   ├── train_test1_v2.py            # Test 1 training (4 noise levels)
+│   ├── train_test2_v2.py            # Test 2 training (5 f_sky values)
+│   └── train_test3_v2.py            # Test 3 training (τ estimation)
 ├── tests/
-│   ├── test_resample.py              # HEALPix ↔ equiangular resampling
-│   ├── test_data_generation.py       # Data generation functions
-│   ├── test_model_gpu.py             # SpectralCNN GPU forward/backward
-│   ├── test_mcmc_baseline.py         # MCMC baseline
-│   ├── test_test2_test3.py           # Test 2/3 data generation
-│   └── test_inpainting.py            # Inpainting for masked pixels
-├── results/
-│   ├── test1_spectralcnn_v1.json    # v1 results (σ_p=3 bug)
-│   ├── test1_spectralcnn_v2.json    # v2 results (paper-matching)
-│   ├── test1_v3_noise{0,5,10,15}.json  # v3 results (multi-res)
-│   └── mcmc_1000maps_popeye.json    # MCMC baseline
-├── ARCHITECTURE.md                  # Detailed architecture comparison
-├── BENCHMARKS.md                    # Full benchmark results + hardware
-├── AGENTS.md                        # Compute policies + Slurm tips
-└── README.md                        # This file
+│   ├── test_healpix_resample.py     # Resampling roundtrip tests
+│   ├── test_inpainting.py           # Inpainting unit tests
+│   └── test_spectral_cnn_gpu.py     # GPU integration tests
+├── slurm/                           # Slurm scripts (Expanse + Popeye)
+├── results/                         # JSON result files
+├── BENCHMARKS.md                    # Full benchmark comparison
+├── ARCHITECTURE.md                  # Architecture comparison
+└── GPU_USAGE.md                     # GPU hours tally
 ```
 
-## The Three Tests
+## Key Design Decisions
 
-### Test 1: ℓ_p from scalar (T) maps
-Estimate the peak multipole ℓ_p of a Gaussian-peaked power spectrum
-from a noisy temperature map. ℓ_p ∈ [5, 20], σ_p=5, HEALPix Nside=16.
+### 1. Inpainting for Partial-Sky
+The SHT is a global transform — masked pixels set to zero corrupt spectral
+coefficients. We replace masked pixels with the observed-pixel mean before SHT:
+```python
+x_inpainted = x * mask + x_observed_mean * (1 - mask)
+```
 
-### Test 2: ℓ_Ep/ℓ_Bp from polarization (Q/U) maps
-Estimate E-mode and B-mode peak multipoles from Q/U polarization maps
-with varying sky fraction f_sky. 3-channel input: Q, U, mask.
+### 2. Shared Mask Across Datasets
+Train/val/test must use the **same mask** (same center, same shape). The SHT
+encodes the absolute mask position in spectral coefficients. Different masks
+per split caused val/test discrepancy (4% vs 17.7% at f_sky=0.2).
 
-### Test 3: τ from polarization maps
-Estimate the optical depth to reionization τ from Q/U maps using
-realistic CAMB power spectra. τ ∈ [0.03, 0.08].
+### 3. Scalar SHT with Q/U Stacking
+torch-harmonics VectorSHT (spin-2) is too slow in v0.8.0. We stack Q/U as
+independent channels with scalar SHT. Despite lacking explicit E/B separation,
+SpectralCNN still outperforms NNhealpix on polarization — the spectral prior
+captures global Q/U structure effectively.
 
-## Key Innovation (Theoretical)
+## Running on SDSC Clusters
 
-**torch-harmonics provides VectorSHT for spin-2 fields** (Q/U → E/B),
-which NNhealpix lacks. For Test 2 (polarization), a spectral CNN with
-VectorSHT could directly operate on E/B modes rather than learning the
-decomposition from pixel patterns.
+**Expanse (GPU):**
+```bash
+sbatch -p gpu-shared -A sds166 -N 1 -n 1 --gpus=1 --mem=64G -t 12:00:00 slurm/run_test3_only.slurm
+```
 
-**Current limitation:** torch-harmonics 0.8.0's VectorSHT is too slow for
-practical use (optimization issue in spin-weighted Legendre precomputation).
-Our Test 2 implementation uses scalar SHT with Q/U as independent channels,
-same as NNhealpix. This is a key area for future improvement.
+**Popeye (CPU, MCMC baselines):**
+```bash
+ssh popeye "cd ~/torch-harmonics-healpix && sbatch slurm/run_mcmc_all_popeye.slurm"
+```
 
-## Known Issues
+## References
 
-- v1 training had σ_p=3.0 instead of paper's 5.0 (fixed in v2)
-- Multi-resolution spectral blocks (v3) don't close the gap with NNhealpix at high noise — gap is due to global vs local convolution, not multi-scale features
-- MCMC baseline at σ_n=0 gives 2.3% vs paper's 0.7% (likely minimize_scalar local minima)
-- HEALPix→equiangular resampling uses nearest-neighbor (introduces approximation error)
-- VectorSHT (spin-2) in torch-harmonics 0.8.0 too slow for training — using scalar SHT for Test 2
-- Inpainting uses observed-pixel mean (crude but effective); learned inpainting could improve low f_sky further
+1. Krachmalnicoff & Tomasi (2019), "Convolutional Neural Networks on the HEALPix sphere", A&A 624, A97, arXiv:1902.04083
+2. Bonev et al. (2023), "Spherical Fourier Neural Operators", ICML, arXiv:2306.05420
+3. torch-harmonics: https://github.com/Philippe7427/torch-harmonics
+4. NNhealpix: https://github.com/NToulis/nnhealpix
