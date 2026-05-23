@@ -18,5 +18,13 @@ venv/
 .vscode/
 .idea/
 
+# Secrets
+.hf_token
+
+# Model weights (large files, uploaded to HF Hub)
+*.pt
+*.pth
+*.ckpt
+
 # OS
 .DS_Store
