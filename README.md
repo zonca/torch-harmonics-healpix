@@ -39,6 +39,101 @@ the spectral prior provides a strong global physical prior. For noisy scalar map
 
 See [BENCHMARKS.md](BENCHMARKS.md) for full results and [ARCHITECTURE.md](ARCHITECTURE.md) for detailed comparison.
 
+## Pre-trained Models
+
+Trained model weights are available on Hugging Face:
+`https://huggingface.co/zonca/torch-harmonics-healpix`
+
+| Model | File | Test | Task | Error | Parameters | Size |
+|-------|------|------|------|-------|------------|------|
+| SpectralCNN T1 | `models/test1_v2_fix_noise0.pt` | 1 (σ=0) | ℓ_peak from T map | 1.27% | 6.4M | 25MB |
+| SpectralCNN T2 | `models/test2_v2_fix_fsky1.0.pt` | 2 (f_sky=1.0) | ℓ_Ep/ℓ_Bp from Q/U | 1.69%/1.53% | 9.8M | 38MB |
+| SpectralCNN T3 | `models/test3_v2_fix.pt` | 3 (full sky) | τ from Q/U | 3.76% | 9.8M | ~38MB |
+
+### Downloading Weights
+
+**Option 1: Using huggingface_hub**
+```python
+from huggingface_hub import hf_hub_download
+
+# Download a model checkpoint
+model_path = hf_hub_download(
+    repo_id="zonca/torch-harmonics-healpix",
+    filename="models/test2_v2_fix_fsky1.0.pt",
+)
+```
+
+**Option 2: Direct URL**
+```bash
+wget https://huggingface.co/zonca/torch-harmonics-healpix/resolve/main/models/test2_v2_fix_fsky1.0.pt
+```
+
+### Loading and Using Weights
+
+```python
+import torch
+import numpy as np
+import healpy as hp
+from torch_harmonics_healpix.models import SpectralCNN
+
+# 1. Create model with matching architecture
+model = SpectralCNN(
+    in_channels=3,       # Test 1: 1 (T only), Test 2/3: 3 (Q, U, mask)
+    out_channels=1,      # 1 output parameter per map
+    nside=16,            # HEALPix resolution
+    hidden_channels=32,  # spectral convolution channels
+    num_blocks=3,        # number of SpectralConvBlocks
+    inpaint=False,       # True for f_sky < 1.0, False for full sky
+)
+
+# 2. Load trained weights
+state_dict = torch.load("test2_v2_fix_fsky1.0.pt", map_location="cpu")
+model.load_state_dict(state_dict)
+model.eval()
+
+# 3. Prepare input map (HEALPix Nside=16, 3072 pixels)
+# Test 1: input shape [1, 1, 3072]  (just T map)
+# Test 2/3: input shape [1, 3, 3072] (Q, U, mask stacked)
+q_map = hp.read_map("my_q_map.fits")   # HEALPix map, Nside=16
+u_map = hp.read_map("my_u_map.fits")
+mask = np.ones_like(q_map)             # 1.0 = observed, 0.0 = masked
+
+# Stack channels and convert to tensor
+input_map = np.stack([q_map, u_map, mask], axis=0).astype(np.float32)
+input_tensor = torch.from_numpy(input_map).unsqueeze(0)  # [1, 3, 3072]
+
+# 4. Run inference
+with torch.no_grad():
+    prediction = model(input_tensor)  # shape: [1, 1]
+
+# Test 1: prediction.item() = ℓ_peak estimate
+# Test 2: prediction[0, 0].item() = ℓ_Ep, prediction[0, 1].item() = ℓ_Bp
+# Test 3: prediction.item() = τ estimate
+print(f"Predicted parameter: {prediction.item():.4f}")
+```
+
+### Architecture Details per Model
+
+**Test 1 model** (`in_channels=1`, `inpaint=False`):
+- Input: single T map [1, 3072]
+- Output: ℓ_peak scalar
+- Parameters: 6,454,529
+
+**Test 2 model** (`in_channels=3`, `inpaint=False` for f_sky=1.0):
+- Input: Q/U/mask stacked [3, 3072]
+- Output: [ℓ_Ep, ℓ_Bp] (2 values)
+- For partial sky (f_sky < 1.0), set `inpaint=True` and retrain
+- Parameters: 9,829,634
+
+**Test 3 model** (`in_channels=3`, `inpaint=False` for full sky):
+- Input: Q/U/mask stacked [3, 3072]
+- Output: τ scalar
+- Parameters: 9,829,634
+
+> **Note:** The pre-trained models correspond to the specific configurations listed
+> above. For different noise levels, f_sky values, or architectures, retrain using
+> the training scripts in `scripts/`.
+
 ## Setup
 
 ```bash
@@ -58,6 +153,11 @@ uv pip install -e .
 For Test 3 (τ estimation), also install CAMB:
 ```bash
 uv pip install camb
+```
+
+For downloading pre-trained models:
+```bash
+uv pip install huggingface_hub
 ```
 
 ## Project Structure
@@ -80,9 +180,12 @@ torch-harmonics-healpix/
 │   ├── train_test2_v2.py            # Test 2 training (5 f_sky values)
 │   └── train_test3_v2.py            # Test 3 training (τ estimation)
 ├── tests/
-│   ├── test_healpix_resample.py     # Resampling roundtrip tests
+│   ├── test_resample.py             # Resampling roundtrip tests
 │   ├── test_inpainting.py           # Inpainting unit tests
-│   └── test_spectral_cnn_gpu.py     # GPU integration tests
+│   ├── test_data_generation.py      # Data generation tests
+│   ├── test_mcmc_baseline.py        # MCMC baseline tests
+│   ├── test_test2_test3.py          # Test 2/3 integration tests
+│   └── test_model_gpu.py            # GPU integration tests
 ├── slurm/                           # Slurm scripts (Expanse + Popeye)
 ├── results/                         # JSON result files
 ├── BENCHMARKS.md                    # Full benchmark comparison
@@ -110,6 +213,27 @@ independent channels with scalar SHT. Despite lacking explicit E/B separation,
 SpectralCNN still outperforms NNhealpix on polarization — the spectral prior
 captures global Q/U structure effectively.
 
+## Retraining Models
+
+Each training script saves both JSON results and `.pt` model weights:
+
+```bash
+# Test 1: ℓ_peak from T maps (4 noise levels)
+python scripts/train_test1_v2.py --noise_std 0 --output results/test1_noise0.json
+python scripts/train_test1_v2.py --noise_std 15 --output results/test1_noise15.json
+
+# Test 2: ℓ_Ep/ℓ_Bp from Q/U maps (5 f_sky values)
+python scripts/train_test2_v2.py --f_sky 1.0 --output results/test2_fsky1.0.json
+python scripts/train_test2_v2.py --f_sky 0.5 --output results/test2_fsky0.5.json
+
+# Test 3: τ estimation (requires CAMB)
+python scripts/train_test3_v2.py --f_sky 1.0 --output results/test3.json
+```
+
+Each script outputs:
+- `results/testN_*.json` — metrics, hyperparameters, comparison with baselines
+- `results/testN_*.pt` — best model `state_dict` (based on validation loss)
+
 ## Running on SDSC Clusters
 
 **Expanse (GPU):**
@@ -126,5 +250,5 @@ ssh popeye "cd ~/torch-harmonics-healpix && sbatch slurm/run_mcmc_all_popeye.slu
 
 1. Krachmalnicoff & Tomasi (2019), "Convolutional Neural Networks on the HEALPix sphere", A&A 624, A97, arXiv:1902.04083
 2. Bonev et al. (2023), "Spherical Fourier Neural Operators", ICML, arXiv:2306.05420
-3. torch-harmonics: https://github.com/Philippe7427/torch-harmonics
-4. NNhealpix: https://github.com/NToulis/nnhealpix
+3. torch-harmonics: `https://github.com/Philippe7427/torch-harmonics`
+4. NNhealpix: `https://github.com/NToulis/nnhealpix`
