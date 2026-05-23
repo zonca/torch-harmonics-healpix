@@ -279,6 +279,12 @@ def main():
         }, f, indent=2)
     print(f"\nResults saved to {args.output}")
 
+    # Save best model weights
+    if args.output and best_state is not None:
+        model_path = args.output.replace(".json", ".pt")
+        torch.save(best_state, model_path)
+        print(f"Model saved to {model_path}")
+
 
 if __name__ == "__main__":
     main()
