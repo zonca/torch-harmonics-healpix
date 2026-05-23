@@ -41,7 +41,8 @@ class TauDataset(Dataset):
     """
 
     def __init__(self, n_maps, nside=NSIDE, lmax=LMAX,
-                 noise_std=0.0, f_sky=1.0, seed=42, mask=None):
+                 noise_std=0.0, f_sky=1.0, seed=42, mask=None,
+                 camb_spectra=None):
         self.n_maps = n_maps
         self.nside = nside
         self.lmax = lmax
@@ -49,12 +50,15 @@ class TauDataset(Dataset):
         self.f_sky = f_sky
         self.rng = np.random.default_rng(seed)
 
-        # Pre-compute 5000 CAMB spectra (paper approach)
+        # Use shared CAMB spectra if provided, otherwise pre-compute
         from torch_harmonics_healpix.data_generation_test3 import precompute_camb_spectra, N_CAMB_SPECTRA
-        print(f"  Pre-computing {N_CAMB_SPECTRA} CAMB spectra for TauDataset...")
-        tau_spectra, self.cl_ee_array, self.cl_bb_array = precompute_camb_spectra(
-            N_CAMB_SPECTRA, lmax, seed=seed + 100
-        )
+        if camb_spectra is not None:
+            tau_spectra, self.cl_ee_array, self.cl_bb_array = camb_spectra
+        else:
+            print(f"  Pre-computing {N_CAMB_SPECTRA} CAMB spectra for TauDataset...")
+            tau_spectra, self.cl_ee_array, self.cl_bb_array = precompute_camb_spectra(
+                N_CAMB_SPECTRA, lmax, seed=seed + 100
+            )
 
         # Randomly choose from pre-computed spectra for each map
         self.spectrum_indices = self.rng.integers(0, N_CAMB_SPECTRA, size=n_maps)
@@ -157,23 +161,28 @@ def main():
     print("\nGenerating datasets (CAMB spectra needed)...")
     # Shared mask for train/val/test (critical for SpectralCNN — see train_test2_v2.py)
     from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
+    from torch_harmonics_healpix.data_generation_test3 import precompute_camb_spectra, N_CAMB_SPECTRA
     shared_rng = np.random.default_rng(0)
     shared_mask = create_sky_mask(args.f_sky, args.nside, shared_rng).astype(np.float32)
+
+    # Pre-compute CAMB spectra ONCE (saves ~4h vs computing per-dataset)
+    print(f"  Pre-computing {N_CAMB_SPECTRA} CAMB spectra (shared across all datasets)...")
+    shared_camb = precompute_camb_spectra(N_CAMB_SPECTRA, LMAX, seed=142)
 
     train_dataset = TauDataset(
         args.n_train, args.nside, LMAX,
         args.noise_std, args.f_sky, seed=42,
-        mask=shared_mask,
+        mask=shared_mask, camb_spectra=shared_camb,
     )
     val_dataset = TauDataset(
         args.n_val, args.nside, LMAX,
         args.noise_std, args.f_sky, seed=1234,
-        mask=shared_mask,
+        mask=shared_mask, camb_spectra=shared_camb,
     )
     test_dataset = TauDataset(
         args.n_test, args.nside, LMAX,
         args.noise_std, args.f_sky, seed=9999,
-        mask=shared_mask,
+        mask=shared_mask, camb_spectra=shared_camb,
     )
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
