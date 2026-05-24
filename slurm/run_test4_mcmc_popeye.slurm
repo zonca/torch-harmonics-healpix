@@ -23,6 +23,7 @@ if [ ! -f "$VENV/bin/python3" ]; then
     echo "=== Creating venv ==="
     uv venv $VENV --python 3.11
     source $VENV/bin/activate
+    uv pip install torch --index-url https://download.pytorch.org/whl/cpu 2>&1 | tail -1
     uv pip install healpy h5py scipy matplotlib camb psutil 2>&1 | tail -3
 else
     source $VENV/bin/activate
