@@ -3,9 +3,10 @@
 #SBATCH --partition=gen
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=12:00:00
-#SBATCH --output=/home/zonca/torch-harmonics-healpix/test4_mcmc_%j.out
+#SBATCH --output=%x_%j.out
 
 set -e
 export PYTHONUNBUFFERED=1
@@ -14,10 +15,26 @@ echo "=== Test 4: MCMC baselines for joint r/τ estimation ==="
 hostname
 date
 
-cd $HOME/torch-harmonics-healpix
-source .venv/bin/activate
+WORKDIR=$HOME/torch-harmonics-healpix
+VENV=$WORKDIR/.venv
 
-RESULTS_DIR=$HOME/torch-harmonics-healpix/results
+# Create venv if needed
+if [ ! -f "$VENV/bin/python3" ]; then
+    echo "=== Creating venv ==="
+    uv venv $VENV --python 3.11
+    source $VENV/bin/activate
+    uv pip install healpy h5py scipy matplotlib camb psutil 2>&1 | tail -3
+else
+    source $VENV/bin/activate
+fi
+
+# Install/update the package
+cd $WORKDIR
+git fetch origin
+git reset --hard origin/main 2>&1 | tail -1
+uv pip install -e . --no-deps 2>&1 | tail -1
+
+RESULTS_DIR=$WORKDIR/results
 mkdir -p $RESULTS_DIR
 
 echo "=== Running MCMC baselines for all 4 configs ==="
@@ -26,11 +43,11 @@ import numpy as np
 import healpy as hp
 import json
 import time
-import psutil
 import os
+import psutil
 
 from torch_harmonics_healpix.data_generation_test4 import (
-    precompute_camb_spectra_r_tau, generate_r_tau_map, NSIDE, LMAX, R_MAX, R_LOG_EPSILON
+    precompute_camb_spectra_r_tau, generate_r_tau_map, NSIDE, LMAX, R_MAX
 )
 from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
 from torch_harmonics_healpix.mcmc_baselines_test2_3 import mcmc_baseline_r_tau
@@ -56,7 +73,8 @@ rng = np.random.default_rng(42)
 print('Pre-computing 5000 CAMB spectra...')
 t0 = time.time()
 r_values, tau_values, cl_ee_array, cl_bb_array = precompute_camb_spectra_r_tau(5000, LMAX, seed=12345)
-print(f'CAMB pre-computation: {time.time()-t0:.1f}s')
+camb_time = time.time() - t0
+print(f'CAMB pre-computation: {camb_time:.1f}s')
 
 # Create shared masks
 shared_masks = {}
@@ -70,14 +88,15 @@ tau_grid = np.linspace(0.03, 0.08, 50)
 
 # Memory tracking
 process = psutil.Process(os.getpid())
-mem_peak = 0
+mem_peak = process.memory_info().rss / 1e9
 
 for cfg in configs:
     f_sky = cfg['f_sky']
     noise_uK = noise_arcmin_to_uK(cfg['noise_arcmin'], NSIDE) if cfg['noise_arcmin'] > 0 else 0.0
     mask = shared_masks[f_sky]
 
-    print(f'\n=== Config: {cfg[\"label\"]} ===')
+    print(f'')
+    print(f'=== Config: {cfg[\"label\"]} ===')
     print(f'  f_sky={f_sky}, noise={cfg[\"noise_arcmin\"]} μK-arcmin = {noise_uK:.2f} μK/pixel')
 
     r_errors = []
@@ -85,18 +104,15 @@ for cfg in configs:
     t_start = time.time()
 
     for i in range(n_test):
-        # Pick random spectrum
         idx = rng.integers(0, len(r_values))
         r_true = r_values[idx]
         tau_true = tau_values[idx]
 
-        # Generate map
         q, u, _ = generate_r_tau_map(
             r_true, tau_true, NSIDE, LMAX, noise_uK, f_sky, rng,
             cl_ee=cl_ee_array[idx], cl_bb=cl_bb_array[idx]
         )
 
-        # Run MCMC baseline
         result = mcmc_baseline_r_tau(
             q, u, mask, r_grid, tau_grid,
             cl_ee_array, cl_bb_array,
@@ -129,6 +145,7 @@ for cfg in configs:
         'r_pct_error_std': float(np.std(r_errors)),
         'tau_pct_error_std': float(np.std(tau_errors)),
         'cpu_time_seconds': elapsed,
+        'camb_precompute_seconds': camb_time,
         'peak_memory_GB': mem_peak,
         'method': 'chi2_grid_search',
         'r_grid_size': len(r_grid),
@@ -143,6 +160,7 @@ for cfg in configs:
     print(f'  τ: {np.mean(tau_errors):.1f}% ± {np.std(tau_errors):.1f}%')
     print(f'  CPU time: {elapsed:.1f}s, Peak memory: {mem_peak:.1f}GB')
 
-print('\n=== All MCMC baselines complete ===')
+print('')
+print('=== All MCMC baselines complete ===')
 date
 "
