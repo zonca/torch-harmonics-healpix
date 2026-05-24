@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=thh-t4-mcmc
 #SBATCH --partition=gen
-#SBATCH --account=sds166
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=32G
