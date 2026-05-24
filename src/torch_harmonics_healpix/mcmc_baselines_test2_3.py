@@ -271,7 +271,7 @@ def mcmc_baseline_r_tau(
 
     # Compute observed C_ℓ from masked Q/U maps
     maps_in = np.array([np.zeros_like(q_map), q_map, u_map])
-    cl_obs = hp.anafast(maps_in, nside=nside, lmax=lmax, pol=True)
+    cl_obs = hp.anafast(maps_in, lmax=lmax, pol=True)
     cl_ee_obs = cl_obs[1]
     cl_bb_obs = cl_obs[2]
 
