@@ -14,8 +14,8 @@ is sampled uniformly, following the same pre-computation strategy as Test 3.
 
 FITS cache format (used by train_test4.py and run_test4_popeye.slurm):
   HDU 0 — PrimaryHDU (empty)
-  HDU 1 — BinTableHDU "R_VALUES"  with column "col0" (float32, n_spectra rows)
-  HDU 2 — BinTableHDU "TAU_VALUES" with column "col0" (float32, n_spectra rows)
+  HDU 1 — ImageHDU "R_VALUES"  (float32, shape n_spectra)
+  HDU 2 — ImageHDU "TAU_VALUES" (float32, shape n_spectra)
   HDU 3 — ImageHDU  "CL_EE"  (float64, shape n_spectra × lmax+1)
   HDU 4 — ImageHDU  "CL_BB"  (float64, shape n_spectra × lmax+1)
 """

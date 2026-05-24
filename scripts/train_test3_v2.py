@@ -175,7 +175,7 @@ def main():
         print(f"  Loading cached CAMB spectra from {args.camb_cache}")
         from astropy.io import fits as pf
         with pf.open(args.camb_cache) as hdul:
-            tau_spectra = hdul["TAU_VALUES"].data["col0"].astype(np.float32)
+            tau_spectra = np.array(hdul["TAU_VALUES"].data, dtype=np.float32)
             cl_ee_array = np.array(hdul["CL_EE"].data, dtype=np.float64)
             cl_bb_array = np.array(hdul["CL_BB"].data, dtype=np.float64)
         shared_camb = (tau_spectra, cl_ee_array, cl_bb_array)
@@ -186,7 +186,7 @@ def main():
         if args.camb_cache:
             print(f"  Saving CAMB spectra to {args.camb_cache}")
             from astropy.io import fits as pf
-            hdu_tau = pf.BinTableHDU(shared_camb[0]); hdu_tau.name = "TAU_VALUES"
+            hdu_tau = pf.ImageHDU(shared_camb[0]); hdu_tau.name = "TAU_VALUES"
             hdu_ee = pf.ImageHDU(shared_camb[1]); hdu_ee.name = "CL_EE"
             hdu_bb = pf.ImageHDU(shared_camb[2]); hdu_bb.name = "CL_BB"
             hdul = pf.HDUList([pf.PrimaryHDU(), hdu_tau, hdu_ee, hdu_bb])

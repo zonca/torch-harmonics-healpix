@@ -105,8 +105,8 @@ camb_cache = '$RESULTS_DIR/test4_camb_spectra.fits'
 if os.path.exists(camb_cache):
     print(f'Loading cached CAMB spectra from {camb_cache}')
     with pf.open(camb_cache) as hdul:
-        r_values = hdul['R_VALUES'].data['col0'].astype(np.float32)
-        tau_values = hdul['TAU_VALUES'].data['col0'].astype(np.float32)
+        r_values = np.array(hdul['R_VALUES'].data, dtype=np.float32)
+        tau_values = np.array(hdul['TAU_VALUES'].data, dtype=np.float32)
         cl_ee_array = np.array(hdul['CL_EE'].data, dtype=np.float64)
         cl_bb_array = np.array(hdul['CL_BB'].data, dtype=np.float64)
     print(f'Loaded {len(r_values)} spectra from cache')
@@ -117,8 +117,8 @@ else:
     camb_time = time.time() - t0
     print(f'CAMB pre-computation: {camb_time:.1f}s')
     # Save to FITS for future runs
-    hdu_r = pf.BinTableHDU(r_values); hdu_r.name = 'R_VALUES'
-    hdu_tau = pf.BinTableHDU(tau_values); hdu_tau.name = 'TAU_VALUES'
+    hdu_r = pf.ImageHDU(r_values); hdu_r.name = 'R_VALUES'
+    hdu_tau = pf.ImageHDU(tau_values); hdu_tau.name = 'TAU_VALUES'
     hdu_ee = pf.ImageHDU(cl_ee_array); hdu_ee.name = 'CL_EE'
     hdu_bb = pf.ImageHDU(cl_bb_array); hdu_bb.name = 'CL_BB'
     hdul = pf.HDUList([pf.PrimaryHDU(), hdu_r, hdu_tau, hdu_ee, hdu_bb])

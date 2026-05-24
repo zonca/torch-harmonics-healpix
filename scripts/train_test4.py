@@ -240,14 +240,14 @@ def main():
     shared_mask = create_sky_mask(args.f_sky, NSIDE, shared_rng).astype(np.float32)
 
     # Pre-compute CAMB spectra ONCE (with optional FITS disk cache)
-    # FITS cache layout: PrimaryHDU + BinTableHDU "R_VALUES"/"TAU_VALUES" (col0) + ImageHDU "CL_EE"/"CL_BB"
+    # FITS cache layout: PrimaryHDU + ImageHDU "R_VALUES"/"TAU_VALUES" + ImageHDU "CL_EE"/"CL_BB"
     if args.camb_cache and os.path.exists(args.camb_cache):
         print(f"  Loading cached CAMB spectra from {args.camb_cache}")
         from astropy.io import fits as pf
         with pf.open(args.camb_cache) as hdul:
-            # BinTableHDU.data is a structured array; extract the column
-            r_values = hdul["R_VALUES"].data["col0"].astype(np.float32)
-            tau_values = hdul["TAU_VALUES"].data["col0"].astype(np.float32)
+            # ImageHDU.data is a plain numpy array (no structured columns)
+            r_values = np.array(hdul["R_VALUES"].data, dtype=np.float32)
+            tau_values = np.array(hdul["TAU_VALUES"].data, dtype=np.float32)
             cl_ee_array = np.array(hdul["CL_EE"].data, dtype=np.float64)
             cl_bb_array = np.array(hdul["CL_BB"].data, dtype=np.float64)
         shared_camb = (r_values, tau_values, cl_ee_array, cl_bb_array)
@@ -258,9 +258,10 @@ def main():
         if args.camb_cache:
             print(f"  Saving CAMB spectra to {args.camb_cache}")
             from astropy.io import fits as pf
-            hdu_r = pf.BinTableHDU(shared_camb[0])
+            # FITS cache: ImageHDU for all arrays (simpler than BinTableHDU)
+            hdu_r = pf.ImageHDU(shared_camb[0])
             hdu_r.name = "R_VALUES"
-            hdu_tau = pf.BinTableHDU(shared_camb[1])
+            hdu_tau = pf.ImageHDU(shared_camb[1])
             hdu_tau.name = "TAU_VALUES"
             hdu_ee = pf.ImageHDU(shared_camb[2])
             hdu_ee.name = "CL_EE"
