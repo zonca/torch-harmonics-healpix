@@ -231,3 +231,120 @@ def evaluate_mcmc_test3(
         "time_per_map": elapsed / n_maps,
         "n_maps": n_maps,
     }
+
+
+def mcmc_baseline_r_tau(
+    q_map: np.ndarray,
+    u_map: np.ndarray,
+    mask: np.ndarray,
+    r_grid: np.ndarray,
+    tau_grid: np.ndarray,
+    cl_ee_array: np.ndarray,
+    cl_bb_array: np.ndarray,
+    noise_std: float = 0.0,
+    nside: int = 16,
+    lmax: int = 47,
+) -> dict:
+    """MCMC baseline for Test 4: joint r/τ estimation via chi-squared power spectrum fit.
+
+    For each (r, τ) in the grid, compute the expected C_ℓ^EE and C_ℓ^BB from pre-computed
+    CAMB spectra, compare to observed C_ℓ from the masked map via chi-squared,
+    and find the best-fit (r, τ).
+
+    Args:
+        q_map: Q polarization map (1D HEALPix array).
+        u_map: U polarization map (1D HEALPix array).
+        mask: Sky mask (1D HEALPix array, 1=observed, 0=masked).
+        r_grid: 1D array of r values to search over.
+        tau_grid: 1D array of τ values to search over.
+        cl_ee_array: Pre-computed EE spectra, shape (n_spectra, lmax+1).
+        cl_bb_array: Pre-computed BB spectra, shape (n_spectra, lmax+1).
+        noise_std: White noise in μK (0 for no noise).
+        nside: HEALPix Nside.
+        lmax: Maximum multipole.
+
+    Returns:
+        Dict with keys: r_best, tau_best, r_pct_error, tau_pct_error, chi2_grid
+    """
+    npix = hp.nside2npix(nside)
+    f_sky = np.mean(mask)
+
+    # Compute observed C_ℓ from masked Q/U maps
+    maps_in = np.array([np.zeros_like(q_map), q_map, u_map])
+    cl_obs = hp.anafast(maps_in, nside=nside, lmax=lmax, pol=True)
+    cl_ee_obs = cl_obs[1]
+    cl_bb_obs = cl_obs[2]
+
+    # Noise power spectrum (white noise)
+    noise_cl = noise_std**2 * 4.0 * np.pi / npix if noise_std > 0.0 else 0.0
+
+    ell = np.arange(lmax + 1)
+
+    # Build 2D chi-squared grid over (r, τ)
+    # Meshgrid: rows correspond to tau, columns to r
+    r_mesh, tau_mesh = np.meshgrid(r_grid, tau_grid)
+    chi2_grid = np.full(r_mesh.shape, np.inf)
+
+    # Number of pre-computed spectra per dimension
+    n_spectra = cl_ee_array.shape[0]
+
+    # Assume cl_ee_array/cl_bb_array are ordered consistently with a
+    # flattened (r, tau) grid. Determine the grid dimensions from the
+    # r_grid and tau_grid sizes so we can map 2-D indices → flat index.
+    n_r = len(r_grid)
+    n_tau = len(tau_grid)
+
+    for i in range(r_mesh.shape[0]):  # tau index
+        for j in range(r_mesh.shape[1]):  # r index
+            r_val = r_mesh[i, j]
+            tau_val = tau_mesh[i, j]
+
+            # Find nearest indices in the pre-computed grid
+            r_idx = np.argmin(np.abs(r_grid - r_val))
+            tau_idx = np.argmin(np.abs(tau_grid - tau_val))
+
+            # Map (r_idx, tau_idx) → flat index into cl_ee_array
+            spec_idx = tau_idx * n_r + r_idx
+            if spec_idx >= n_spectra:
+                continue
+
+            cl_ee_model = cl_ee_array[spec_idx]
+            cl_bb_model = cl_bb_array[spec_idx]
+
+            # σ² = (2/(2ℓ+1)) * (cl_model + noise_cl)² / f_sky
+            sigma_ee2 = (2.0 / (2 * ell + 1)) * (cl_ee_model + noise_cl) ** 2 / f_sky
+            sigma_bb2 = (2.0 / (2 * ell + 1)) * (cl_bb_model + noise_cl) ** 2 / f_sky
+
+            sigma_ee2 = np.maximum(sigma_ee2, 1e-30)
+            sigma_bb2 = np.maximum(sigma_bb2, 1e-30)
+
+            chi2 = np.sum(
+                (cl_ee_obs - cl_ee_model) ** 2 / sigma_ee2
+                + (cl_bb_obs - cl_bb_model) ** 2 / sigma_bb2
+            )
+            chi2_grid[i, j] = chi2
+
+    # Find best-fit (r, τ)
+    best_flat = np.argmin(chi2_grid)
+    best_tau_idx, best_r_idx = np.unravel_index(best_flat, chi2_grid.shape)
+
+    r_best = float(r_grid[best_r_idx])
+    tau_best = float(tau_grid[best_tau_idx])
+
+    # Determine true values from the closest grid point to the input r_grid/tau_grid
+    # (caller should compare externally; here we report raw best-fit)
+    # For pct_error we need true values — extract from the grid center as a fallback,
+    # but typically the caller knows r_true/tau_true.
+    # We set pct_error to 0 and let the caller override; alternatively compute
+    # assuming the true values are the nearest grid points to the best-fit.
+    # Convention: return NaN for pct errors; caller should compute them.
+    r_pct_error = np.nan
+    tau_pct_error = np.nan
+
+    return {
+        "r_best": r_best,
+        "tau_best": tau_best,
+        "r_pct_error": r_pct_error,
+        "tau_pct_error": tau_pct_error,
+        "chi2_grid": chi2_grid,
+    }
