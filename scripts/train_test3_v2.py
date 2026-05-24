@@ -149,6 +149,8 @@ def main():
     parser.add_argument("--num_blocks", type=int, default=4)
     parser.add_argument("--nside", type=int, default=NSIDE)
     parser.add_argument("--output", type=str, default="results/test3_v2.json")
+    parser.add_argument("--camb_cache", type=str, default=None,
+                        help="FITS file to cache/load CAMB spectra (saves ~2h on repeat runs)")
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -168,9 +170,28 @@ def main():
     shared_rng = np.random.default_rng(0)
     shared_mask = create_sky_mask(args.f_sky, args.nside, shared_rng).astype(np.float32)
 
-    # Pre-compute CAMB spectra ONCE (saves ~4h vs computing per-dataset)
-    print(f"  Pre-computing {N_CAMB_SPECTRA} CAMB spectra (shared across all datasets)...")
-    shared_camb = precompute_camb_spectra(N_CAMB_SPECTRA, LMAX, seed=142)
+    # Pre-compute CAMB spectra ONCE (with optional FITS disk cache)
+    if args.camb_cache and os.path.exists(args.camb_cache):
+        print(f"  Loading cached CAMB spectra from {args.camb_cache}")
+        from astropy.io import fits as pf
+        with pf.open(args.camb_cache) as hdul:
+            tau_spectra = hdul["TAU_VALUES"].data["col0"].astype(np.float32)
+            cl_ee_array = np.array(hdul["CL_EE"].data, dtype=np.float64)
+            cl_bb_array = np.array(hdul["CL_BB"].data, dtype=np.float64)
+        shared_camb = (tau_spectra, cl_ee_array, cl_bb_array)
+        print(f"  Loaded {len(shared_camb[0])} spectra from cache")
+    else:
+        print(f"  Pre-computing {N_CAMB_SPECTRA} CAMB spectra (shared across all datasets)...")
+        shared_camb = precompute_camb_spectra(N_CAMB_SPECTRA, LMAX, seed=142)
+        if args.camb_cache:
+            print(f"  Saving CAMB spectra to {args.camb_cache}")
+            from astropy.io import fits as pf
+            hdu_tau = pf.BinTableHDU(shared_camb[0]); hdu_tau.name = "TAU_VALUES"
+            hdu_ee = pf.ImageHDU(shared_camb[1]); hdu_ee.name = "CL_EE"
+            hdu_bb = pf.ImageHDU(shared_camb[2]); hdu_bb.name = "CL_BB"
+            hdul = pf.HDUList([pf.PrimaryHDU(), hdu_tau, hdu_ee, hdu_bb])
+            hdul.writeto(args.camb_cache, overwrite=True)
+            print(f"  Cache saved ({os.path.getsize(args.camb_cache)/1e6:.1f} MB)")
 
     train_dataset = TauDataset(
         args.n_train, args.nside, LMAX,

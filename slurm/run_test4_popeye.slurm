@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=thh-t4-mcmc
+#SBATCH --job-name=thh-t4-baselines
 #SBATCH --partition=gen
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -11,7 +11,7 @@
 set -e
 export PYTHONUNBUFFERED=1
 
-echo "=== Test 4: MCMC baselines for joint r/τ estimation ==="
+echo "=== Test 4: Fisher forecast + MCMC baselines (CPU) ==="
 hostname
 date
 
@@ -24,7 +24,7 @@ rm -rf $VENV
 uv venv $VENV --python 3.11
 source $VENV/bin/activate
 uv pip install torch --index-url https://download.pytorch.org/whl/cpu 2>&1 | tail -1
-uv pip install numpy healpy h5py scipy matplotlib camb psutil 2>&1 | tail -3
+uv pip install numpy healpy h5py scipy matplotlib camb psutil astropy 2>&1 | tail -3
 
 # Install/update the package
 cd $WORKDIR
@@ -33,9 +33,27 @@ git reset --hard origin/main 2>&1 | tail -1
 uv pip install -e . --no-deps 2>&1 | tail -1
 
 RESULTS_DIR=$WORKDIR/results
+CAMB_CACHE=$RESULTS_DIR/test4_camb_spectra.fits
 mkdir -p $RESULTS_DIR
 
-echo "=== Running MCMC baselines for all 4 configs ==="
+echo ""
+echo "=========================================="
+echo "=== Fisher Forecast (4 configs) ==="
+echo "=========================================="
+for FSKY in 1.0 0.1; do
+    for NOISE in 0 6; do
+        echo "--- Fisher: f_sky=$FSKY, noise=$NOISE μK-arcmin ---"
+        python3 scripts/fisher_forecast.py \
+            --r 0.003 --tau 0.054 \
+            --noise_std $NOISE --f_sky $FSKY \
+            --nside 16 --lmax 47 2>&1 | tail -10
+    done
+done
+
+echo ""
+echo "=========================================="
+echo "=== MCMC Baselines (4 configs) ==="
+echo "=========================================="
 python3 -c "
 import numpy as np
 import healpy as hp
@@ -67,12 +85,31 @@ configs = [
 n_test = 1000
 rng = np.random.default_rng(42)
 
-# Pre-compute CAMB spectra
-print('Pre-computing 5000 CAMB spectra...')
-t0 = time.time()
-r_values, tau_values, cl_ee_array, cl_bb_array = precompute_camb_spectra_r_tau(5000, LMAX, seed=12345)
-camb_time = time.time() - t0
-print(f'CAMB pre-computation: {camb_time:.1f}s')
+# Pre-compute CAMB spectra (with FITS cache)
+from astropy.io import fits as pf
+camb_cache = '$RESULTS_DIR/test4_camb_spectra.fits'
+if os.path.exists(camb_cache):
+    print(f'Loading cached CAMB spectra from {camb_cache}')
+    with pf.open(camb_cache) as hdul:
+        r_values = hdul['R_VALUES'].data['col0'].astype(np.float32)
+        tau_values = hdul['TAU_VALUES'].data['col0'].astype(np.float32)
+        cl_ee_array = np.array(hdul['CL_EE'].data, dtype=np.float64)
+        cl_bb_array = np.array(hdul['CL_BB'].data, dtype=np.float64)
+    print(f'Loaded {len(r_values)} spectra from cache')
+else:
+    print('Pre-computing 5000 CAMB spectra...')
+    t0 = time.time()
+    r_values, tau_values, cl_ee_array, cl_bb_array = precompute_camb_spectra_r_tau(5000, LMAX, seed=12345)
+    camb_time = time.time() - t0
+    print(f'CAMB pre-computation: {camb_time:.1f}s')
+    # Save to FITS for future runs
+    hdu_r = pf.BinTableHDU(r_values); hdu_r.name = 'R_VALUES'
+    hdu_tau = pf.BinTableHDU(tau_values); hdu_tau.name = 'TAU_VALUES'
+    hdu_ee = pf.ImageHDU(cl_ee_array); hdu_ee.name = 'CL_EE'
+    hdu_bb = pf.ImageHDU(cl_bb_array); hdu_bb.name = 'CL_BB'
+    hdul = pf.HDUList([pf.PrimaryHDU(), hdu_r, hdu_tau, hdu_ee, hdu_bb])
+    hdul.writeto(camb_cache, overwrite=True)
+    print(f'Saved CAMB cache to {camb_cache} ({os.path.getsize(camb_cache)/1e6:.1f} MB)')
 
 # Create shared masks
 shared_masks = {}
@@ -143,7 +180,6 @@ for cfg in configs:
         'r_pct_error_std': float(np.std(r_errors)),
         'tau_pct_error_std': float(np.std(tau_errors)),
         'cpu_time_seconds': elapsed,
-        'camb_precompute_seconds': camb_time,
         'peak_memory_GB': mem_peak,
         'method': 'chi2_grid_search',
         'r_grid_size': len(r_grid),
@@ -159,6 +195,6 @@ for cfg in configs:
     print(f'  CPU time: {elapsed:.1f}s, Peak memory: {mem_peak:.1f}GB')
 
 print('')
-print('=== All MCMC baselines complete ===')
+print('=== All baselines complete ===')
 date
 "
