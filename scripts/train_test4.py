@@ -216,10 +216,12 @@ def main():
                         help="NPZ file to cache/load CAMB spectra (saves ~1.5h on repeat runs)")
     args = parser.parse_args()
 
-    # Convert noise from μK-arcmin to μK (HEALPix pixel area factor)
-    # noise_uK = noise_arcmin / sqrt(pixel_area_arcmin²) where pixel_area = 4π/npix sr
+    # μK-arcmin → μK/pixel: σ_pix = σ_arcmin / sqrt(Ω_pix [arcmin²])
     noise_arcmin = args.noise_std
-    noise_uK = noise_arcmin / np.sqrt(60 * 180 / np.pi)
+    npix = 12 * NSIDE**2
+    pixel_area_sr = 4.0 * np.pi / npix
+    pixel_area_arcmin2 = pixel_area_sr * (180.0 * 60.0 / np.pi)**2
+    noise_uK = noise_arcmin / np.sqrt(pixel_area_arcmin2)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")

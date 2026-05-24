@@ -138,6 +138,41 @@ proper Bayesian inference.
 
 ---
 
+## Test 4: Joint r/τ estimation for Simons Observatory
+
+**Problem:** Estimate both the tensor-to-scalar ratio r and the optical depth τ
+from CMB polarization Q/U maps, using realistic CAMB power spectra with
+r ∈ [0, 1] and τ ∈ [0.03, 0.08].
+
+**Setup:** HEALPix N_side=16, CAMB spectra (FITS-cached via astropy),
+other cosmological parameters fixed to Planck best-fit.
+100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
+
+**Targets:** [log(r + 1e-4), τ] with MSE loss.
+**Model:** `SpectralCNN(in_channels=3, out_channels=2, nside=16, num_blocks=3, hidden_channels=32, inpaint=f_sky<1)`
+
+### Configurations
+
+| Config | f_sky | Noise (μK-arcmin) | Inpaint | Model File |
+|--------|-------|-------------------|---------|------------|
+| T4-a   | 1.0   | 0                 | False   | `test4_fsky1.0_noise0.pt` |
+| T4-b   | 1.0   | 6                 | False   | `test4_fsky1.0_noise6.pt` |
+| T4-c   | 0.1   | 0                 | True    | `test4_fsky0.1_noise0.pt` |
+| T4-d   | 0.1   | 6                 | True    | `test4_fsky0.1_noise6.pt` |
+
+### Results
+
+**Results pending — training in progress.**
+
+| Config | Fisher forecast (r % / τ %) | SpectralCNN (r % / τ %) | MCMC (r % / τ %) |
+|--------|-----------------------------|--------------------------|-------------------|
+| T4-a   | TBD / TBD                   | TBD / TBD                | TBD / TBD         |
+| T4-b   | TBD / TBD                   | TBD / TBD                | TBD / TBD         |
+| T4-c   | TBD / TBD                   | TBD / TBD                | TBD / TBD         |
+| T4-d   | TBD / TBD                   | TBD / TBD                | TBD / TBD         |
+
+---
+
 ## Architecture Comparison
 
 | Property | SpectralCNN | NNhealpix |
@@ -173,7 +208,9 @@ proper Bayesian inference.
 | Training scripts v2               | ✅ Done   | 100k maps, ReduceLROnPlateau, early stopping       |
 | Test 1 v2 results (all noise)     | ✅ Done   | 1.27%, 3.58%, 6.81%, 11.98%                        |
 | Test 2 v2 results (all f_sky)     | ✅ Done   | 1.69-3.01% (all beat NNhealpix)                    |
-| Test 3 v2 result                  | ✅ Done   | 3.76% (beats NNhealpix 4.0%)                       |
+|| Test 3 v2 result                  | ✅ Done   | 3.76% (beats NNhealpix 4.0%)                       |
+|| Data generation (Test 4)          | ✅ Done   | data_generation_test4.py, FITS CAMB cache via astropy |
+|| Test 4 training (4 configs)       | 🔄 WIP    | 4 configs: f_sky∈{1.0,0.1} × noise∈{0,6}            |
 
 ---
 

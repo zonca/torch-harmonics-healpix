@@ -13,7 +13,14 @@
 | T2/T3 Inpaint (bug) | 1 | 13.75 | ❌ Shared mask not fixed yet |
 | T2/T3 Full fix re-run | 1 | 24.00 | ✅ Timed out but Test 1+2 complete |
 | Test 3 only | 1 | ~8.00 | ✅ Test 3 complete (3.76%) |
-| **TOTAL** | **31** | **~65.5** | |
+| Test 4 training | 1 | TBD | Job 49679473, 4 configs (f_sky×noise) |
+| **TOTAL** | **32** | **~65.5+** | |
+
+### Note on Test 4 GPU Time
+
+Expanse job 49679473 covers all 4 Test 4 configurations. The FITS-based CAMB cache
+(introduced in Test 4's data generation) saves ~4.5 hours of GPU time by avoiding
+recomputation of CAMB power spectra for each configuration.
 
 ### Wasted GPU Time
 

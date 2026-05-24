@@ -24,15 +24,19 @@ These models reproduce and improve upon the benchmarks from [Krachmalnicoff & To
 |-------|------|------|-------|--------|-------|--------|
 | SpectralCNN T1 | `models/test1_v2_fix_noise0.pt` | ℓ_peak estimation | T map | ℓ_peak | 1.27% | 6.4M |
 | SpectralCNN T2 | `models/test2_v2_fix_fsky1.0.pt` | ℓ_Ep / ℓ_Bp estimation | Q, U, mask | [ℓ_Ep, ℓ_Bp] | 1.69% / 1.53% | 9.8M |
-| SpectralCNN T3 | `models/test3_v2_fix.pt` | τ estimation | Q, U, mask | τ | 3.76% | 9.8M |
+|| SpectralCNN T3 | `models/test3_v2_fix.pt` | τ estimation | Q, U, mask | τ | 3.76% | 9.8M |
+| SpectralCNN T4 | `models/test4_fsky1.0_noise0.pt` | r/τ estimation (f_sky=1.0, σ=0) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
+| SpectralCNN T4 | `models/test4_fsky1.0_noise6.pt` | r/τ estimation (f_sky=1.0, σ=6) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
+| SpectralCNN T4 | `models/test4_fsky0.1_noise0.pt` | r/τ estimation (f_sky=0.1, σ=0) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
+| SpectralCNN T4 | `models/test4_fsky0.1_noise6.pt` | r/τ estimation (f_sky=0.1, σ=6) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
 
 ## Architecture
 
 **SpectralCNN** performs convolution in harmonic space instead of pixel space:
 
-1. **HEALPix → Equiangular** resampling (bilinear interpolation)
+1. **HEALPix → Equiangular** resampling (nearest-neighbor interpolation)
 2. **SHT** (Spherical Harmonic Transform) via torch-harmonics
-3. **Learned spectral weights** — complex-valued 1×1 convolutions on (ℓ, m) coefficients
+3. **Learned spectral weights** — learned complex-valued spectral weights via einsum on (ℓ, m) coefficients
 4. **ISHT** (Inverse SHT) back to pixel space
 5. **Equiangular → HEALPix** resampling
 
@@ -88,7 +92,7 @@ uv venv .venv --python 3.11
 source .venv/bin/activate
 uv pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
 uv pip install torch-harmonics==0.8.0 --no-deps
-uv pip install healpy h5py scipy huggingface_hub
+uv pip install healpy astropy scipy huggingface_hub
 uv pip install -e "git+https://github.com/zonca/torch-harmonics-healpix#egg=torch-harmonics-healpix"
 ```
 
@@ -130,7 +134,39 @@ input_tensor = torch.from_numpy(
 with torch.no_grad():
     prediction = model(input_tensor)
 
-print(f"Predicted parameter: {prediction.item():.4f}")
+print(f"Predicted parameter: {prediction[0, 0].item():.4f}")
+```
+
+### Test 4 — Joint r/τ estimation
+
+```python
+# Test 4: Joint r/τ estimation (Simons Observatory)
+model = SpectralCNN(
+    in_channels=3,       # Q, U, mask
+    out_channels=2,      # [log(r + 1e-4), τ]
+    nside=16,
+    hidden_channels=32,
+    num_blocks=3,        # Note: 3 blocks (not 4 like Tests 2/3)
+    inpaint=True,        # True for f_sky < 1.0
+)
+
+model_path = hf_hub_download(
+    repo_id="zonca/torch-harmonics-healpix",
+    filename="models/test4_fsky0.1_noise6.pt",
+)
+state_dict = torch.load(model_path, map_location="cpu")
+model.load_state_dict(state_dict)
+model.eval()
+
+# Run inference
+with torch.no_grad():
+    prediction = model(input_tensor)  # shape: [1, 2]
+
+import numpy as np
+log_r = prediction[0, 0].item()
+tau = prediction[0, 1].item()
+r_estimate = np.exp(log_r) - 1e-4
+print(f"Predicted r: {r_estimate:.6f}, τ: {tau:.4f}")
 ```
 
 ## Training

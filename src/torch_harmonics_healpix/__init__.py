@@ -17,6 +17,9 @@ def __getattr__(name):
     if name == "SpectralCNN":
         from .models import SpectralCNN
         return SpectralCNN
+    if name == "MultiResSpectralCNN":
+        from .models import MultiResSpectralCNN
+        return MultiResSpectralCNN
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
@@ -32,4 +35,5 @@ __all__ = [
     "mcmc_estimate_ell_p",
     "evaluate_mcmc_baseline",
     "SpectralCNN",
+    "MultiResSpectralCNN",
 ]

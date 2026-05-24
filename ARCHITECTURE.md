@@ -168,6 +168,25 @@ global context is overwhelmingly beneficial for partial-sky polarization.
 
 SpectralCNN beats NNhealpix by ~6%.
 
+### Test 4: Joint r/τ estimation (Simons Observatory)
+
+**Configuration:** `SpectralCNN(in_channels=3, out_channels=2, nside=16, num_blocks=3, hidden_channels=32, inpaint=f_sky<1)`
+
+- **Input:** Q/U/mask stacked [3, 3072]
+- **Targets:** [log(r + 1e-4), τ] — tensor-to-scalar ratio r and optical depth τ
+- **Loss:** MSE on both targets jointly
+- **num_blocks=3** (differs from Tests 2/3 which use `num_blocks=4`)
+- **4 configurations:** f_sky ∈ {1.0, 0.1} × noise ∈ {0, 6} μK-arcmin
+
+| f_sky | Noise (μK-arcmin) | Inpaint | r % error | τ % error |
+|-------|-------------------|---------|-----------|-----------|
+| 1.0   | 0                 | False   | TBD       | TBD       |
+| 1.0   | 6                 | False   | TBD       | TBD       |
+| 0.1   | 0                 | True    | TBD       | TBD       |
+| 0.1   | 6                 | True    | TBD       | TBD       |
+
+Results pending — training in progress.
+
 ### Key Observations
 
 1. **Polarization is the sweet spot**: SpectralCNN dominates for Q/U-based estimation

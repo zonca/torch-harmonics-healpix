@@ -2,7 +2,7 @@
 
 Bridge HEALPix to torch-harmonics for spherical CNNs on CMB data.
 
-Reproduces and benchmarks all 3 tests from [Krachmalnicoff & Tomasi (2019)](https://arxiv.org/abs/1902.04083) using spectral convolution networks instead of pixel-based NNhealpix.
+Reproduces and benchmarks all 4 tests from [Krachmalnicoff & Tomasi (2019)](https://arxiv.org/abs/1902.04083) and the [Simons Observatory](https://simonsobservatory.org/) parameter estimation challenge using spectral convolution networks instead of pixel-based NNhealpix.
 
 ## Quick Results
 
@@ -33,7 +33,7 @@ Reproduces and benchmarks all 3 tests from [Krachmalnicoff & Tomasi (2019)](http
 | 10  | 6.81%      | **5.2%**  | NNhealpix |
 | 15  | 11.98%     | **8.4%**  | NNhealpix |
 
-**Main finding:** SpectralCNN dominates for polarization estimation (Tests 2 & 3) —
+**Main finding:** SpectralCNN dominates for polarization estimation (Tests 2, 3 & 4) —
 the spectral prior provides a strong global physical prior. For noisy scalar maps
 (Test 1), pixel-space convolution is more robust due to implicit low-pass filtering.
 
@@ -44,11 +44,15 @@ See [BENCHMARKS.md](BENCHMARKS.md) for full results and [ARCHITECTURE.md](ARCHIT
 Trained model weights are available on Hugging Face:
 `https://huggingface.co/zonca/torch-harmonics-healpix`
 
-| Model | File | Test | Task | Error | Parameters | Size |
+|| Model | File | Test | Task | Error | Parameters | Size |
 |-------|------|------|------|-------|------------|------|
 | SpectralCNN T1 | `models/test1_v2_fix_noise0.pt` | 1 (σ=0) | ℓ_peak from T map | 1.27% | 6.4M | 25MB |
 | SpectralCNN T2 | `models/test2_v2_fix_fsky1.0.pt` | 2 (f_sky=1.0) | ℓ_Ep/ℓ_Bp from Q/U | 1.69%/1.53% | 9.8M | 38MB |
 | SpectralCNN T3 | `models/test3_v2_fix.pt` | 3 (full sky) | τ from Q/U | 3.6% | 9.8M | ~38MB |
+| SpectralCNN T4 | `models/test4_fsky1.0_noise0.pt` | 4 (f_sky=1.0, σ=0) | r, τ from Q/U | TBD | 9.8M | ~38MB |
+| SpectralCNN T4 | `models/test4_fsky1.0_noise6.pt` | 4 (f_sky=1.0, σ=6) | r, τ from Q/U | TBD | 9.8M | ~38MB |
+| SpectralCNN T4 | `models/test4_fsky0.1_noise0.pt` | 4 (f_sky=0.1, σ=0) | r, τ from Q/U | TBD | 9.8M | ~38MB |
+| SpectralCNN T4 | `models/test4_fsky0.1_noise6.pt` | 4 (f_sky=0.1, σ=6) | r, τ from Q/U | TBD | 9.8M | ~38MB |
 
 ### Downloading Weights
 
@@ -106,10 +110,11 @@ input_tensor = torch.from_numpy(input_map).unsqueeze(0)  # [1, 3, 3072]
 with torch.no_grad():
     prediction = model(input_tensor)  # shape: [1, 1]
 
-# Test 1: prediction.item() = ℓ_peak estimate
+# Test 1: prediction[0, 0].item() = ℓ_peak estimate
 # Test 2: prediction[0, 0].item() = ℓ_Ep, prediction[0, 1].item() = ℓ_Bp
-# Test 3: prediction.item() = τ estimate
-print(f"Predicted parameter: {prediction.item():.4f}")
+# Test 3: prediction[0, 0].item() = τ estimate
+# Test 4: prediction[0, 0].item() = log(r+1e-4), prediction[0, 1].item() = τ
+print(f"Predicted parameter: {prediction[0, 0].item():.4f}")
 ```
 
 ### Architecture Details per Model
@@ -130,6 +135,14 @@ print(f"Predicted parameter: {prediction.item():.4f}")
 - Output: τ scalar
 - Parameters: 9,829,634
 
+**Test 4 models** (`in_channels=3`, `out_channels=2`, `num_blocks=3`, `inpaint=f_sky<1`):
+- Input: Q/U/mask stacked [3, 3072]
+- Output: [log(r + 1e-4), τ] (2 values)
+- Joint r/τ estimation for Simons Observatory challenge
+- 4 configurations: f_sky∈{1.0, 0.1} × noise∈{0, 6} μK-arcmin
+- Loss: MSE on [log(r + 1e-4), τ]
+- Parameters: 9,829,634
+
 > **Note:** The pre-trained models correspond to the specific configurations listed
 > above. For different noise levels, f_sky values, or architectures, retrain using
 > the training scripts in `scripts/`.
@@ -144,15 +157,15 @@ source .venv/bin/activate
 # Install dependencies
 uv pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
 uv pip install torch-harmonics==0.8.0 --no-deps
-uv pip install healpy h5py scipy
+uv pip install healpy astropy scipy
 
 # Install in dev mode
 uv pip install -e .
 ```
 
-For Test 3 (τ estimation), also install CAMB:
+For Test 3/4 (τ/r estimation), also install CAMB and astropy (for FITS CAMB cache):
 ```bash
-uv pip install camb
+uv pip install camb astropy
 ```
 
 For downloading pre-trained models:
@@ -170,6 +183,7 @@ torch-harmonics-healpix/
 │   ├── data_generation.py           # Test 1: scalar power spectrum maps
 │   ├── data_generation_test2.py     # Test 2: polarization Q/U maps
 │   ├── data_generation_test3.py     # Test 3: CAMB spectra + τ maps
+│   ├── data_generation_test4.py     # Test 4: Simons Obs r/τ maps
 │   ├── mcmc_baseline.py             # MCMC ℓ_p estimation baseline
 │   ├── mcmc_baselines_test2_3.py    # MCMC baselines for Tests 2 & 3
 │   └── models/
@@ -178,7 +192,8 @@ torch-harmonics-healpix/
 ├── scripts/
 │   ├── train_test1_v2.py            # Test 1 training (4 noise levels)
 │   ├── train_test2_v2.py            # Test 2 training (5 f_sky values)
-│   └── train_test3_v2.py            # Test 3 training (τ estimation)
+│   ├── train_test3_v2.py            # Test 3 training (τ estimation)
+│   └── train_test4.py              # Test 4 training (r/τ estimation)
 ├── tests/
 │   ├── test_resample.py             # Resampling roundtrip tests
 │   ├── test_inpainting.py           # Inpainting unit tests
@@ -228,6 +243,10 @@ python scripts/train_test2_v2.py --f_sky 0.5 --output results/test2_fsky0.5.json
 
 # Test 3: τ estimation (requires CAMB)
 python scripts/train_test3_v2.py --f_sky 1.0 --output results/test3.json
+
+# Test 4: Joint r/τ estimation (requires CAMB + astropy)
+python scripts/train_test4.py --f_sky 1.0 --noise_std 0 --output results/test4_fsky1.0_noise0.json
+python scripts/train_test4.py --f_sky 0.1 --noise_std 6 --output results/test4_fsky0.1_noise6.json
 ```
 
 Each script outputs:
