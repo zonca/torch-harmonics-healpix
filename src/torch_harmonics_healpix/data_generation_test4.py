@@ -11,6 +11,13 @@ significantly harder inference problem than fixing either parameter.
 Uses realistic CAMB power spectra with varying (r, τ) pairs, where
 r ∈ [0, 0.01] is sampled uniformly in log(r + ε) space and τ ∈ [0.03, 0.08]
 is sampled uniformly, following the same pre-computation strategy as Test 3.
+
+FITS cache format (used by train_test4.py and run_test4_popeye.slurm):
+  HDU 0 — PrimaryHDU (empty)
+  HDU 1 — BinTableHDU "R_VALUES"  with column "col0" (float32, n_spectra rows)
+  HDU 2 — BinTableHDU "TAU_VALUES" with column "col0" (float32, n_spectra rows)
+  HDU 3 — ImageHDU  "CL_EE"  (float64, shape n_spectra × lmax+1)
+  HDU 4 — ImageHDU  "CL_BB"  (float64, shape n_spectra × lmax+1)
 """
 
 import numpy as np
@@ -25,7 +32,9 @@ TAU_MAX = 0.08
 R_MIN = 0.0
 R_MAX = 0.01
 N_CAMB_SPECTRA = 5000  # Paper: 5000 pre-computed spectra
-R_LOG_EPSILON = 1e-4  # Offset for log(r + epsilon) sampling
+R_LOG_EPSILON = 1e-4  # Offset for log(r + epsilon) sampling;
+                       # chosen so log(0 + ε) ≈ -9.2, well below log(r_min)=−4.6;
+                       # small enough to avoid bias at r=0
 
 # Planck 2018 best-fit (other parameters fixed, only r and τ vary)
 PLANCK_PARAMS = {
@@ -176,7 +185,7 @@ def generate_r_tau_map(
         cl_ee, cl_bb = generate_camb_spectra_r_tau(r, tau, lmax)
 
     # Build full TEB power spectrum
-    cl_tt = np.full(lmax + 1, 1e-5)  # No T signal for this test
+    cl_tt = np.full(lmax + 1, 1e-5)  # placeholder T signal (not used for Q/U estimation, but required by hp.synfast)
     cl_te = np.zeros(lmax + 1)
     cl_eb = np.zeros(lmax + 1)
     cl_tb = np.zeros(lmax + 1)
@@ -187,7 +196,7 @@ def generate_r_tau_map(
     if rng is not None:
         rand_state = np.random.get_state()
         seed = int(rng.integers(0, 2**31))
-        np.random.seed(seed)
+        np.random.seed(seed)  # healpy synfast doesn't accept numpy Generator objects, so we extract a seed and use legacy np.random.seed
 
     maps = hp.synfast(cl_full, nside=nside, lmax=lmax)
 

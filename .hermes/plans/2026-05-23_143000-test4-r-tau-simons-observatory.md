@@ -52,11 +52,11 @@ Test whether SpectralCNN can jointly estimate r (tensor-to-scalar ratio) and τ 
 
 | File | Description |
 |------|-------------|
-| `src/torch_harmonics_healpix/data_generation_test4.py` | CAMB r/τ spectra, map generation, RTauDataset |
-| `scripts/train_test4.py` | Training script (saves .pt + .json) |
+| `src/torch_harmonics_healpix/data_generation_test4.py` | CAMB r/τ spectra, map generation |
+| `scripts/train_test4.py` | Training script with RTauDataset (saves .pt + .json) |
 | `scripts/fisher_forecast.py` | Fisher matrix → σ(r), σ(τ) lower bounds |
 | `slurm/run_test4_expanse.slurm` | GPU training (all 4 configs) |
-| `slurm/run_test4_mcmc_popeye.slurm` | MCMC baselines on CPU |
+| `slurm/run_test4_popeye.slurm` | MCMC baselines on CPU |
 
 ### Modified Files
 

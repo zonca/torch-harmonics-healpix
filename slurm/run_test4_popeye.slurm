@@ -1,4 +1,6 @@
 #!/bin/bash
+# Fisher forecast + MCMC baselines for Test 4 (joint r/τ estimation).
+# CPU-only (Popeye gen partition). Uses same FITS CAMB cache as Expanse training script.
 #SBATCH --job-name=thh-t4-baselines
 #SBATCH --partition=gen
 #SBATCH --nodes=1
@@ -70,6 +72,18 @@ from torch_harmonics_healpix.mcmc_baselines_test2_3 import mcmc_baseline_r_tau
 
 # Noise conversion: μK-arcmin -> μK per pixel
 def noise_arcmin_to_uK(noise_arcmin, nside):
+    """Convert noise from μK-arcmin to μK per HEALPix pixel.
+
+    The noise per pixel scales as noise_arcmin / sqrt(pixel_area_arcmin²),
+    where pixel_area = 4π/npix sr.
+
+    Args:
+        noise_arcmin: White noise level in μK-arcmin.
+        nside: HEALPix Nside parameter.
+
+    Returns:
+        Noise standard deviation in μK per pixel.
+    """
     npix = hp.nside2npix(nside)
     pixel_area_rad2 = 4 * np.pi / npix
     pixel_area_arcmin2 = pixel_area_rad2 * (180 * 60 / np.pi)**2
@@ -117,7 +131,7 @@ for f_sky in [1.0, 0.1]:
     mask_rng = np.random.default_rng(0)
     shared_masks[f_sky] = create_sky_mask(f_sky, NSIDE, mask_rng).astype(np.float32)
 
-# Grid for MCMC search
+# Grid for MCMC search (50 points each — coarse but sufficient for benchmark comparison)
 r_grid = np.linspace(0, R_MAX, 50)
 tau_grid = np.linspace(0.03, 0.08, 50)
 

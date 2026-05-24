@@ -37,6 +37,19 @@ class RTauDataset(Dataset):
     def __init__(self, n_maps, nside=NSIDE, lmax=LMAX,
                  noise_std=0.0, f_sky=1.0, seed=42, mask=None,
                  camb_spectra=None):
+        """Initialize the RTauDataset.
+
+        Args:
+            n_maps: Number of maps to generate (dataset length).
+            nside: HEALPix Nside parameter.
+            lmax: Maximum multipole for power spectra.
+            noise_std: White noise standard deviation in μK (per pixel).
+            f_sky: Sky fraction observed (1.0 = full sky).
+            seed: Random seed for reproducibility.
+            mask: Pre-computed sky mask (1D HEALPix array); generated if None.
+            camb_spectra: Optional tuple of (r_values, tau_values, cl_ee_array, cl_bb_array)
+                to reuse pre-computed CAMB spectra across datasets.
+        """
         self.n_maps = n_maps
         self.nside = nside
         self.lmax = lmax
@@ -91,7 +104,17 @@ class RTauDataset(Dataset):
 
 
 def train_one_epoch(model, dataloader, optimizer, device):
-    """Train model for one epoch. Returns mean loss."""
+    """Train model for one epoch. Returns mean loss.
+
+    Args:
+        model: SpectralCNN model to train.
+        dataloader: DataLoader yielding (input_maps, targets) batches.
+        optimizer: PyTorch optimizer.
+        device: torch.device for computation.
+
+    Returns:
+        Mean MSE loss over all batches in the epoch.
+    """
     model.train()
     total_loss = 0
     n_batches = 0
@@ -112,7 +135,19 @@ def train_one_epoch(model, dataloader, optimizer, device):
 
 @torch.no_grad()
 def evaluate(model, dataloader, device):
-    """Evaluate joint r/τ estimation. Returns dict with r_pct_error, tau_pct_error, r_bias."""
+    """Evaluate joint r/τ estimation. Returns dict with r_pct_error, tau_pct_error, r_bias.
+
+    Args:
+        model: SpectralCNN model to evaluate.
+        dataloader: DataLoader yielding (input_maps, targets) batches.
+        device: torch.device for computation.
+
+    Returns:
+        Dict with keys:
+            r_pct_error: mean |r_pred - r_true| / r_true × 100 for r_true > 0.001.
+            tau_pct_error: mean |τ_pred - τ_true| / |τ_true| × 100 (denom clamped ≥ 0.01).
+            r_bias: mean (r_pred - r_true) for r_true < 0.001 (near-zero r detection).
+    """
     model.eval()
     r_pct_errors = []
     tau_pct_errors = []
@@ -182,6 +217,7 @@ def main():
     args = parser.parse_args()
 
     # Convert noise from μK-arcmin to μK (HEALPix pixel area factor)
+    # noise_uK = noise_arcmin / sqrt(pixel_area_arcmin²) where pixel_area = 4π/npix sr
     noise_arcmin = args.noise_std
     noise_uK = noise_arcmin / np.sqrt(60 * 180 / np.pi)
 
@@ -202,6 +238,7 @@ def main():
     shared_mask = create_sky_mask(args.f_sky, NSIDE, shared_rng).astype(np.float32)
 
     # Pre-compute CAMB spectra ONCE (with optional FITS disk cache)
+    # FITS cache layout: PrimaryHDU + BinTableHDU "R_VALUES"/"TAU_VALUES" (col0) + ImageHDU "CL_EE"/"CL_BB"
     if args.camb_cache and os.path.exists(args.camb_cache):
         print(f"  Loading cached CAMB spectra from {args.camb_cache}")
         from astropy.io import fits as pf
@@ -288,7 +325,7 @@ def main():
         epoch_time = time.time() - t0
 
         val_results = evaluate(model, val_loader, device)
-        val_loss = val_results["r_pct_error"] + val_results["tau_pct_error"]
+        val_loss = val_results["r_pct_error"] + val_results["tau_pct_error"]  # Combined validation metric for early stopping (equal weight to both parameters)
 
         scheduler.step(val_loss)
 

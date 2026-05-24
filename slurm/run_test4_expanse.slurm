@@ -1,4 +1,7 @@
 #!/bin/bash
+# Train SpectralCNN for Test 4 (joint r/τ estimation) on 4 configs.
+# Config 1 computes CAMB spectra and saves FITS cache; Configs 2-4 load from cache.
+# GPU-only (Expanse gpu-shared). Uploads trained models to HF Hub.
 #SBATCH --job-name=thh-test4
 #SBATCH --partition=gpu-shared
 #SBATCH --account=sds166

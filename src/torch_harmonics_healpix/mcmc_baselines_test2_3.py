@@ -1,10 +1,11 @@
-"""MCMC baselines for Test 2 (polarization) and Test 3 (τ estimation).
+"""MCMC baselines for Test 2 (polarization), Test 3 (τ estimation), and Test 4 (joint r/τ estimation).
 
 These reproduce the maximum-likelihood estimators from Krachmalnicoff & Tomasi (2019)
 Sections 6.2 and 6.3. Run on CPU (Popeye) since they don't need GPU.
 
 Test 2 MCMC: Fit ℓ_Ep and ℓ_Bp from the EE and BB power spectra of Q/U maps.
 Test 3 MCMC: Fit τ from the EE power spectrum of Q/U maps using CAMB templates.
+Test 4 MCMC (mcmc_baseline_r_tau): Joint r/τ estimation via chi-squared grid search.
 """
 
 import numpy as np
@@ -258,13 +259,17 @@ def mcmc_baseline_r_tau(
         r_grid: 1D array of r values to search over.
         tau_grid: 1D array of τ values to search over.
         cl_ee_array: Pre-computed EE spectra, shape (n_spectra, lmax+1).
+            Must be ordered as a flattened (r, τ) grid with index = tau_idx * n_r + r_idx.
         cl_bb_array: Pre-computed BB spectra, shape (n_spectra, lmax+1).
+            Must be ordered as a flattened (r, τ) grid with index = tau_idx * n_r + r_idx.
         noise_std: White noise in μK (0 for no noise).
         nside: HEALPix Nside.
         lmax: Maximum multipole.
 
     Returns:
-        Dict with keys: r_best, tau_best, r_pct_error, tau_pct_error, chi2_grid
+        Dict with keys: r_best, tau_best, r_pct_error, tau_pct_error, chi2_grid.
+        Note: r_pct_error and tau_pct_error are always NaN; the caller must compute
+        percentage errors using known true values.
     """
     npix = hp.nside2npix(nside)
     f_sky = np.mean(mask)
