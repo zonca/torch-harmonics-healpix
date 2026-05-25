@@ -216,6 +216,12 @@ def main():
         default=16,
         help="HEALPix NSIDE (default: 16)",
     )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Output JSON path for results",
+    )
 
     args = parser.parse_args()
 
@@ -264,6 +270,28 @@ def main():
     print(f"  r error    = {sigma_r / args.r * 100:.1f}%")
     print(f"  τ error    = {sigma_tau / args.tau * 100:.1f}%")
     print("=" * 60)
+
+    if args.output:
+        import json, os
+        os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
+        result_data = {
+            "test": "test4_fisher",
+            "f_sky": args.f_sky,
+            "noise_arcmin": args.noise_std,
+            "noise_uK_per_pixel": float(noise_std_uK),
+            "r_fiducial": args.r,
+            "tau_fiducial": args.tau,
+            "sigma_r": float(sigma_r),
+            "sigma_tau": float(sigma_tau),
+            "r_pct_error": float(sigma_r / args.r * 100),
+            "tau_pct_error": float(sigma_tau / args.tau * 100),
+            "correlation_r_tau": float(corr),
+            "nside": args.nside,
+            "lmax": args.lmax,
+        }
+        with open(args.output, "w") as f:
+            json.dump(result_data, f, indent=2)
+        print(f"Results saved to {args.output}")
 
 
 if __name__ == "__main__":

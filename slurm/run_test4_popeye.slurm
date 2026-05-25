@@ -34,7 +34,11 @@ uv pip install -e "$REPO_SRC" --no-deps 2>&1 | tail -1
 echo ""
 echo "=== Fisher Forecast (4 configs) ==="
 date
-python3 scripts/fisher_forecast.py
+RESULTS=$WORKDIR/results
+python3 scripts/fisher_forecast.py --f_sky 1.0 --noise_std 0 --output $RESULTS/test4_fisher_fsky1.0_noise0.json
+python3 scripts/fisher_forecast.py --f_sky 1.0 --noise_std 6 --output $RESULTS/test4_fisher_fsky1.0_noise6.json
+python3 scripts/fisher_forecast.py --f_sky 0.1 --noise_std 0 --output $RESULTS/test4_fisher_fsky0.1_noise0.json
+python3 scripts/fisher_forecast.py --f_sky 0.1 --noise_std 6 --output $RESULTS/test4_fisher_fsky0.1_noise6.json
 
 echo ""
 echo "=== MCMC Baselines (4 configs, 1000 maps each) ==="
