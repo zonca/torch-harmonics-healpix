@@ -49,12 +49,17 @@ This document tracks our reproduction of the three benchmarks from
 | T2 | f_sky=0.1 | **2.56%/2.70%** | 6.4%/6.4% | 75.7%/71.3% | SpectralCNN ✅ |
 | T2 | f_sky=0.05 | **3.01%/3.11%** | 8.4%/8.4% | 66.3%/63.3% | SpectralCNN ✅ |
 | T3 | full sky | **3.76%** | 4.0% | 2.8% (paper) | SpectralCNN ✅ |
-| T4 | f_sky=1.0, noise=0 | **55.2%**/24.2% (r/τ) | — | 337%/25.0% | SpectralCNN ✅ (r) |
-| T4 | f_sky=0.1, noise=0 | **61.0%**/24.3% (r/τ) | — | 341%/40.1% | SpectralCNN ✅ (r & τ) |
+| T4 | f_sky=1.0, noise=0 | **55.2%**/24.2% (r/τ) | — | 337%/25.0% | SpectralCNN ✅ (vs MCMC; see ⚠️ for Fisher) |
+| T4 | f_sky=0.1, noise=0 | **61.0%**/24.3% (r/τ) | — | 341%/40.1% | SpectralCNN ✅ (vs MCMC; see ⚠️ for Fisher) |
 
 **Main finding:** SpectralCNN dominates for polarization estimation (Tests 2 & 3) but
 underperforms for noisy scalar maps (Test 1). The spectral representation provides a
 strong global prior for clean/polarized data but is sensitive to noise in scalar fields.
+
+> ⚠️ **Test 4 Fisher vs. CNN:** The r% errors for Fisher and CNN in the table above are
+> **not directly comparable** — Fisher is evaluated at a single fiducial point while CNN
+> is averaged across the full parameter range. See the detailed warning in the Test 4
+> section below.
 
 ---
 
@@ -164,11 +169,44 @@ other cosmological parameters fixed to Planck best-fit.
 
 ### Results
 
+> ⚠️ **WARNING: Fisher vs. CNN percentage errors are NOT directly comparable!**
+>
+> The Fisher and CNN "r %" numbers measure fundamentally different things:
+>
+> - **Fisher** reports σ(r)/r_fiducial × 100 evaluated at a **single fiducial point**
+>   (r=0.003, τ=0.054). This is the Cramér-Rao lower bound on the *relative*
+>   uncertainty at that point.
+> - **CNN** reports the average |r_pred − r_true|/r_true × 100 across **all test
+>   samples** with r drawn uniformly from [0, 0.01]. This average is dominated by
+>   samples with larger r (where relative error is inherently smaller), and
+>   includes samples with r=0 where the metric is undefined or meaningless.
+>
+> **Why this matters:** At f_sky=0.1, Fisher says the minimum possible relative
+> error at r=0.003 is **165%** — yet the CNN reports **61%**. This does NOT mean
+> the CNN beats the Fisher bound (which is mathematically impossible). The
+> apparent "improvement" is entirely due to the CNN average being weighted toward
+> larger r values where relative errors are smaller.
+>
+> **Fair comparison in absolute terms:** Fisher gives σ(r) = 0.005 (absolute) at
+> f_sky=0.1. The CNN's mean absolute error can be roughly estimated as
+> r_pct_avg × mean(r_true) ≈ 0.61 × 0.005 = 0.003, which is *less* than Fisher's
+> 0.005 — but this comparison is also misleading because CNN error varies strongly
+> with r_true and the averaging hides the true error profile.
+>
+> **For future work, a proper comparison would require either:**
+> (a) evaluating the CNN at the fiducial point only (r=0.003, τ=0.054), or
+> (b) computing Fisher forecasts at multiple points across the parameter space.
+>
+> **One exception:** At f_sky=1.0, Fisher r% ≈ 52% and CNN r% ≈ 55%. Here the
+> Fisher error is small enough that the averaging effect is less severe, so the
+> CNN is indeed close to the Fisher bound — but this should still be confirmed
+> with a point-wise comparison.
+
 #### Fisher Forecast (theoretical optimal bounds)
 
 Cramér-Rao lower bound computed at fiducial point (r=0.003, τ=0.054).
 
-| Config | f_sky | Noise | σ(r) | σ(τ) | r % error | τ % error |
+| Config | f_sky | Noise | σ(r) | σ(τ) | r % error (at fiducial) | τ % error (at fiducial) |
 |--------|-------|-------|------|------|-----------|-----------|
 | T4-a   | 1.0   | 0     | 0.00156 | 0.00223 | 52.1% | 4.1% |
 | T4-b   | 1.0   | 6     | 0.00161 | 0.00223 | 53.6% | 4.1% |
@@ -177,7 +215,7 @@ Cramér-Rao lower bound computed at fiducial point (r=0.003, τ=0.054).
 
 #### SpectralCNN (our method)
 
-| Config | f_sky | Noise | r % error | τ % error | Epochs | Time (s) | GPU Mem |
+| Config | f_sky | Noise | r % error (avg over range) | τ % error (avg over range) | Epochs | Time (s) | GPU Mem |
 |--------|-------|-------|-----------|-----------|--------|----------|---------|
 | T4-a   | 1.0   | 0     | 55.2%     | 24.2%     | 24     | 3003     | 277MB   |
 | T4-b   | 1.0   | 6     | 55.2%     | 24.8%     | 21     | 2854     | 277MB   |
@@ -188,7 +226,7 @@ Cramér-Rao lower bound computed at fiducial point (r=0.003, τ=0.054).
 
 50×50 grid in (r, τ) — coarse but representative of traditional methods.
 
-| Config | f_sky | Noise | r % error | τ % error | Time (s) | Memory |
+| Config | f_sky | Noise | r % error (avg over range) | τ % error (avg over range) | Time (s) | Memory |
 |--------|-------|-------|-----------|-----------|----------|--------|
 | T4-a   | 1.0   | 0     | 337%      | 25.0%     | 65       | 0.3GB  |
 | T4-b   | 1.0   | 6     | 335%      | 26.3%     | 65       | 0.3GB  |
@@ -197,23 +235,31 @@ Cramér-Rao lower bound computed at fiducial point (r=0.003, τ=0.054).
 
 #### Comparison Summary
 
-| Config | Fisher (r/τ %) | SpectralCNN (r/τ %) | MCMC (r/τ %) |
-|--------|-----------------|----------------------|---------------|
-| T4-a   | 52.1 / 4.1      | 55.2 / 24.2          | 337 / 25.0    |
-| T4-b   | 53.6 / 4.1      | 55.2 / 24.8          | 335 / 26.3    |
-| T4-c   | 164.9 / 13.0    | 61.0 / 24.3          | 341 / 40.1    |
-| T4-d   | 169.6 / 13.1    | 60.5 / 24.2          | 341 / 41.0    |
+| Config | Fisher r% (at fiducial) / τ% (at fiducial) | SpectralCNN r% (avg over range) / τ% (avg over range) | MCMC r% (avg over range) / τ% (avg over range) |
+|--------|----------------------------------------------|-------------------------------------------------------|---------------------------------------------------|
+| T4-a   | 52.1 / 4.1                                   | 55.2 / 24.2                                           | 337 / 25.0                                        |
+| T4-b   | 53.6 / 4.1                                   | 55.2 / 24.8                                           | 335 / 26.3                                        |
+| T4-c   | 164.9 / 13.0                                 | 61.0 / 24.3                                           | 341 / 40.1                                        |
+| T4-d   | 169.6 / 13.1                                 | 60.5 / 24.2                                           | 341 / 41.0                                        |
 
 #### Important Notes
 
-1. **Fisher vs. CNN/MCMC comparison requires care.** The Fisher forecast gives the
+1. **Fisher vs. CNN/MCMC comparison is NOT valid as-is.** The Fisher forecast gives the
    Cramér-Rao lower bound at a single fiducial point (r=0.003, τ=0.054), while
-   CNN and MCMC errors are averaged over the full parameter range. Direct
-   comparison should account for this difference.
+   CNN and MCMC errors are averaged over the full parameter range (r ∈ [0, 0.01],
+   τ ∈ [0.03, 0.08]). The percentage errors are fundamentally different metrics
+   and **cannot be directly compared**. At f_sky=0.1, the CNN reporting 61% vs.
+   Fisher's 165% does NOT mean the CNN beats the Fisher bound — it reflects the
+   averaging effect (see warning above). A proper comparison requires evaluating
+   the CNN at the fiducial point or computing Fisher at multiple points.
 
-2. **CNN approaches the Fisher bound on r** (within ~3% for f_sky=1.0), but the
-   τ error is ~6× the Fisher bound — likely because log-r dominates the loss
-   function, causing the network to prioritize r accuracy over τ.
+2. **At f_sky=1.0, the comparison is approximately valid.** For T4-a (f_sky=1.0,
+   noise=0), Fisher r% = 52.1% and CNN r% = 55.2% — the CNN is within ~3% of
+   the Fisher bound. Here the Fisher error is small enough that the averaging
+   effect is less severe, so the CNN is indeed close to the theoretical optimum
+   on r. However, τ error remains ~6× the Fisher bound (24.2% vs 4.1%), likely
+   because log-r dominates the loss function, causing the network to prioritize
+   r accuracy over τ.
 
 3. **CNN dramatically outperforms MCMC** on both r (5-6× better) and τ (~1.5×
    better at f_sky=0.1). The spectral representation provides a strong prior for
