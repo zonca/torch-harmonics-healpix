@@ -13,14 +13,15 @@
 | T2/T3 Inpaint (bug) | 1 | 13.75 | ❌ Shared mask not fixed yet |
 | T2/T3 Full fix re-run | 1 | 24.00 | ✅ Timed out but Test 1+2 complete |
 | Test 3 only | 1 | ~8.00 | ✅ Test 3 complete (3.76%) |
-| Test 4 training | 1 | TBD | Job 49679473, 4 configs (f_sky×noise) |
-| **TOTAL** | **32** | **~65.5+** | |
+| Test 4 training | 1 | ~6.0 | Job 49694662, 4 configs (f_sky×noise), CAMB FITS cache 3.9MB |
+| **TOTAL** | **32** | **~71.5+** | |
 
 ### Note on Test 4 GPU Time
 
-Expanse job 49679473 covers all 4 Test 4 configurations. The FITS-based CAMB cache
-(introduced in Test 4's data generation) saves ~4.5 hours of GPU time by avoiding
-recomputation of CAMB power spectra for each configuration.
+Expanse job 49694662 covers all 4 Test 4 configurations. Total walltime ~6 hours.
+The FITS-based CAMB cache (introduced in Test 4's data generation) saves ~4.5 hours
+of GPU time by avoiding recomputation of CAMB power spectra for each configuration.
+The CAMB FITS cache file is 3.9MB.
 
 ### Wasted GPU Time
 
@@ -30,7 +31,7 @@ recomputation of CAMB power spectra for each configuration.
 | T2/T3 Inpaint (49229707) | 13.75 | Same mask bug + CAMB error; cancelled after 13.75h |
 | **Total wasted** | **21.93** | ~33% of total GPU time |
 
-### Productive GPU Time: ~43.5 hours
+### Productive GPU Time: ~49.5 hours
 
 ## Popeye CPU Usage
 

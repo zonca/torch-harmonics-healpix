@@ -1,0 +1,17 @@
+{
+  "test": "test4_mcmc",
+  "config": "fsky0.1_noise6",
+  "f_sky": 0.1,
+  "noise_arcmin": 6,
+  "noise_uK_per_pixel": 0.02728871221190636,
+  "n_test": 1000,
+  "r_pct_error": 340.5581359863281,
+  "tau_pct_error": 41.0350227355957,
+  "r_pct_error_std": 213.63490295410156,
+  "tau_pct_error_std": 38.59656524658203,
+  "cpu_time_seconds": 66.45319509506226,
+  "peak_memory_GB": 0.298917888,
+  "method": "chi2_grid_search",
+  "r_grid_size": 50,
+  "tau_grid_size": 50
+}
