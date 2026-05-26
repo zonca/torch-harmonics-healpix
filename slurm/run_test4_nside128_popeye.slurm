@@ -32,7 +32,7 @@ rm -rf $VENV
 uv venv $VENV --python 3.11
 source $VENV/bin/activate
 uv pip install torch --index-url https://download.pytorch.org/whl/cpu 2>&1 | tail -1
-uv pip install numpy healpy astropy scipy matplotlib camb "torch-harmonics==0.8.0" 2>&1 | tail -3
+uv pip install numpy healpy astropy scipy matplotlib camb "torch-harmonics==0.8.0" psutil 2>&1 | tail -3
 uv pip install -e "$REPO_SRC" --no-deps 2>&1 | tail -1
 
 echo ""
