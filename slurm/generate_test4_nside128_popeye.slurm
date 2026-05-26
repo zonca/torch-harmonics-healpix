@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=thh-gen-n128
 #SBATCH --partition=gen
-#SBATCH --account=sds166
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
