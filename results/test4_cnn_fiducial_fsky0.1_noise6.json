@@ -1,0 +1,21 @@
+{
+  "test": "test4_cnn_at_fiducial",
+  "r_fiducial": 0.003,
+  "tau_fiducial": 0.054,
+  "f_sky": 0.1,
+  "noise_arcmin": 6,
+  "noise_uK_per_pixel": 0.02728871221190636,
+  "n_realizations": 1000,
+  "sigma_r": 2.792725447859252e-05,
+  "sigma_tau": 0.0009736306491060959,
+  "r_pct_error": 0.9309084826197507,
+  "tau_pct_error": 1.8030197205668441,
+  "r_mean": 0.0010690402825775656,
+  "tau_mean": 0.050178615629673004,
+  "r_bias": -0.0019309597174224345,
+  "tau_bias": -0.0038213843703269954,
+  "nside": 16,
+  "lmax": 47,
+  "device": "cpu",
+  "eval_time_s": 45.81914687156677
+}
