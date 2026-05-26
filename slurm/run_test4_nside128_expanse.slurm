@@ -1,17 +1,16 @@
 #!/bin/bash
 #SBATCH --job-name=thh-t4-n128
-#SBATCH --partition=gpu-shared
+#SBATCH --partition=gpu
 #SBATCH --account=sds166
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gpus=1
-#SBATCH --mem=64G
-#SBATCH --time=10:00:00
+#SBATCH --gpus=4
+#SBATCH --mem=256G
+#SBATCH --time=06:00:00
 #SBATCH --output=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/test4_n128_gpu_%j.out
 
-# Test 4 at NSIDE=128: joint r/τ estimation with higher resolution
-# NSIDE=128 → lmax=383, much more BB signal available for r constraint.
-# Batch size reduced to 16 (maps are 64x larger than NSIDE=16).
+# Test 4 at NSIDE=128 on full GPU node (shorter queue than gpu-shared)
+# Only uses 1 GPU for training, but full node has faster scheduling
 
 set -e
 export PYTHONUNBUFFERED=1
@@ -32,7 +31,9 @@ echo "NSIDE=$NSIDE, LMAX=$LMAX"
 date
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 
-# Pre-compute CAMB spectra (all 4 configs share the same spectra)
+# Use only GPU 0
+export CUDA_VISIBLE_DEVICES=0
+
 # Config 1: f_sky=1.0, noise=0
 echo ""
 echo "=== Config 1: f_sky=1.0, noise=0 ==="
