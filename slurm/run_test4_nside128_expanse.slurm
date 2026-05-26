@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=thh-t4-n128
-#SBATCH --partition=gpu-shared
+#SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=10
 #SBATCH --mem=64G
 #SBATCH --gpus=1
 #SBATCH --account=sds166
-#SBATCH --time=12:00:00
+#SBATCH --time=08:00:00
 #SBATCH --output=%x_%j.out
 
 # Test 4 at NSIDE=128: joint r/τ estimation with higher resolution
