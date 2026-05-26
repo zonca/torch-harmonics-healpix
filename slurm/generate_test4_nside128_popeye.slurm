@@ -15,7 +15,7 @@ export PYTHONUNBUFFERED=1
 
 # Setup
 VENV=~/torch-hh-venv
-REPO=~/torch-harmonics-healpix/repo_latest
+REPO=~/torch-harmonics-healpix
 RESULTS=~/torch-harmonics-healpix/results
 CAMB_CACHE=$RESULTS/test4_camb_spectra_nside128.fits
 NSIDE=128
