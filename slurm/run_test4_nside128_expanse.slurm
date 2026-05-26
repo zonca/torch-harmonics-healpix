@@ -1,12 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=thh-t4-n128
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu-shared
 #SBATCH --account=sds166
+#SBATCH --qos=gpu-preempt-normal
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gpus=4
-#SBATCH --mem=256G
-#SBATCH --time=06:00:00
+#SBATCH --gpus=1
+#SBATCH --mem=64G
+#SBATCH --time=10:00:00
 #SBATCH --output=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/test4_n128_gpu_%j.out
 
 # Test 4 at NSIDE=128 on full GPU node (shorter queue than gpu-shared)

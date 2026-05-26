@@ -5,13 +5,15 @@
   "noise_arcmin": 0,
   "noise_uK_per_pixel": 0.0,
   "n_test": 1000,
-  "r_pct_error": 337.0331726074219,
-  "tau_pct_error": 25.046358108520508,
-  "r_pct_error_std": 280.6076354980469,
-  "tau_pct_error_std": 18.58241844177246,
-  "cpu_time_seconds": 65.33222603797913,
-  "peak_memory_GB": 0.29872128,
+  "r_pct_error": 170.47727966308594,
+  "tau_pct_error": 38.81097412109375,
+  "r_pct_error_std": 115.02407836914062,
+  "tau_pct_error_std": 36.594120025634766,
+  "cpu_time_seconds": 127.03289294242859,
+  "peak_memory_GB": 0.381968384,
   "method": "chi2_grid_search",
   "r_grid_size": 50,
-  "tau_grid_size": 50
+  "tau_grid_size": 50,
+  "nside": 128,
+  "lmax": 383
 }
