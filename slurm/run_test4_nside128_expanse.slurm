@@ -1,14 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=thh-t4-n128
 #SBATCH --partition=gpu-shared
+#SBATCH --account=sds166
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=10
-#SBATCH --mem=64G
 #SBATCH --gpus=1
-#SBATCH --account=sds166
-#SBATCH --time=04:00:00
-#SBATCH --output=%x_%j.out
+#SBATCH --mem=64G
+#SBATCH --time=10:00:00
+#SBATCH --output=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/test4_n128_gpu_%j.out
 
 # Test 4 at NSIDE=128: joint r/τ estimation with higher resolution
 # NSIDE=128 → lmax=383, much more BB signal available for r constraint.
@@ -25,7 +24,7 @@ CAMB_CACHE=$RESULTS/test4_camb_spectra_nside${NSIDE}.fits
 
 cd $REPO
 
-# Activate existing venv (set up by previous Expanse jobs)
+# Activate existing venv
 source $REPO/.venv/bin/activate
 
 echo "=== Test 4 NSIDE=128: Joint r/τ estimation ==="
