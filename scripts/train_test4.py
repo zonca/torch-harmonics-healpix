@@ -213,10 +213,6 @@ def main():
     parser.add_argument("--lr_factor", type=float, default=0.1)
     parser.add_argument("--hidden_channels", type=int, default=32)
     parser.add_argument("--num_blocks", type=int, default=3)
-    parser.add_argument("--nside", type=int, default=16,
-                        help="HEALPix NSIDE (default: 16)")
-    parser.add_argument("--lmax", type=int, default=None,
-                        help="Maximum multipole (default: 3*NSIDE-1)")
     parser.add_argument("--output", type=str, required=True,
                         help="Output JSON path for results")
     parser.add_argument("--camb_cache", type=str, default=None,
