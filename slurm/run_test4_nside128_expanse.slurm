@@ -10,30 +10,28 @@
 #SBATCH --time=10:00:00
 #SBATCH --output=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/test4_n128_gpu_%j.out
 
-# Test 4 at NSIDE=128 on full GPU node (shorter queue than gpu-shared)
-# Only uses 1 GPU for training, but full node has faster scheduling
+# Test 4 at NSIDE=128: joint r/τ estimation with higher resolution
+# NSIDE=128 → lmax=383, much more BB signal available for r constraint.
 
 set -e
 export PYTHONUNBUFFERED=1
 
-REPO=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/repo_latest
-RESULTS=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results
+BASE=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix
+REPO=$BASE/repo_latest
+RESULTS=$BASE/results
 NSIDE=128
 LMAX=383
 CAMB_CACHE=$RESULTS/test4_camb_spectra_nside${NSIDE}.fits
 
 cd $REPO
 
-# Activate existing venv
-source $REPO/.venv/bin/activate
+# Activate existing venv (at parent level)
+source $BASE/.venv/bin/activate
 
 echo "=== Test 4 NSIDE=128: Joint r/τ estimation ==="
 echo "NSIDE=$NSIDE, LMAX=$LMAX"
 date
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
-
-# Use only GPU 0
-export CUDA_VISIBLE_DEVICES=0
 
 # Config 1: f_sky=1.0, noise=0
 echo ""
