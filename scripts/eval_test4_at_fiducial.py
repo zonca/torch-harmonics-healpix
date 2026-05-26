@@ -19,7 +19,7 @@ import healpy as hp
 
 from torch_harmonics_healpix.data_generation_test4 import (
     generate_camb_spectra_r_tau, generate_r_tau_map,
-    NSIDE, LMAX, R_MAX, R_LOG_EPSILON
+    R_MAX, R_LOG_EPSILON
 )
 from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
 from torch_harmonics_healpix.models.spectral_cnn import SpectralCNN
@@ -38,7 +38,7 @@ def noise_arcmin_to_uK(noise_arcmin, nside):
 
 def eval_at_fiducial(model_path, r_fid=0.003, tau_fid=0.054,
                      f_sky=1.0, noise_arcmin=0, n_realizations=1000,
-                     nside=NSIDE, lmax=LMAX, seed=42):
+                     nside=16, lmax=47, seed=42):
     """Evaluate a trained SpectralCNN at a single fiducial (r, τ) point.
 
     Generates n_realizations maps with different noise seeds at the same
@@ -166,7 +166,14 @@ def main():
                         help="Directory with .pt model files and output JSONs")
     parser.add_argument("--n_realizations", type=int, default=1000,
                         help="Number of noise realizations per config")
+    parser.add_argument("--nside", type=int, default=16,
+                        help="HEALPix NSIDE (default: 16)")
+    parser.add_argument("--lmax", type=int, default=None,
+                        help="Maximum multipole (default: 3*NSIDE-1)")
     args = parser.parse_args()
+
+    if args.lmax is None:
+        args.lmax = 3 * args.nside - 1
 
     results_dir = args.results_dir
     os.makedirs(results_dir, exist_ok=True)
@@ -185,7 +192,10 @@ def main():
 
     for cfg in configs:
         label = cfg["label"]
-        model_path = os.path.join(results_dir, f"test4_{label}.pt")
+        # Try nside-specific name first, then fall back to legacy name
+        model_path = os.path.join(results_dir, f"test4_{label}_nside{args.nside}.pt")
+        if not os.path.exists(model_path):
+            model_path = os.path.join(results_dir, f"test4_{label}.pt")
 
         if not os.path.exists(model_path):
             print(f"Skipping {label}: model not found at {model_path}")
@@ -199,6 +209,8 @@ def main():
             f_sky=cfg["f_sky"],
             noise_arcmin=cfg["noise_arcmin"],
             n_realizations=args.n_realizations,
+            nside=args.nside,
+            lmax=args.lmax,
         )
 
         outpath = os.path.join(results_dir, f"test4_cnn_fiducial_{label}.json")

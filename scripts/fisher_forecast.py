@@ -35,16 +35,14 @@ import numpy as np
 
 from torch_harmonics_healpix.data_generation_test4 import (
     generate_camb_spectra_r_tau,
-    NSIDE,
-    LMAX,
 )
 
 
 def compute_fisher_matrix(
     r: float,
     tau: float,
-    lmax: int = LMAX,
-    nside: int = NSIDE,
+    lmax: int = 47,
+    nside: int = 16,
     noise_std_uK: float = 6.0,
     f_sky: float = 1.0,
 ) -> np.ndarray:
@@ -121,8 +119,8 @@ def compute_fisher_matrix(
 def fisher_forecast(
     r: float = 0.003,
     tau: float = 0.054,
-    lmax: int = LMAX,
-    nside: int = NSIDE,
+    lmax: int = 47,
+    nside: int = 16,
     noise_std_uK: float = 6.0,
     f_sky: float = 1.0,
 ) -> dict:
@@ -207,8 +205,8 @@ def main():
     parser.add_argument(
         "--lmax",
         type=int,
-        default=47,
-        help="Maximum multipole (default: 47, i.e. 3*NSIDE-1 for NSIDE=16)",
+        default=None,
+        help="Maximum multipole (default: 3*NSIDE-1)",
     )
     parser.add_argument(
         "--nside",
@@ -224,6 +222,9 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.lmax is None:
+        args.lmax = 3 * args.nside - 1
 
     # Convert noise from μK-arcmin to μK per HEALPix pixel
     # Pixel area in arcmin²:

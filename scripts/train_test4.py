@@ -13,7 +13,6 @@ from torch.utils.data import Dataset, DataLoader
 from torch_harmonics_healpix.data_generation_test4 import (
     generate_r_tau_map,
     precompute_camb_spectra_r_tau,
-    NSIDE, LMAX,
     R_MIN, R_MAX,
     TAU_MIN, TAU_MAX,
     N_CAMB_SPECTRA,
@@ -34,7 +33,7 @@ class RTauDataset(Dataset):
     dynamic range r ∈ [0, 0.01].
     """
 
-    def __init__(self, n_maps, nside=NSIDE, lmax=LMAX,
+    def __init__(self, n_maps, nside=16, lmax=47,
                  noise_std=0.0, f_sky=1.0, seed=42, mask=None,
                  camb_spectra=None):
         """Initialize the RTauDataset.
@@ -199,6 +198,10 @@ def main():
     parser.add_argument("--f_sky", type=float, default=1.0)
     parser.add_argument("--noise_std", type=float, default=0,
                         help="Noise in μK-arcmin")
+    parser.add_argument("--nside", type=int, default=16,
+                        help="HEALPix NSIDE (default: 16)")
+    parser.add_argument("--lmax", type=int, default=None,
+                        help="Maximum multipole (default: 3*NSIDE-1)")
     parser.add_argument("--n_train", type=int, default=100000)
     parser.add_argument("--n_val", type=int, default=10000)
     parser.add_argument("--n_test", type=int, default=1000)
@@ -210,21 +213,29 @@ def main():
     parser.add_argument("--lr_factor", type=float, default=0.1)
     parser.add_argument("--hidden_channels", type=int, default=32)
     parser.add_argument("--num_blocks", type=int, default=3)
+    parser.add_argument("--nside", type=int, default=16,
+                        help="HEALPix NSIDE (default: 16)")
+    parser.add_argument("--lmax", type=int, default=None,
+                        help="Maximum multipole (default: 3*NSIDE-1)")
     parser.add_argument("--output", type=str, required=True,
                         help="Output JSON path for results")
     parser.add_argument("--camb_cache", type=str, default=None,
                         help="NPZ file to cache/load CAMB spectra (saves ~1.5h on repeat runs)")
     args = parser.parse_args()
 
+    if args.lmax is None:
+        args.lmax = 3 * args.nside - 1
+
     # μK-arcmin → μK/pixel: σ_pix = σ_arcmin / sqrt(Ω_pix [arcmin²])
     noise_arcmin = args.noise_std
-    npix = 12 * NSIDE**2
+    npix = 12 * args.nside**2
     pixel_area_sr = 4.0 * np.pi / npix
     pixel_area_arcmin2 = pixel_area_sr * (180.0 * 60.0 / np.pi)**2
     noise_uK = noise_arcmin / np.sqrt(pixel_area_arcmin2)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
+    print(f"NSIDE = {args.nside}, LMAX = {args.lmax}")
     print(f"Noise σ_n = {noise_arcmin} μK-arcmin = {noise_uK:.4f} μK, f_sky = {args.f_sky}")
     print(f"r range: [{R_MIN}, {R_MAX}], τ range: [{TAU_MIN}, {TAU_MAX}]")
     print(f"Training maps: {args.n_train}, Val: {args.n_val}, Test: {args.n_test}")
@@ -237,7 +248,7 @@ def main():
     # Shared mask for train/val/test (critical for SpectralCNN)
     from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
     shared_rng = np.random.default_rng(0)
-    shared_mask = create_sky_mask(args.f_sky, NSIDE, shared_rng).astype(np.float32)
+    shared_mask = create_sky_mask(args.f_sky, args.nside, shared_rng).astype(np.float32)
 
     # Pre-compute CAMB spectra ONCE (with optional FITS disk cache)
     # FITS cache layout: PrimaryHDU + ImageHDU "R_VALUES"/"TAU_VALUES" + ImageHDU "CL_EE"/"CL_BB"
@@ -254,7 +265,7 @@ def main():
         print(f"  Loaded {len(shared_camb[0])} spectra from cache")
     else:
         print(f"  Pre-computing {N_CAMB_SPECTRA} CAMB spectra (shared across all datasets)...")
-        shared_camb = precompute_camb_spectra_r_tau(N_CAMB_SPECTRA, LMAX, seed=142)
+        shared_camb = precompute_camb_spectra_r_tau(N_CAMB_SPECTRA, args.lmax, seed=142)
         if args.camb_cache:
             print(f"  Saving CAMB spectra to {args.camb_cache}")
             from astropy.io import fits as pf
@@ -272,17 +283,17 @@ def main():
             print(f"  Cache saved ({os.path.getsize(args.camb_cache)/1e6:.1f} MB)")
 
     train_dataset = RTauDataset(
-        args.n_train, NSIDE, LMAX,
+        args.n_train, args.nside, args.lmax,
         noise_uK, args.f_sky, seed=42,
         mask=shared_mask, camb_spectra=shared_camb,
     )
     val_dataset = RTauDataset(
-        args.n_val, NSIDE, LMAX,
+        args.n_val, args.nside, args.lmax,
         noise_uK, args.f_sky, seed=1234,
         mask=shared_mask, camb_spectra=shared_camb,
     )
     test_dataset = RTauDataset(
-        args.n_test, NSIDE, LMAX,
+        args.n_test, args.nside, args.lmax,
         noise_uK, args.f_sky, seed=9999,
         mask=shared_mask, camb_spectra=shared_camb,
     )
@@ -297,7 +308,7 @@ def main():
     model = SpectralCNN(
         in_channels=3,
         out_channels=2,
-        nside=NSIDE,
+        nside=args.nside,
         hidden_channels=args.hidden_channels,
         num_blocks=args.num_blocks,
         inpaint=(args.f_sky < 1.0),
@@ -398,14 +409,16 @@ def main():
             "hidden_channels": args.hidden_channels,
             "num_blocks": args.num_blocks,
             "inpaint": bool(args.f_sky < 1.0),
+            "nside": args.nside,
+            "lmax": args.lmax,
             "train_time_s": train_time,
             "gpu_memory_mb": gpu_memory_mb,
         }, f, indent=2)
     print(f"\nResults saved to {args.output}")
 
-    # Save best model weights
+    # Save best model weights (include nside in filename)
     if best_state is not None:
-        model_path = args.output.replace(".json", ".pt")
+        model_path = args.output.replace(".json", f"_nside{args.nside}.pt")
         torch.save(best_state, model_path)
         print(f"Model saved to {model_path}")
 
