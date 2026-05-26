@@ -54,7 +54,7 @@ echo "=========================================="
 python3 scripts/train_test4.py \
     --f_sky 1.0 --noise_std 0 \
     --nside $NSIDE --lmax $LMAX \
-    --n_train 100000 --n_val 10000 --n_test 1000 \
+    --n_train 20000 --n_val 5000 --n_test 1000 \
     --max_epochs 150 --patience 20 --batch_size 16 --lr 1e-3 \
     --camb_cache $CAMB_CACHE \
     --output $RESULTS_DIR/test4_nside${NSIDE}_fsky1.0_noise0.json
@@ -67,7 +67,7 @@ echo "=========================================="
 python3 scripts/train_test4.py \
     --f_sky 1.0 --noise_std 6 \
     --nside $NSIDE --lmax $LMAX \
-    --n_train 100000 --n_val 10000 --n_test 1000 \
+    --n_train 20000 --n_val 5000 --n_test 1000 \
     --max_epochs 150 --patience 20 --batch_size 16 --lr 1e-3 \
     --camb_cache $CAMB_CACHE \
     --output $RESULTS_DIR/test4_nside${NSIDE}_fsky1.0_noise6.json
@@ -80,7 +80,7 @@ echo "=========================================="
 python3 scripts/train_test4.py \
     --f_sky 0.1 --noise_std 0 \
     --nside $NSIDE --lmax $LMAX \
-    --n_train 100000 --n_val 10000 --n_test 1000 \
+    --n_train 20000 --n_val 5000 --n_test 1000 \
     --max_epochs 150 --patience 20 --batch_size 16 --lr 1e-3 \
     --camb_cache $CAMB_CACHE \
     --output $RESULTS_DIR/test4_nside${NSIDE}_fsky0.1_noise0.json
@@ -93,7 +93,7 @@ echo "=========================================="
 python3 scripts/train_test4.py \
     --f_sky 0.1 --noise_std 6 \
     --nside $NSIDE --lmax $LMAX \
-    --n_train 100000 --n_val 10000 --n_test 1000 \
+    --n_train 20000 --n_val 5000 --n_test 1000 \
     --max_epochs 150 --patience 20 --batch_size 16 --lr 1e-3 \
     --camb_cache $CAMB_CACHE \
     --output $RESULTS_DIR/test4_nside${NSIDE}_fsky0.1_noise6.json

@@ -295,9 +295,11 @@ def main():
     )
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
-                              shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=0)
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=0)
+                              shuffle=True, num_workers=4, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size,
+                            num_workers=4, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size,
+                             num_workers=4)
 
     # Model: 3 input channels (Q, U, mask), 2 outputs (r_log, τ)
     # Enable inpainting for partial-sky observations
