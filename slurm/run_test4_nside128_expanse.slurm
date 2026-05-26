@@ -2,7 +2,7 @@
 #SBATCH --job-name=thh-t4-n128
 #SBATCH --partition=gpu-shared
 #SBATCH --account=sds166
-#SBATCH --qos=gpu-preempt-normal
+#SBATCH --qos=gpu-shared-normal
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus=1
