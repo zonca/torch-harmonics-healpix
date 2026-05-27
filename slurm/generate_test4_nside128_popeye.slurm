@@ -11,6 +11,7 @@
 
 set -e
 export PYTHONUNBUFFERED=1
+export HDF5_USE_FILE_LOCKING=FALSE
 
 # Setup
 VENV=~/torch-hh-venv

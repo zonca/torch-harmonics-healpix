@@ -10,6 +10,7 @@
 
 set -e
 export PYTHONUNBUFFERED=1
+export HDF5_USE_FILE_LOCKING=FALSE
 
 VENV=~/torch-hh-venv
 REPO=~/torch-harmonics-healpix
