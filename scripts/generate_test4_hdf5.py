@@ -1,8 +1,8 @@
 """
 Pre-generate NSIDE=128 Test 4 datasets as HDF5 files for fast GPU training.
 
-Generates Q/U maps on CPU using healpy.synfast, saves to HDF5 with
-random access support. Each config gets its own file.
+Writes maps incrementally to HDF5 (no RAM accumulation).
+Each config gets its own file.
 
 Usage:
     python scripts/generate_test4_hdf5.py --nside 128 --f_sky 1.0 --noise_std 0 \
@@ -17,13 +17,64 @@ import healpy as hp
 import h5py
 from pathlib import Path
 
-# Import data generation from the package
 from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
 from torch_harmonics_healpix.data_generation_test4 import (
     precompute_camb_spectra_r_tau,
     generate_r_tau_map,
     N_CAMB_SPECTRA,
 )
+
+R_LOG_EPSILON = 1e-4
+
+
+def generate_split_incremental(h5file, split_name, n_maps, r_values, tau_values,
+                                cl_ee_array, cl_bb_array, mask, nside, lmax,
+                                noise_std, f_sky, seed, chunk_size=1000):
+    """Generate maps and write incrementally to HDF5 (constant RAM)."""
+    npix = hp.nside2npix(nside)
+
+    if n_maps == 0:
+        grp = h5file.create_group(split_name)
+        grp.create_dataset('maps', shape=(0, 3, npix), dtype=np.float32)
+        grp.create_dataset('targets', shape=(0, 2), dtype=np.float32)
+        grp.attrs['n_maps'] = 0
+        return
+
+    # Create datasets with full shape but no data yet
+    grp = h5file.create_group(split_name)
+    maps_ds = grp.create_dataset('maps', shape=(n_maps, 3, npix), dtype=np.float32,
+                                  chunks=(1, 3, npix))
+    targets_ds = grp.create_dataset('targets', shape=(n_maps, 2), dtype=np.float32)
+    grp.attrs['n_maps'] = n_maps
+
+    rng = np.random.default_rng(seed)
+    spec_indices = rng.integers(0, len(r_values), size=n_maps)
+
+    print(f"  Generating {split_name}: {n_maps} maps...")
+    t0 = time.time()
+
+    for i in range(n_maps):
+        idx = spec_indices[i]
+        q, u, _ = generate_r_tau_map(
+            float(r_values[idx]), float(tau_values[idx]),
+            nside, lmax, noise_std, f_sky, rng,
+            cl_ee=cl_ee_array[idx],
+            cl_bb=cl_bb_array[idx],
+        )
+        maps_ds[i, 0] = q
+        maps_ds[i, 1] = u
+        maps_ds[i, 2] = mask
+        targets_ds[i, 0] = np.log(float(r_values[idx]) + R_LOG_EPSILON)
+        targets_ds[i, 1] = float(tau_values[idx])
+
+        if (i + 1) % 1000 == 0:
+            elapsed = time.time() - t0
+            rate = (i + 1) / elapsed
+            eta = (n_maps - i - 1) / rate
+            print(f"    {i+1}/{n_maps} ({rate:.1f} maps/s, ETA: {eta:.0f}s)")
+
+    elapsed = time.time() - t0
+    print(f"    Done: {n_maps} maps in {elapsed:.0f}s ({n_maps/elapsed:.1f} maps/s)")
 
 
 def main():
@@ -46,7 +97,6 @@ def main():
     nside = args.nside
     lmax = args.lmax
     npix = hp.nside2npix(nside)
-    R_LOG_EPSILON = 1e-4
 
     print(f"NSIDE={nside}, lmax={lmax}, npix={npix}")
     print(f"f_sky={args.f_sky}, noise_std={args.noise_std}")
@@ -57,10 +107,10 @@ def main():
         from astropy.io import fits
         print(f"Loading CAMB cache from {args.camb_cache}")
         with fits.open(args.camb_cache) as hdul:
-            r_values = hdul['R_VALUES'].data
-            tau_values = hdul['TAU_VALUES'].data
-            cl_ee_array = hdul['CL_EE'].data
-            cl_bb_array = hdul['CL_BB'].data
+            r_values = np.array(hdul['R_VALUES'].data)
+            tau_values = np.array(hdul['TAU_VALUES'].data)
+            cl_ee_array = np.array(hdul['CL_EE'].data)
+            cl_bb_array = np.array(hdul['CL_BB'].data)
         print(f"  Loaded {len(r_values)} CAMB spectra")
     else:
         print(f"Pre-computing {N_CAMB_SPECTRA} CAMB spectra...")
@@ -71,78 +121,31 @@ def main():
     rng = np.random.default_rng(args.seed)
     mask = create_sky_mask(args.f_sky, nside, rng).astype(np.float32)
 
-    def generate_split(n_maps, seed_offset, split_name):
-        """Generate maps and targets for one split."""
-        if n_maps == 0:
-            return np.empty((0, 3, npix), dtype=np.float32), \
-                   np.empty((0, 2), dtype=np.float32)
-
-        print(f"  Generating {split_name}: {n_maps} maps...")
-        maps = np.empty((n_maps, 3, npix), dtype=np.float32)
-        targets = np.empty((n_maps, 2), dtype=np.float32)
-
-        rng_split = np.random.default_rng(args.seed + seed_offset)
-        spec_indices = rng_split.integers(0, len(r_values), size=n_maps)
-
-        t0 = time.time()
-        for i in range(n_maps):
-            idx = spec_indices[i]
-            q, u, _ = generate_r_tau_map(
-                r_values[idx], tau_values[idx],
-                nside, lmax, args.noise_std, args.f_sky, rng_split,
-                cl_ee=cl_ee_array[idx],
-                cl_bb=cl_bb_array[idx],
-            )
-            maps[i, 0] = q
-            maps[i, 1] = u
-            maps[i, 2] = mask
-            targets[i, 0] = np.log(r_values[idx] + R_LOG_EPSILON)
-            targets[i, 1] = tau_values[idx]
-
-            if (i + 1) % 1000 == 0:
-                elapsed = time.time() - t0
-                rate = (i + 1) / elapsed
-                eta = (n_maps - i - 1) / rate
-                print(f"    {i+1}/{n_maps} ({rate:.1f} maps/s, ETA: {eta:.0f}s)")
-
-        elapsed = time.time() - t0
-        print(f"    Done: {n_maps} maps in {elapsed:.0f}s ({n_maps/elapsed:.1f} maps/s)")
-        return maps, targets
-
-    # Generate all splits
-    print("Generating datasets...")
-    train_maps, train_targets = generate_split(args.n_train, 0, "train")
-    val_maps, val_targets = generate_split(args.n_val, 1000, "val")
-    test_maps, test_targets = generate_split(args.n_test, 2000, "test")
-
-    # Save to HDF5
-    print(f"Saving to {args.output}...")
+    # Create HDF5 file and write incrementally
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    print(f"Creating {args.output}...")
     with h5py.File(args.output, 'w') as f:
         f.attrs['nside'] = nside
         f.attrs['lmax'] = lmax
         f.attrs['f_sky'] = args.f_sky
         f.attrs['noise_std'] = args.noise_std
 
-        for split, maps, targets in [
-            ('train', train_maps, train_targets),
-            ('val', val_maps, val_targets),
-            ('test', test_maps, test_targets),
-        ]:
-            grp = f.create_group(split)
-            grp.create_dataset('maps', data=maps, chunks=(1, 3, npix),
-                             compression='gzip', compression_opts=1)
-            grp.create_dataset('targets', data=targets)
-            grp.attrs['n_maps'] = len(maps)
-
         f.create_dataset('mask', data=mask)
+
+        generate_split_incremental(f, 'train', args.n_train,
+                                    r_values, tau_values, cl_ee_array, cl_bb_array,
+                                    mask, nside, lmax, args.noise_std, args.f_sky,
+                                    seed=args.seed)
+        generate_split_incremental(f, 'val', args.n_val,
+                                    r_values, tau_values, cl_ee_array, cl_bb_array,
+                                    mask, nside, lmax, args.noise_std, args.f_sky,
+                                    seed=args.seed + 1000)
+        generate_split_incremental(f, 'test', args.n_test,
+                                    r_values, tau_values, cl_ee_array, cl_bb_array,
+                                    mask, nside, lmax, args.noise_std, args.f_sky,
+                                    seed=args.seed + 2000)
 
     file_size_gb = output_path.stat().st_size / 1e9
     print(f"Done! File size: {file_size_gb:.1f} GB")
-    print(f"  Train: {len(train_maps)}, Val: {len(val_maps)}, Test: {len(test_maps)}")
-
-
-if __name__ == '__main__':
-    main()
