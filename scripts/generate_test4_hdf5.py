@@ -149,3 +149,7 @@ def main():
 
     file_size_gb = output_path.stat().st_size / 1e9
     print(f"Done! File size: {file_size_gb:.1f} GB")
+
+
+if __name__ == '__main__':
+    main()
