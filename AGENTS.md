@@ -4,7 +4,13 @@
 
 - **Expanse** (`ssh expanse`): GPU jobs only. Use Slurm with `sbatch`. Partition `gpu-shared`, account `sds166`.
 - **Popeye** (`ssh popeye`): CPU jobs only. Use Slurm with `sbatch`. Partition `gen`. SSH key auth (no 2FA).
+- **NRP Nautilus** (`https://nrp.ai`): GPU via Kubernetes. Namespace `sdsc-scicomp`. See `../nrp/AGENTS.md` for setup.
+  - Training job YAML: `../nrp/examples/train-test4-nside128.yaml`
+  - PVC `thh-data` (50Gi, `rook-cephfs`) for persistent results at `/data`
+  - kubectl wrapper: `../nrp/kubectl.sh` (auto-refreshing OIDC token)
+  - **Important on CephFS**: set `HDF5_USE_FILE_LOCKING=FALSE`
 - **Code sync:** Always `git commit && git push` from local, then `git pull` on remote. Do NOT use `scp` or `rsync` to copy code around.
+  - Exception: NRP uses `git clone` in initContainer (code is in the repo, PVC is for data only)
 
 ## Platform Specs & Software Versions
 
@@ -36,6 +42,20 @@ All Slurm scripts are in `slurm/`:
 - `run_tests.slurm` — Expanse GPU: run full test suite (34 tests)
 - `run_train_test1.slurm` — Expanse GPU: train SpectralCNN for Test 1 (all noise levels)
 - `run_mcmc_benchmark_popeye.slurm` — Popeye CPU: MCMC baseline benchmark (1000 maps)
+
+### NRP Nautilus (GPU — Kubernetes)
+
+Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full details.
+
+- **GPU observed:** NVIDIA GeForce GTX 1080 Ti (11GB), driver 580.159.04
+- **Image:** `pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel` (packages installed at runtime)
+- **Python:** 3.11 (from image)
+- **PyTorch:** 2.6.0+cu124
+- **torch-harmonics:** 0.8.0 (pinned with `--no-deps`)
+- **healpy:** 1.19.0
+- **CAMB:** installed via pip
+- **PVC:** `thh-data` (50Gi, rook-cephfs) at `/data` — stores results and CAMB cache
+- **Note:** CephFS requires `HDF5_USE_FILE_LOCKING=FALSE`
 
 ## Key Technical Notes
 
