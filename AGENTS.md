@@ -47,8 +47,10 @@ All Slurm scripts are in `slurm/`:
 
 Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full details.
 
-- **GPU observed:** NVIDIA GeForce GTX 1080 Ti (11GB), driver 580.159.04
+- **GPU observed:** NVIDIA A40 (48GB), driver 595.71.05 (first run: GTX 1080 Ti 11GB — OOM with hidden_channels=32)
 - **Image:** `pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel` (packages installed at runtime)
+- **Model config for NSIDE=128:** hidden_channels=8, num_blocks=3, batch_size=4 (~30M params)
+- **OOM caveat:** Default hidden_channels=32 → 422M params, OOMs on ≤16GB GPUs. Use hidden_channels=8 or request A40.
 - **Python:** 3.11 (from image)
 - **PyTorch:** 2.6.0+cu124
 - **torch-harmonics:** 0.8.0 (pinned with `--no-deps`)
@@ -56,6 +58,7 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
 - **CAMB:** installed via pip
 - **PVC:** `thh-data` (50Gi, rook-cephfs) at `/data` — stores results and CAMB cache
 - **Note:** CephFS requires `HDF5_USE_FILE_LOCKING=FALSE`
+- **Env:** `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`
 
 ## Key Technical Notes
 
