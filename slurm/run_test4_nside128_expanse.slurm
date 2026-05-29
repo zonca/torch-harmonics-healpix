@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=thh-t4-n128
 #SBATCH --partition=gpu-shared
-#SBATCH --account=sds166
+#SBATCH --account=PHY250175
 #SBATCH --qos=gpu-shared-normal
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -12,12 +12,14 @@
 
 # Test 4 at NSIDE=128: joint r/τ estimation with higher resolution
 # NSIDE=128 → lmax=383, much more BB signal for r constraint.
-# Batch size 16 (maps are 64× larger than NSIDE=16).
+# Using allocation PHY250175, n_train=100000, hidden_channels=32, batch_size=2
+# (422M params — needs V100 32GB; smaller GPUs OOM)
 
 set -e
 export PYTHONUNBUFFERED=1
 
 echo "=== Test 4 NSIDE=128: Joint r/τ estimation ==="
+echo "=== n_train=100000, hidden_channels=32, batch_size=2 ==="
 hostname
 date
 nvidia-smi
@@ -54,10 +56,11 @@ echo "=========================================="
 python3 scripts/train_test4.py \
     --f_sky 1.0 --noise_std 0 \
     --nside $NSIDE --lmax $LMAX \
-    --n_train 5000 --n_val 1000 --n_test 1000 \
-    --max_epochs 150 --patience 20 --batch_size 16 --lr 1e-3 \
+    --n_train 100000 --n_val 10000 --n_test 1000 \
+    --max_epochs 150 --patience 20 --batch_size 2 --lr 1e-3 \
+    --hidden_channels 32 --num_blocks 3 \
     --camb_cache $CAMB_CACHE \
-    --output $RESULTS_DIR/test4_nside${NSIDE}_fsky1.0_noise0.json
+    --output $RESULTS_DIR/test4_nside${NSIDE}_fsky1.0_noise0.json || echo "CONFIG 1 FAILED"
 
 # Config 2: f_sky=1.0, noise=6 μK-arcmin
 echo ""
@@ -67,10 +70,11 @@ echo "=========================================="
 python3 scripts/train_test4.py \
     --f_sky 1.0 --noise_std 6 \
     --nside $NSIDE --lmax $LMAX \
-    --n_train 5000 --n_val 1000 --n_test 1000 \
-    --max_epochs 150 --patience 20 --batch_size 16 --lr 1e-3 \
+    --n_train 100000 --n_val 10000 --n_test 1000 \
+    --max_epochs 150 --patience 20 --batch_size 2 --lr 1e-3 \
+    --hidden_channels 32 --num_blocks 3 \
     --camb_cache $CAMB_CACHE \
-    --output $RESULTS_DIR/test4_nside${NSIDE}_fsky1.0_noise6.json
+    --output $RESULTS_DIR/test4_nside${NSIDE}_fsky1.0_noise6.json || echo "CONFIG 2 FAILED"
 
 # Config 3: f_sky=0.1, noise=0
 echo ""
@@ -80,10 +84,11 @@ echo "=========================================="
 python3 scripts/train_test4.py \
     --f_sky 0.1 --noise_std 0 \
     --nside $NSIDE --lmax $LMAX \
-    --n_train 5000 --n_val 1000 --n_test 1000 \
-    --max_epochs 150 --patience 20 --batch_size 16 --lr 1e-3 \
+    --n_train 100000 --n_val 10000 --n_test 1000 \
+    --max_epochs 150 --patience 20 --batch_size 2 --lr 1e-3 \
+    --hidden_channels 32 --num_blocks 3 \
     --camb_cache $CAMB_CACHE \
-    --output $RESULTS_DIR/test4_nside${NSIDE}_fsky0.1_noise0.json
+    --output $RESULTS_DIR/test4_nside${NSIDE}_fsky0.1_noise0.json || echo "CONFIG 3 FAILED"
 
 # Config 4: f_sky=0.1, noise=6 μK-arcmin
 echo ""
@@ -93,10 +98,11 @@ echo "=========================================="
 python3 scripts/train_test4.py \
     --f_sky 0.1 --noise_std 6 \
     --nside $NSIDE --lmax $LMAX \
-    --n_train 5000 --n_val 1000 --n_test 1000 \
-    --max_epochs 150 --patience 20 --batch_size 16 --lr 1e-3 \
+    --n_train 100000 --n_val 10000 --n_test 1000 \
+    --max_epochs 150 --patience 20 --batch_size 2 --lr 1e-3 \
+    --hidden_channels 32 --num_blocks 3 \
     --camb_cache $CAMB_CACHE \
-    --output $RESULTS_DIR/test4_nside${NSIDE}_fsky0.1_noise6.json
+    --output $RESULTS_DIR/test4_nside${NSIDE}_fsky0.1_noise6.json || echo "CONFIG 4 FAILED"
 
 echo ""
 echo "=== All NSIDE=128 training complete ==="
