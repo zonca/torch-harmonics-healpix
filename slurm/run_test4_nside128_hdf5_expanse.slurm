@@ -14,7 +14,7 @@
 # Account: sds275
 # HDF5 mode eliminates the hp.synfast bottleneck — much faster epochs
 # 422M params, hidden_channels=32, batch_size=2 (fits on V100 32GB)
-# num_workers=4 (HDF5 mode supports multi-process DataLoader)
+# num_workers=0 (gpu-shared has 1 CPU core; num_workers>0 causes freezes)
 
 set -e
 export PYTHONUNBUFFERED=1
@@ -57,7 +57,7 @@ python3 scripts/train_test4.py \
     --f_sky 1.0 --noise_std 0 \
     --nside $NSIDE --lmax 383 \
     --hdf5_path $HDF5_DIR/test4_nside128_fsky1.0_noise0.h5 \
-    --num_workers 4 \
+    --num_workers 0 \
     --max_epochs 150 --patience 20 --batch_size 2 --lr 1e-3 \
     --hidden_channels 32 --num_blocks 3 \
     --output $RESULTS_DIR/test4_nside128_hdf5_fsky1.0_noise0.json || echo "CONFIG 1 FAILED"
@@ -71,7 +71,7 @@ python3 scripts/train_test4.py \
     --f_sky 1.0 --noise_std 6 \
     --nside $NSIDE --lmax 383 \
     --hdf5_path $HDF5_DIR/test4_nside128_fsky1.0_noise6.h5 \
-    --num_workers 4 \
+    --num_workers 0 \
     --max_epochs 150 --patience 20 --batch_size 2 --lr 1e-3 \
     --hidden_channels 32 --num_blocks 3 \
     --output $RESULTS_DIR/test4_nside128_hdf5_fsky1.0_noise6.json || echo "CONFIG 2 FAILED"
@@ -85,7 +85,7 @@ python3 scripts/train_test4.py \
     --f_sky 0.1 --noise_std 0 \
     --nside $NSIDE --lmax 383 \
     --hdf5_path $HDF5_DIR/test4_nside128_fsky0.1_noise0.h5 \
-    --num_workers 4 \
+    --num_workers 0 \
     --max_epochs 150 --patience 20 --batch_size 2 --lr 1e-3 \
     --hidden_channels 32 --num_blocks 3 \
     --output $RESULTS_DIR/test4_nside128_hdf5_fsky0.1_noise0.json || echo "CONFIG 3 FAILED"
@@ -99,7 +99,7 @@ python3 scripts/train_test4.py \
     --f_sky 0.1 --noise_std 6 \
     --nside $NSIDE --lmax 383 \
     --hdf5_path $HDF5_DIR/test4_nside128_fsky0.1_noise6.h5 \
-    --num_workers 4 \
+    --num_workers 0 \
     --max_epochs 150 --patience 20 --batch_size 2 --lr 1e-3 \
     --hidden_channels 32 --num_blocks 3 \
     --output $RESULTS_DIR/test4_nside128_hdf5_fsky0.1_noise6.json || echo "CONFIG 4 FAILED"
