@@ -49,8 +49,9 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
 
 - **GPU observed:** NVIDIA A40 (48GB), driver 595.71.05 (first run: GTX 1080 Ti 11GB — OOM with hidden_channels=32)
 - **Image:** `pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel` (packages installed at runtime)
-- **Model config for NSIDE=128:** hidden_channels=8, num_blocks=3, batch_size=4 (~30M params)
+- **Model config for NSIDE=128:** hidden_channels=32, num_blocks=3, batch_size=2 (422M params — full model)
 - **OOM caveat:** Default hidden_channels=32 → 422M params, OOMs on ≤16GB GPUs. Use hidden_channels=8 or request A40.
+- **Underfitting caveat:** hidden_channels=8 (30M params) underfits at NSIDE=128 — plateaued at ~63% r error vs 54% with hidden_channels=32 after epoch 1. Always use hidden_channels=32 on ≥48GB GPUs.
 - **Python:** 3.11 (from image)
 - **PyTorch:** 2.6.0+cu124
 - **torch-harmonics:** 0.8.0 (pinned with `--no-deps`)
