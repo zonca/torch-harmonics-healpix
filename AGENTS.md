@@ -70,3 +70,22 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
 - Slurm Python scripts: always set `PYTHONUNBUFFERED=1` for real-time output.
 - In Slurm `--output` paths, use absolute paths (e.g. `/expanse/lustre/...`), not `$HOME` or `~` — they don't expand in SBATCH directives.
 - **HDF5 on Lustre**: set `HDF5_USE_FILE_LOCKING=FALSE` in Slurm scripts. Random DataLoader shuffle + single-chunk RAM cache = 95% cache miss rate (eviction every call). Fix: use `ChunkShuffleSampler` (groups indices by chunk, shuffles chunk order + within-chunk indices).
+
+### HDF5 Data on Expanse Lustre
+
+- **Original directory**: `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data/`
+  - 4 HDF5 files (~244 GB each): fsky1.0_noise0, fsky1.0_noise6, fsky0.1_noise0, fsky0.1_noise6
+  - 100K train + 10K val + 1K test maps per file, NSIDE=128
+  - **Problem**: `lfs getstripe` shows `stripe_count=1` (single OST). Bandwidth capped at ~80 MB/s per file, causing ~60 min/epoch I/O time
+- **Striped directory**: `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_striped/`
+  - Created with `lfs setstripe -c 16 -S 4M` (16 OSTs, 4 MB stripe size)
+  - Expected bandwidth: 8-16x faster (~0.5-1+ GB/s), reducing I/O per epoch from ~40 min to ~3-5 min
+  - **Re-striping**: `cp` from `hdf5_data/` to `hdf5_striped/` (Lustre respects target directory striping on new files)
+  - Run from login node: `nohup bash -c 'for f in hdf5_data/*.h5; do cp "$f" hdf5_striped/; done' &`
+  - Or from compute node via `srun --jobid=XXX --overlap` (faster, ~5 min per file)
+  - **After restriping**: update Slurm scripts to point `--hdf5_path` to `hdf5_striped/` instead of `hdf5_data/`
+- **Epoch timing** (single-striped files, batch_size=16, 422M params, V100):
+  - I/O: ~40 min (20 chunks × ~120s avg, varying 7-650s due to OST variability)
+  - GPU training: ~20 min (6250 batches × ~0.2s)
+  - Validation: ~3 min (625 batches)
+  - Total: ~60 min/epoch
