@@ -41,7 +41,9 @@
 All Slurm scripts are in `slurm/`:
 - `run_tests.slurm` — Expanse GPU: run full test suite (34 tests)
 - `run_train_test1.slurm` — Expanse GPU: train SpectralCNN for Test 1 (all noise levels)
+- `run_test4_nside128_hdf5_expanse.slurm` — Expanse GPU: train Test 4 NSIDE=128 with HDF5 (account sds275)
 - `run_mcmc_benchmark_popeye.slurm` — Popeye CPU: MCMC baseline benchmark (1000 maps)
+- `generate_test4_nside128_popeye.slurm` — Popeye CPU: HDF5 pre-generation for Test 4
 
 ### NRP Nautilus (GPU — Kubernetes)
 
