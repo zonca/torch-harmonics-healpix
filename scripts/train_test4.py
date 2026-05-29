@@ -113,8 +113,13 @@ class HDF5RTauDataset(Dataset):
     """HDF5-backed dataset for pre-generated Q/U maps (Test 4).
 
     Reads maps from HDF5 files created by scripts/generate_test4_hdf5.py.
-    This avoids the hp.synfast bottleneck at NSIDE≥128 and allows
-    num_workers>0 for parallel data loading.
+    Supports two access modes:
+      - Direct HDF5 reads (default): each __getitem__ reads one map from disk.
+        Slow on Lustre due to random I/O. Acceptable for small datasets.
+      - RAM chunk cache (cache_chunk_size > 0): pre-loads chunks of maps into
+        RAM for fast access. When the DataLoader requests a map outside the
+        current chunk, the next chunk is loaded. This dramatically speeds up
+        training on Lustre by converting random reads into large sequential ones.
 
     The HDF5 file layout is:
       /train/maps    [N_train, 3, npix] float32  (Q, U, mask channels)
@@ -129,17 +134,24 @@ class HDF5RTauDataset(Dataset):
     DataLoader (h5py does not allow sharing file handles across forked processes).
     """
 
-    def __init__(self, h5_path, split='train'):
+    def __init__(self, h5_path, split='train', cache_chunk_size=0):
         """Initialize HDF5RTauDataset.
 
         Args:
             h5_path: Path to HDF5 file with pre-generated maps.
             split: One of 'train', 'val', 'test'.
+            cache_chunk_size: Number of maps to cache in RAM per chunk.
+                0 = no caching (read each map from disk on demand).
+                >0 = cache this many maps in RAM at a time. Recommended: 5000-10000
+                for NSIDE=128 on Lustre (each map ~2.3 MB, so 5K maps ≈ 11.5 GB RAM).
+                The DataLoader should shuffle indices so that maps within the same
+                chunk are accessed together for best performance.
         """
         import h5py
         self.h5_path = h5_path
         self.split = split
         self._file = None
+        self.cache_chunk_size = cache_chunk_size
 
         # Read metadata without keeping file open
         with h5py.File(h5_path, 'r') as f:
@@ -148,22 +160,54 @@ class HDF5RTauDataset(Dataset):
             self.nside = int(f.attrs.get('nside', 128))
             self.f_sky = float(f.attrs.get('f_sky', 1.0))
 
+        # Chunk cache state
+        self._cached_chunk_idx = -1
+        self._maps_cache = None
+        self._targets_cache = None
+
     def _ensure_open(self):
         """Open HDF5 file lazily (safe for multiprocessing workers)."""
         if self._file is None:
             import h5py
             self._file = h5py.File(self.h5_path, 'r')
 
+    def _load_chunk(self, chunk_idx):
+        """Load a chunk of maps into RAM from HDF5."""
+        self._ensure_open()
+        start = chunk_idx * self.cache_chunk_size
+        end = min(start + self.cache_chunk_size, self.n_maps)
+        print(f"  Loading HDF5 chunk {chunk_idx}: maps [{start}:{end}] into RAM...")
+        t0 = time.time()
+        self._maps_cache = np.array(self._file[self.split]['maps'][start:end],
+                                    dtype=np.float32)
+        self._targets_cache = np.array(self._file[self.split]['targets'][start:end],
+                                       dtype=np.float32)
+        elapsed = time.time() - t0
+        print(f"  Loaded {end - start} maps in {elapsed:.1f}s "
+              f"({(end - start) / elapsed:.0f} maps/s, "
+              f"{self._maps_cache.nbytes / 1e9:.1f} GB)")
+        self._cached_chunk_idx = chunk_idx
+
     def __len__(self):
         return self.n_maps
 
     def __getitem__(self, idx):
-        """Return (qu_map, target) pair from HDF5."""
-        self._ensure_open()
-        qu_map = self._file[self.split]['maps'][idx]   # [3, npix]
-        target = self._file[self.split]['targets'][idx] # [2]
-        return torch.from_numpy(np.array(qu_map, dtype=np.float32)), \
-               torch.tensor(np.array(target, dtype=np.float32))
+        """Return (qu_map, target) pair from HDF5 (with optional RAM cache)."""
+        if self.cache_chunk_size > 0:
+            chunk_idx = idx // self.cache_chunk_size
+            if chunk_idx != self._cached_chunk_idx:
+                self._load_chunk(chunk_idx)
+            local_idx = idx - chunk_idx * self.cache_chunk_size
+            qu_map = self._maps_cache[local_idx]
+            target = self._targets_cache[local_idx]
+        else:
+            self._ensure_open()
+            qu_map = self._file[self.split]['maps'][idx]
+            target = self._file[self.split]['targets'][idx]
+            qu_map = np.array(qu_map, dtype=np.float32)
+            target = np.array(target, dtype=np.float32)
+
+        return torch.from_numpy(qu_map.copy()), torch.tensor(target, dtype=torch.float32)
 
     def __del__(self):
         if self._file is not None:
@@ -307,6 +351,12 @@ def main():
     parser.add_argument("--num_workers", type=int, default=0,
                         help="DataLoader num_workers. 0 = main thread (safe on gpu-shared). "
                              "2-4 recommended with HDF5 on nodes with multiple CPU cores.")
+    parser.add_argument("--cache_chunk_size", type=int, default=0,
+                        help="Number of maps to cache in RAM per chunk for HDF5 mode. "
+                             "0 = no caching (read each map from disk). "
+                             "Recommended for NSIDE=128 on Lustre: 5000-10000 "
+                             "(5K maps ≈ 11.5 GB RAM at NSIDE=128). "
+                             "Converts slow random I/O into fast sequential reads.")
     args = parser.parse_args()
 
     if args.lmax is None:
@@ -343,9 +393,12 @@ def main():
                   f"noise_std={f.attrs.get('noise_std')}")
             print(f"  train: {f['train/maps'].shape}, val: {f['val/maps'].shape}, "
                   f"test: {f['test/maps'].shape}")
-        train_dataset = HDF5RTauDataset(args.hdf5_path, split='train')
-        val_dataset = HDF5RTauDataset(args.hdf5_path, split='val')
-        test_dataset = HDF5RTauDataset(args.hdf5_path, split='test')
+        train_dataset = HDF5RTauDataset(args.hdf5_path, split='train',
+                                        cache_chunk_size=args.cache_chunk_size)
+        val_dataset = HDF5RTauDataset(args.hdf5_path, split='val',
+                                      cache_chunk_size=args.cache_chunk_size)
+        test_dataset = HDF5RTauDataset(args.hdf5_path, split='test',
+                                       cache_chunk_size=args.cache_chunk_size)
         # Override n_train/n_val/n_test from HDF5 sizes
         args.n_train = len(train_dataset)
         args.n_val = len(val_dataset)

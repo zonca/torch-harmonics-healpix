@@ -47,6 +47,7 @@ python3 scripts/train_test4.py \
     --nside 128 --lmax 383 \
     --hdf5_path $HDF5_DIR/test4_nside128_fsky0.1_noise0.h5 \
     --num_workers 0 \
+    --cache_chunk_size 5000 \
     --max_epochs 150 --patience 20 --batch_size 16 --lr 1e-3 \
     --hidden_channels 32 --num_blocks 3 \
     --output $RESULTS_DIR/test4_nside128_hdf5_fsky0.1_noise0.json
