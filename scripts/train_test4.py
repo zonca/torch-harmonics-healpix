@@ -15,7 +15,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Sampler
 
 from torch_harmonics_healpix.data_generation_test4 import (
     generate_r_tau_map,
@@ -212,6 +212,67 @@ class HDF5RTauDataset(Dataset):
     def __del__(self):
         if self._file is not None:
             self._file.close()
+
+
+class ChunkShuffleSampler(Sampler):
+    """Sampler that shuffles chunk order and indices within each chunk.
+
+    Designed for use with HDF5RTauDataset's RAM chunk cache. Instead of
+    fully randomizing index order (which causes constant cache eviction),
+    this sampler:
+      1. Shuffles the ORDER of chunks (global randomization across epochs)
+      2. Shuffles indices WITHIN each chunk (local randomization)
+      3. Yields all indices from one chunk before moving to the next
+
+    This gives the statistical benefits of shuffling while keeping the
+    HDF5 chunk cache hit rate at ~100%, dramatically speeding up training
+    on Lustre where each chunk load takes 1-3 minutes.
+
+    Args:
+        dataset_size: Total number of samples in the dataset.
+        chunk_size: Number of samples per chunk (must match cache_chunk_size).
+        shuffle_chunks: Whether to randomize chunk order (default: True).
+        shuffle_within: Whether to randomize within each chunk (default: True).
+    """
+
+    def __init__(self, dataset_size, chunk_size, shuffle_chunks=True,
+                 shuffle_within=True):
+        self.dataset_size = dataset_size
+        self.chunk_size = chunk_size
+        self.shuffle_chunks = shuffle_chunks
+        self.shuffle_within = shuffle_within
+        self.n_chunks = (dataset_size + chunk_size - 1) // chunk_size
+        self.epoch = 0
+
+    def __iter__(self):
+        # Generate chunk indices
+        chunk_indices = list(range(self.n_chunks))
+        if self.shuffle_chunks:
+            g = torch.Generator()
+            g.manual_seed(self.epoch)
+            chunk_indices = torch.randperm(self.n_chunks, generator=g).tolist()
+
+        # For each chunk, generate shuffled indices within that chunk
+        all_indices = []
+        for ci in chunk_indices:
+            start = ci * self.chunk_size
+            end = min(start + self.chunk_size, self.dataset_size)
+            chunk_idx = list(range(start, end))
+            if self.shuffle_within:
+                g = torch.Generator()
+                g.manual_seed(self.epoch * 10000 + ci)
+                shuffled = torch.randperm(len(chunk_idx), generator=g).tolist()
+                chunk_idx = [chunk_idx[j] for j in shuffled]
+            all_indices.extend(chunk_idx)
+
+        return iter(all_indices)
+
+    def __len__(self):
+        return self.dataset_size
+
+    def set_epoch(self, epoch):
+        """Set the epoch for deterministic shuffling across epochs."""
+        self.epoch = epoch
 
 
 def _hdf5_worker_init(worker_id):
@@ -462,8 +523,20 @@ def main():
 
     # DataLoader with optional multiprocessing for HDF5
     worker_init_fn = _hdf5_worker_init if use_hdf5 and num_workers > 0 else None
+
+    # Use ChunkShuffleSampler when cache_chunk_size is set — it groups indices
+    # by chunk so the HDF5 cache stays hot (100% hit rate vs ~0% with random shuffle)
+    train_sampler = None
+    if use_hdf5 and args.cache_chunk_size > 0:
+        train_sampler = ChunkShuffleSampler(len(train_dataset),
+                                            args.cache_chunk_size)
+        print(f"Using ChunkShuffleSampler: {train_sampler.n_chunks} chunks "
+              f"of {args.cache_chunk_size} maps each")
+
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
-                              shuffle=True, num_workers=num_workers,
+                              shuffle=(train_sampler is None),
+                              sampler=train_sampler,
+                              num_workers=num_workers,
                               pin_memory=True, worker_init_fn=worker_init_fn)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size,
                             num_workers=num_workers, pin_memory=True,
@@ -503,6 +576,9 @@ def main():
 
     for epoch in range(1, args.max_epochs + 1):
         t0 = time.time()
+        # Update sampler epoch so each epoch gets a different chunk shuffle
+        if train_sampler is not None:
+            train_sampler.set_epoch(epoch)
         train_loss = train_one_epoch(model, train_loader, optimizer, device)
         epoch_time = time.time() - t0
 

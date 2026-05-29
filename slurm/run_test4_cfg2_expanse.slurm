@@ -15,6 +15,7 @@
 
 set -e
 export PYTHONUNBUFFERED=1
+export HDF5_USE_FILE_LOCKING=FALSE
 
 echo "=== Test 4 Config 2: f_sky=1.0, noise=6 (HDF5) ==="
 hostname
