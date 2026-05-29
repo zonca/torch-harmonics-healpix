@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=thh-restripe
-#SBATCH --partition=compute
+#SBATCH --partition=debug
 #SBATCH --account=sds275
-#SBATCH --qos=normal
+#SBATCH --qos=debug-normal
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=16G
