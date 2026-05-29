@@ -1,4 +1,11 @@
-"""Train SpectralCNN for Test 4: joint estimation of r (tensor-to-scalar ratio) and τ (optical depth) from Q/U polarization maps. Extends Test 3 to 2-parameter estimation relevant to Simons Observatory."""
+"""Train SpectralCNN for Test 4: joint estimation of r (tensor-to-scalar ratio) and τ (optical depth) from Q/U polarization maps. Extends Test 3 to 2-parameter estimation relevant to Simons Observatory.
+
+Supports two data modes:
+  1. On-the-fly generation (--hdf5_path not set): generates maps via hp.synfast in __getitem__
+  2. HDF5 pre-generated (--hdf5_path set): reads from pre-generated HDF5 file on disk
+
+HDF5 mode is strongly recommended for NSIDE≥128 where synfast is the bottleneck.
+"""
 
 import argparse
 import json
@@ -100,6 +107,80 @@ class RTauDataset(Dataset):
                               dtype=torch.float32)
 
         return torch.from_numpy(qu_map), target
+
+
+class HDF5RTauDataset(Dataset):
+    """HDF5-backed dataset for pre-generated Q/U maps (Test 4).
+
+    Reads maps from HDF5 files created by scripts/generate_test4_hdf5.py.
+    This avoids the hp.synfast bottleneck at NSIDE≥128 and allows
+    num_workers>0 for parallel data loading.
+
+    The HDF5 file layout is:
+      /train/maps    [N_train, 3, npix] float32  (Q, U, mask channels)
+      /train/targets [N_train, 2]       float32  (log(r+ε), τ)
+      /val/maps      [N_val, 3, npix]
+      /val/targets   [N_val, 2]
+      /test/maps     [N_test, 3, npix]
+      /test/targets  [N_test, 2]
+      /mask          [npix]             float32  (shared mask)
+
+    h5py file handles are opened lazily per-worker to support multiprocessing
+    DataLoader (h5py does not allow sharing file handles across forked processes).
+    """
+
+    def __init__(self, h5_path, split='train'):
+        """Initialize HDF5RTauDataset.
+
+        Args:
+            h5_path: Path to HDF5 file with pre-generated maps.
+            split: One of 'train', 'val', 'test'.
+        """
+        import h5py
+        self.h5_path = h5_path
+        self.split = split
+        self._file = None
+
+        # Read metadata without keeping file open
+        with h5py.File(h5_path, 'r') as f:
+            self.n_maps = f[split]['maps'].shape[0]
+            self.npix = f[split]['maps'].shape[2]
+            self.nside = int(f.attrs.get('nside', 128))
+            self.f_sky = float(f.attrs.get('f_sky', 1.0))
+
+    def _ensure_open(self):
+        """Open HDF5 file lazily (safe for multiprocessing workers)."""
+        if self._file is None:
+            import h5py
+            self._file = h5py.File(self.h5_path, 'r')
+
+    def __len__(self):
+        return self.n_maps
+
+    def __getitem__(self, idx):
+        """Return (qu_map, target) pair from HDF5."""
+        self._ensure_open()
+        qu_map = self._file[self.split]['maps'][idx]   # [3, npix]
+        target = self._file[self.split]['targets'][idx] # [2]
+        return torch.from_numpy(np.array(qu_map, dtype=np.float32)), \
+               torch.tensor(np.array(target, dtype=np.float32))
+
+    def __del__(self):
+        if self._file is not None:
+            self._file.close()
+
+
+def _hdf5_worker_init(worker_id):
+    """Reset h5py file handle in each DataLoader worker process.
+
+    When num_workers>0, DataLoader forks the dataset. The parent's h5py
+    file handle is invalid in the child process. This function closes
+    the inherited handle so _ensure_open() creates a fresh one.
+    """
+    dataset = torch.utils.data.get_worker_info().dataset
+    if hasattr(dataset, '_file') and dataset._file is not None:
+        dataset._file.close()
+        dataset._file = None
 
 
 def train_one_epoch(model, dataloader, optimizer, device):
@@ -217,6 +298,15 @@ def main():
                         help="Output JSON path for results")
     parser.add_argument("--camb_cache", type=str, default=None,
                         help="NPZ file to cache/load CAMB spectra (saves ~1.5h on repeat runs)")
+    parser.add_argument("--hdf5_path", type=str, default=None,
+                        help="Path to pre-generated HDF5 dataset. When set, reads maps from disk "
+                             "instead of on-the-fly generation. Much faster for NSIDE>=128. "
+                             "The HDF5 file must contain train/val/test splits as created by "
+                             "scripts/generate_test4_hdf5.py. Ignores --n_train/--n_val/--n_test "
+                             "(sizes come from the HDF5 file).")
+    parser.add_argument("--num_workers", type=int, default=0,
+                        help="DataLoader num_workers. 0 = main thread (safe on gpu-shared). "
+                             "2-4 recommended with HDF5 on nodes with multiple CPU cores.")
     args = parser.parse_args()
 
     if args.lmax is None:
@@ -236,70 +326,97 @@ def main():
     print(f"r range: [{R_MIN}, {R_MAX}], τ range: [{TAU_MIN}, {TAU_MAX}]")
     print(f"Training maps: {args.n_train}, Val: {args.n_val}, Test: {args.n_test}")
     print(f"Batch size: {args.batch_size}, LR: {args.lr}")
+    print(f"Data mode: {'HDF5' if args.hdf5_path else 'on-the-fly'}, num_workers={args.num_workers}")
     print(f"LR schedule: ReduceLROnPlateau (patience={args.lr_patience}, factor={args.lr_factor})")
     print(f"Early stopping: patience={args.patience}")
 
-    # Create datasets
-    print("\nGenerating datasets (CAMB spectra needed)...")
-    # Shared mask for train/val/test (critical for SpectralCNN)
-    from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
-    shared_rng = np.random.default_rng(0)
-    shared_mask = create_sky_mask(args.f_sky, args.nside, shared_rng).astype(np.float32)
+    # Create datasets (HDF5 or on-the-fly)
+    use_hdf5 = args.hdf5_path is not None
+    num_workers = args.num_workers
 
-    # Pre-compute CAMB spectra ONCE (with optional FITS disk cache)
-    # FITS cache layout: PrimaryHDU + ImageHDU "R_VALUES"/"TAU_VALUES" + ImageHDU "CL_EE"/"CL_BB"
-    if args.camb_cache and os.path.exists(args.camb_cache):
-        print(f"  Loading cached CAMB spectra from {args.camb_cache}")
-        from astropy.io import fits as pf
-        with pf.open(args.camb_cache) as hdul:
-            # ImageHDU.data is a plain numpy array (no structured columns)
-            r_values = np.array(hdul["R_VALUES"].data, dtype=np.float32)
-            tau_values = np.array(hdul["TAU_VALUES"].data, dtype=np.float32)
-            cl_ee_array = np.array(hdul["CL_EE"].data, dtype=np.float64)
-            cl_bb_array = np.array(hdul["CL_BB"].data, dtype=np.float64)
-        shared_camb = (r_values, tau_values, cl_ee_array, cl_bb_array)
-        print(f"  Loaded {len(shared_camb[0])} spectra from cache")
+    if use_hdf5:
+        # HDF5 mode: read pre-generated maps from disk (fast, no synfast bottleneck)
+        print(f"\nUsing HDF5 dataset: {args.hdf5_path}")
+        import h5py
+        with h5py.File(args.hdf5_path, 'r') as f:
+            print(f"  HDF5 attrs: nside={f.attrs.get('nside')}, f_sky={f.attrs.get('f_sky')}, "
+                  f"noise_std={f.attrs.get('noise_std')}")
+            print(f"  train: {f['train/maps'].shape}, val: {f['val/maps'].shape}, "
+                  f"test: {f['test/maps'].shape}")
+        train_dataset = HDF5RTauDataset(args.hdf5_path, split='train')
+        val_dataset = HDF5RTauDataset(args.hdf5_path, split='val')
+        test_dataset = HDF5RTauDataset(args.hdf5_path, split='test')
+        # Override n_train/n_val/n_test from HDF5 sizes
+        args.n_train = len(train_dataset)
+        args.n_val = len(val_dataset)
+        args.n_test = len(test_dataset)
+        print(f"  Dataset sizes: train={args.n_train}, val={args.n_val}, test={args.n_test}")
     else:
-        print(f"  Pre-computing {N_CAMB_SPECTRA} CAMB spectra (shared across all datasets)...")
-        shared_camb = precompute_camb_spectra_r_tau(N_CAMB_SPECTRA, args.lmax, seed=142)
-        if args.camb_cache:
-            print(f"  Saving CAMB spectra to {args.camb_cache}")
+        # On-the-fly mode: generate maps via hp.synfast in __getitem__
+        print("\nGenerating datasets on-the-fly (CAMB spectra needed)...")
+        # Shared mask for train/val/test (critical for SpectralCNN)
+        from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
+        shared_rng = np.random.default_rng(0)
+        shared_mask = create_sky_mask(args.f_sky, args.nside, shared_rng).astype(np.float32)
+
+        # Pre-compute CAMB spectra ONCE (with optional FITS disk cache)
+        # FITS cache layout: PrimaryHDU + ImageHDU "R_VALUES"/"TAU_VALUES" + ImageHDU "CL_EE"/"CL_BB"
+        if args.camb_cache and os.path.exists(args.camb_cache):
+            print(f"  Loading cached CAMB spectra from {args.camb_cache}")
             from astropy.io import fits as pf
-            # FITS cache: ImageHDU for all arrays (simpler than BinTableHDU)
-            hdu_r = pf.ImageHDU(shared_camb[0])
-            hdu_r.name = "R_VALUES"
-            hdu_tau = pf.ImageHDU(shared_camb[1])
-            hdu_tau.name = "TAU_VALUES"
-            hdu_ee = pf.ImageHDU(shared_camb[2])
-            hdu_ee.name = "CL_EE"
-            hdu_bb = pf.ImageHDU(shared_camb[3])
-            hdu_bb.name = "CL_BB"
-            hdul = pf.HDUList([pf.PrimaryHDU(), hdu_r, hdu_tau, hdu_ee, hdu_bb])
-            hdul.writeto(args.camb_cache, overwrite=True)
-            print(f"  Cache saved ({os.path.getsize(args.camb_cache)/1e6:.1f} MB)")
+            with pf.open(args.camb_cache) as hdul:
+                r_values = np.array(hdul["R_VALUES"].data, dtype=np.float32)
+                tau_values = np.array(hdul["TAU_VALUES"].data, dtype=np.float32)
+                cl_ee_array = np.array(hdul["CL_EE"].data, dtype=np.float64)
+                cl_bb_array = np.array(hdul["CL_BB"].data, dtype=np.float64)
+            shared_camb = (r_values, tau_values, cl_ee_array, cl_bb_array)
+            print(f"  Loaded {len(shared_camb[0])} spectra from cache")
+        else:
+            print(f"  Pre-computing {N_CAMB_SPECTRA} CAMB spectra (shared across all datasets)...")
+            shared_camb = precompute_camb_spectra_r_tau(N_CAMB_SPECTRA, args.lmax, seed=142)
+            if args.camb_cache:
+                print(f"  Saving CAMB spectra to {args.camb_cache}")
+                from astropy.io import fits as pf
+                hdu_r = pf.ImageHDU(shared_camb[0])
+                hdu_r.name = "R_VALUES"
+                hdu_tau = pf.ImageHDU(shared_camb[1])
+                hdu_tau.name = "TAU_VALUES"
+                hdu_ee = pf.ImageHDU(shared_camb[2])
+                hdu_ee.name = "CL_EE"
+                hdu_bb = pf.ImageHDU(shared_camb[3])
+                hdu_bb.name = "CL_BB"
+                hdul = pf.HDUList([pf.PrimaryHDU(), hdu_r, hdu_tau, hdu_ee, hdu_bb])
+                hdul.writeto(args.camb_cache, overwrite=True)
+                print(f"  Cache saved ({os.path.getsize(args.camb_cache)/1e6:.1f} MB)")
 
-    train_dataset = RTauDataset(
-        args.n_train, args.nside, args.lmax,
-        noise_uK, args.f_sky, seed=42,
-        mask=shared_mask, camb_spectra=shared_camb,
-    )
-    val_dataset = RTauDataset(
-        args.n_val, args.nside, args.lmax,
-        noise_uK, args.f_sky, seed=1234,
-        mask=shared_mask, camb_spectra=shared_camb,
-    )
-    test_dataset = RTauDataset(
-        args.n_test, args.nside, args.lmax,
-        noise_uK, args.f_sky, seed=9999,
-        mask=shared_mask, camb_spectra=shared_camb,
-    )
+        train_dataset = RTauDataset(
+            args.n_train, args.nside, args.lmax,
+            noise_uK, args.f_sky, seed=42,
+            mask=shared_mask, camb_spectra=shared_camb,
+        )
+        val_dataset = RTauDataset(
+            args.n_val, args.nside, args.lmax,
+            noise_uK, args.f_sky, seed=1234,
+            mask=shared_mask, camb_spectra=shared_camb,
+        )
+        test_dataset = RTauDataset(
+            args.n_test, args.nside, args.lmax,
+            noise_uK, args.f_sky, seed=9999,
+            mask=shared_mask, camb_spectra=shared_camb,
+        )
+        # On-the-fly must use num_workers=0 on gpu-shared (1 CPU core)
+        num_workers = 0
 
+    # DataLoader with optional multiprocessing for HDF5
+    worker_init_fn = _hdf5_worker_init if use_hdf5 and num_workers > 0 else None
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
-                              shuffle=True, num_workers=0, pin_memory=True)
+                              shuffle=True, num_workers=num_workers,
+                              pin_memory=True, worker_init_fn=worker_init_fn)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size,
-                            num_workers=0, pin_memory=True)
+                            num_workers=num_workers, pin_memory=True,
+                            worker_init_fn=worker_init_fn)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size,
-                             num_workers=0)
+                             num_workers=num_workers, worker_init_fn=worker_init_fn)
 
     # Model: 3 input channels (Q, U, mask), 2 outputs (r_log, τ)
     # Enable inpainting for partial-sky observations
@@ -386,6 +503,8 @@ def main():
     with open(args.output, "w") as f:
         json.dump({
             "test": "test4_joint_r_tau",
+            "data_mode": "hdf5" if args.hdf5_path else "on-the-fly",
+            "hdf5_path": args.hdf5_path,
             "r_pct_error": float(results["r_pct_error"]),
             "tau_pct_error": float(results["tau_pct_error"]),
             "r_bias": float(results["r_bias"]),
