@@ -40,7 +40,7 @@ git pull origin main 2>&1 | tail -3
 uv pip install -e "$REPO_SRC[dev]" --no-deps 2>&1 | tail -1
 
 RESULTS_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results
-HDF5_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data
+HDF5_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_striped
 mkdir -p $RESULTS_DIR
 
 python3 scripts/train_test4.py \
