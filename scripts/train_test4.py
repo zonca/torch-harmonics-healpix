@@ -288,7 +288,7 @@ def _hdf5_worker_init(worker_id):
         dataset._file = None
 
 
-def train_one_epoch(model, dataloader, optimizer, device):
+def train_one_epoch(model, dataloader, optimizer, device, grad_clip=0):
     """Train model for one epoch. Returns mean loss.
 
     Args:
@@ -296,6 +296,7 @@ def train_one_epoch(model, dataloader, optimizer, device):
         dataloader: DataLoader yielding (input_maps, targets) batches.
         optimizer: PyTorch optimizer.
         device: torch.device for computation.
+        grad_clip: Max gradient norm for clipping (0=disabled).
 
     Returns:
         Mean MSE loss over all batches in the epoch.
@@ -311,6 +312,8 @@ def train_one_epoch(model, dataloader, optimizer, device):
         pred = model(batch_x)
         loss = nn.functional.mse_loss(pred, batch_y)
         loss.backward()
+        if grad_clip > 0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         optimizer.step()
 
         total_loss += loss.item()
@@ -397,6 +400,11 @@ def main():
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--lr_patience", type=int, default=5)
     parser.add_argument("--lr_factor", type=float, default=0.1)
+    parser.add_argument("--scheduler", type=str, default="cosine",
+                        choices=["cosine", "plateau"],
+                        help="LR scheduler: cosine (smooth decay) or plateau (step drops)")
+    parser.add_argument("--grad_clip", type=float, default=1.0,
+                        help="Max gradient norm for clipping (0=disabled)")
     parser.add_argument("--hidden_channels", type=int, default=32)
     parser.add_argument("--num_blocks", type=int, default=3)
     parser.add_argument("--output", type=str, required=True,
@@ -560,9 +568,16 @@ def main():
 
     # Training setup
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', patience=args.lr_patience, factor=args.lr_factor
-    )
+    if args.scheduler == "cosine":
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=args.max_epochs, eta_min=args.lr * 1e-4
+        )
+        use_plateau = False
+    else:
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode='min', patience=args.lr_patience, factor=args.lr_factor
+        )
+        use_plateau = True
 
     best_val_loss = float("inf")
     best_state = None
@@ -579,18 +594,26 @@ def main():
         # Update sampler epoch so each epoch gets a different chunk shuffle
         if train_sampler is not None:
             train_sampler.set_epoch(epoch)
-        train_loss = train_one_epoch(model, train_loader, optimizer, device)
+        train_loss = train_one_epoch(model, train_loader, optimizer, device, grad_clip=args.grad_clip)
         epoch_time = time.time() - t0
 
         val_results = evaluate(model, val_loader, device)
         val_loss = val_results["r_pct_error"] + val_results["tau_pct_error"]  # Combined validation metric for early stopping (equal weight to both parameters)
 
-        scheduler.step(val_loss)
+        if use_plateau:
+            scheduler.step(val_loss)
+        else:
+            scheduler.step()
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             best_state = {k: v.clone() for k, v in model.state_dict().items()}
             epochs_no_improve = 0
+            # Save best checkpoint to disk (survives walltime kills)
+            ckpt_dir = os.path.dirname(args.output) or "."
+            os.makedirs(ckpt_dir, exist_ok=True)
+            ckpt_path = args.output.replace(".json", f"_nside{args.nside}_best.pt")
+            torch.save(best_state, ckpt_path)
         else:
             epochs_no_improve += 1
 
@@ -648,7 +671,7 @@ def main():
             "best_val_loss": float(best_val_loss),
             "batch_size": args.batch_size,
             "lr": args.lr,
-            "lr_schedule": "ReduceLROnPlateau",
+            "lr_schedule": args.scheduler,
             "lr_patience": args.lr_patience,
             "lr_factor": args.lr_factor,
             "early_stopping_patience": args.patience,
