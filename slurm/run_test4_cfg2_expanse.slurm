@@ -23,6 +23,8 @@ date
 nvidia-smi
 
 WORKDIR=/tmp/zonca_torch_hh_t4_hdf5_$SLURM_JOB_ID
+# Cleanup on exit
+trap "rm -rf $WORKDIR" EXIT
 mkdir -p $WORKDIR
 cd $WORKDIR
 
@@ -30,7 +32,7 @@ UV_LINK_MODE=copy uv venv .venv --python 3.11
 source .venv/bin/activate
 
 echo "=== Installing packages ==="
-uv pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124 2>&1 | tail -1
+uv pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124 2>&1 | tail -1
 uv pip install torch-harmonics==0.8.0 --no-deps 2>&1 | tail -1
 uv pip install healpy h5py scipy matplotlib camb astropy 2>&1 | tail -1
 

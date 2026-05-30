@@ -446,7 +446,11 @@ def main():
     print(f"Training maps: {args.n_train}, Val: {args.n_val}, Test: {args.n_test}")
     print(f"Batch size: {args.batch_size}, LR: {args.lr}")
     print(f"Data mode: {'HDF5' if args.hdf5_path else 'on-the-fly'}, num_workers={args.num_workers}")
-    print(f"LR schedule: ReduceLROnPlateau (patience={args.lr_patience}, factor={args.lr_factor})")
+    if args.scheduler == "cosine":
+        print(f"LR schedule: CosineAnnealingLR (T_max={args.max_epochs}, eta_min={args.lr*1e-4:.1e})")
+    else:
+        print(f"LR schedule: ReduceLROnPlateau (patience={args.lr_patience}, factor={args.lr_factor})")
+    print(f"Gradient clipping: {args.grad_clip if args.grad_clip > 0 else 'disabled'}")
     print(f"Early stopping: patience={args.patience}")
 
     # Create datasets (HDF5 or on-the-fly)
