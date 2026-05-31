@@ -13,8 +13,12 @@
 | T2/T3 Inpaint (bug) | 1 | 13.75 | ❌ Shared mask not fixed yet |
 | T2/T3 Full fix re-run | 1 | 24.00 | ✅ Timed out but Test 1+2 complete |
 | Test 3 only | 1 | ~8.00 | ✅ Test 3 complete (3.76%) |
-| Test 4 training | 1 | ~6.0 | Job 49694662, 4 configs (f_sky×noise), CAMB FITS cache 3.9MB |
-| **TOTAL** | **32** | **~71.5+** | |
+|| Test 4 training | 1 | ~6.0 | Job 49694662, 4 configs (f_sky×noise), CAMB FITS cache 3.9MB |
+|| T4 NSIDE=128 (ReduceLR) | 4 | 96.0 | Jobs 49877275-31, 24h walltime each, τ divergence at ep11 |
+|| T4 NSIDE=128 (cosine T150) | 4 | 40.0 | Jobs 49905105-8, cancelled after τ divergence confirmed |
+|| T4 NSIDE=128 (hard clamp) | 4 | 2.0 | Jobs 49917222-5, cancelled ep1 (dead gradients, τ=940%) |
+|| T4 NSIDE=128 (Huber T25) | 4 | 96.0 | Jobs 49918615-8, 24h walltime, Huber τ loss + CosineAnnealingLR |
+|| **TOTAL** | **53** | **~311.5+** | |
 
 ### Note on Test 4 GPU Time
 
@@ -44,6 +48,7 @@ The CAMB FITS cache file is 3.9MB.
 | Architecture | Test 1 | Test 2/3 | Notes |
 |-------------|--------|----------|-------|
 | **SpectralCNN v2** | 6,454,529 | 9,829,634 | 3 spectral blocks, 32 channels |
+| **SpectralCNN T4 NSIDE=128** | — | 422,074,562 | 3 blocks, 32 ch, LMAX=383 |
 | **MultiResSpectralCNN v3** | 1,545,601 | — | Multi-resolution ablation |
 | **NNhealpix** (paper) | ~80,000 | ~240,000 | Pixel-space CNN, O(filter²) |
 | **MCMC** (baseline) | 0 | 0 | Classical, no trainable params |
