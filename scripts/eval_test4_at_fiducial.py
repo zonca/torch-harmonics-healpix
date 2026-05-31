@@ -192,8 +192,9 @@ def main():
 
     for cfg in configs:
         label = cfg["label"]
-        # Try multiple naming conventions (HDF5, nside-specific, legacy)
+        # Try multiple naming conventions (checkpoint, HDF5, nside-specific, legacy)
         candidates = [
+            os.path.join(results_dir, f"test4_nside128_hdf5_{label}_nside{args.nside}_best.pt"),
             os.path.join(results_dir, f"test4_nside128_hdf5_{label}_nside{args.nside}.pt"),
             os.path.join(results_dir, f"test4_{label}_nside{args.nside}.pt"),
             os.path.join(results_dir, f"test4_{label}.pt"),
