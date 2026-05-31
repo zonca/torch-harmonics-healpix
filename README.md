@@ -33,7 +33,9 @@ Reproduces and benchmarks all 4 tests from Krachmalnicoff & Tomasi (2019) [[arXi
 | 10  | 6.81%       | **5.2%**  | NNhealpix   |
 | 15  | 11.98%      | **8.4%**  | NNhealpix   |
 
-### Test 4 (Joint r/τ estimation, NSIDE=16) — CNN approaches Fisher bound
+### Test 4 (Joint r/τ estimation) — CNN approaches Fisher bound
+
+**NSIDE=16** (9.8M params, fiducial-point evaluation):
 
 Fiducial-point evaluation at (r=0.003, τ=0.054), 1000 noise realizations.
 RMSE = √(bias² + σ²) vs Fisher σ (Cramér-Rao lower bound for unbiased estimators).
@@ -44,6 +46,17 @@ RMSE = √(bias² + σ²) vs Fisher σ (Cramér-Rao lower bound for unbiased est
 | f_sky=1.0, noise=6  | 1.06×                     | 0.33×                     |
 | f_sky=0.1, noise=0  | 0.39×                     | 1.02×                     |
 | f_sky=0.1, noise=6  | 0.38×                     | 0.56×                     |
+
+**NSIDE=128** (422M params, training in progress):
+
+| Config              | Fisher σ(r) % | CNN best r % | Status |
+|---------------------|---------------|--------------|--------|
+| f_sky=1.0, noise=0  | 7.5%          | ~54%         | 🔄 Training |
+| f_sky=1.0, noise=6  | 7.7%          | ~57%         | 🔄 Training |
+| f_sky=0.1, noise=0  | 23.8%         | ~54%         | 🔄 Training |
+| f_sky=0.1, noise=6  | 24.2%         | ~56%         | 🔄 Training |
+
+> High-resolution NSIDE=128 training uses HDF5 pre-generated maps (100K/config) on Expanse with Lustre striping, ChunkShuffleSampler, Huber loss for τ, and CosineAnnealingLR. Current best r errors are far from the Fisher bound — further training improvements needed.
 
 **Main finding:** SpectralCNN dominates for polarization estimation (Tests 2, 3, 4) — the spectral prior provides a strong global physical prior. For noisy scalar maps (Test 1), pixel-space convolution is more robust due to implicit low-pass filtering.
 

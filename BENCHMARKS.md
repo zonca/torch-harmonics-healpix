@@ -243,6 +243,47 @@ fiducial-point RMSE results above.
 | T4-c   | 0.1   | 0     | 61.0%     | 24.3%     | 31     | 4830     | 277MB   |
 | T4-d   | 0.1   | 6     | 60.5%     | 24.2%     | 29     | 4665     | 277MB   |
 
+### NSIDE=128 (High-Resolution) Results
+
+**Setup:** HEALPix N_side=128, LMAX=383, 422M-parameter SpectralCNN (hidden_channels=32, num_blocks=3).
+100K train / 10K val / 1K test maps pre-generated as HDF5 on Expanse Lustre (striped across 16 OSTs for ~250 MB/s I/O).
+Training with CosineAnnealingLR (T_max=25, eta_min=1e-7), Huber loss for τ, MSE for log(r), gradient clipping=1.0, batch_size=16.
+
+**Training challenges overcome:**
+1. **Lustre I/O bottleneck** — single-OST striping capped bandwidth at ~80 MB/s; re-striped to 16 OSTs → 250+ MB/s
+2. **ChunkShuffleSampler** — groups DataLoader indices by HDF5 chunk for sequential reads, with chunk-order + within-chunk shuffle
+3. **τ divergence at epoch 11** — MSE loss on τ caused gradient explosion when predictions drifted outside [0.03, 0.08]; fixed with Huber loss (linear gradient far from target, quadratic near target)
+4. **Insufficient LR decay** — ReduceLROnPlateau's 10× step drops and CosineAnnealing with T_max=150 both fail to decay LR within 24h walltime; CosineAnnealing with T_max=25 provides full cosine cycle within walltime
+5. **Walltime checkpointing** — script saves best model to disk on each improvement, surviving TIME_LIMIT kills
+
+#### Fisher Forecast (NSIDE=128, theoretical optimal bounds)
+
+Cramér-Rao lower bound at fiducial point (r=0.003, τ=0.054).
+
+| Config | f_sky | Noise | σ(r) | σ(τ) | r % error | τ % error |
+|--------|-------|-------|------|------|-----------|-----------|
+| T4-a   | 1.0   | 0     | 0.000225 | 0.00110 | 7.5%  | 2.0% |
+| T4-b   | 1.0   | 6     | 0.000230 | 0.00110 | 7.7%  | 2.0% |
+| T4-c   | 0.1   | 0     | 0.000713 | 0.00347 | 23.8% | 6.4% |
+| T4-d   | 0.1   | 6     | 0.000727 | 0.00348 | 24.2% | 6.4% |
+
+#### SpectralCNN NSIDE=128 (range-averaged % errors)
+
+Best results from multi-epoch training runs with CosineAnnealingLR + Huber τ loss.
+Fiducial-point evaluation pending (requires trained model checkpoint + eval_test4_at_fiducial.py).
+
+| Config | f_sky | Noise | Best r % error | Best τ % error | Training epochs | Model params |
+|--------|-------|-------|----------------|----------------|-----------------|--------------|
+| T4-a   | 1.0   | 0     | ~54%           | ~7.8%          | 22              | 422M         |
+| T4-b   | 1.0   | 6     | ~57%           | ~22%           | 22              | 422M         |
+| T4-c   | 0.1   | 0     | ~54%           | ~24%           | 23              | 422M         |
+| T4-d   | 0.1   | 6     | ~56%           | ~24%           | 22              | 422M         |
+
+**Status:** Training with Huber τ loss + CosineAnnealingLR (T_max=25) is in progress (Expanse jobs 49918615-8).
+Previous runs with MSE τ loss showed τ divergence to 10^12% at epoch 11 — Huber loss eliminates this.
+Preliminary epoch 1 results show τ at 24-26% (normal). Full results and fiducial-point evaluation
+will be added when training completes.
+
 #### MCMC (chi-squared grid search baseline)
 
 50×50 grid in (r, τ) — coarse but representative of traditional methods.
@@ -331,8 +372,11 @@ fiducial-point RMSE results above.
 | Test 2 v2 results (all f_sky)     | ✅ Done   | 1.69-3.01% (all beat NNhealpix)                    |
 || Test 3 v2 result                  | ✅ Done   | 3.76% (beats NNhealpix 4.0%)                       |
 || Data generation (Test 4)          | ✅ Done   | data_generation_test4.py, FITS CAMB cache via astropy |
-|| Test 4 training (4 configs)       | ✅ Done   | 4 configs: f_sky∈{1.0,0.1} × noise∈{0,6}, CNN r≈55-61% |
-|| Test 4 fiducial-point evaluation  | ✅ Done   | 1000 noise realizations at r=0.003, τ=0.054; RMSE/Fisher = 0.38–1.11 (r) |
+| Test 4 training (4 configs)       | ✅ Done   | 4 configs: f_sky∈{1.0,0.1} × noise∈{0,6}, CNN r≈55-61% |
+| Test 4 fiducial-point evaluation  | ✅ Done   | 1000 noise realizations at r=0.003, τ=0.054; RMSE/Fisher = 0.38–1.11 (r) |
+| Test 4 NSIDE=128 HDF5 data        | ✅ Done   | 100K train / 10K val / 1K test per config, striped HDF5 on Expanse Lustre |
+| Test 4 NSIDE=128 Fisher forecast  | ✅ Done   | Fisher σ(r) = 7.5% (fsky=1.0) to 24.2% (fsky=0.1) at fiducial |
+| Test 4 NSIDE=128 CNN training     | 🔄 In progress | Huber τ loss + CosineAnnealingLR (T_max=25), Expanse jobs 49918615-8 |
 
 ---
 

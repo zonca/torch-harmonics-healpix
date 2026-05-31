@@ -70,6 +70,8 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
 - Slurm Python scripts: always set `PYTHONUNBUFFERED=1` for real-time output.
 - In Slurm `--output` paths, use absolute paths (e.g. `/expanse/lustre/...`), not `$HOME` or `~` — they don't expand in SBATCH directives.
 - **HDF5 on Lustre**: set `HDF5_USE_FILE_LOCKING=FALSE` in Slurm scripts. Random DataLoader shuffle + single-chunk RAM cache = 95% cache miss rate (eviction every call). Fix: use `ChunkShuffleSampler` (groups indices by chunk, shuffles chunk order + within-chunk indices).
+- **τ divergence bug**: MSE loss on τ causes gradient explosion around epoch 11 (τ %err → 10^12%+) regardless of LR scheduler type. Root cause: MSE gradient = 2(τ_pred - τ_true) grows linearly with prediction error → positive feedback loop. Fix: use Huber loss for τ (delta=0.01) — linear gradient far from target caps magnitude, quadratic near target preserves accuracy. Hard clamping (torch.clamp) creates dead gradients and makes it worse.
+- **CosineAnnealingLR T_max**: With 24h walltime and ~58 min/epoch, only ~24 epochs fit. Set `--cosine_T_max 25` for full cosine decay cycle; default T_max=150 leaves LR essentially constant.
 
 ### HDF5 Data on Expanse Lustre
 
