@@ -192,13 +192,20 @@ def main():
 
     for cfg in configs:
         label = cfg["label"]
-        # Try nside-specific name first, then fall back to legacy name
-        model_path = os.path.join(results_dir, f"test4_{label}_nside{args.nside}.pt")
-        if not os.path.exists(model_path):
-            model_path = os.path.join(results_dir, f"test4_{label}.pt")
+        # Try multiple naming conventions (HDF5, nside-specific, legacy)
+        candidates = [
+            os.path.join(results_dir, f"test4_nside128_hdf5_{label}_nside{args.nside}.pt"),
+            os.path.join(results_dir, f"test4_{label}_nside{args.nside}.pt"),
+            os.path.join(results_dir, f"test4_{label}.pt"),
+        ]
+        model_path = None
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                model_path = candidate
+                break
 
-        if not os.path.exists(model_path):
-            print(f"Skipping {label}: model not found at {model_path}")
+        if model_path is None:
+            print(f"Skipping {label}: model not found (tried {candidates})")
             continue
 
         print(f"\n=== Config: {label} ===")
