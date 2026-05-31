@@ -403,6 +403,10 @@ def main():
     parser.add_argument("--scheduler", type=str, default="cosine",
                         choices=["cosine", "plateau"],
                         help="LR scheduler: cosine (smooth decay) or plateau (step drops)")
+    parser.add_argument("--cosine_T_max", type=int, default=0,
+                        help="Cosine T_max (0=use max_epochs, set lower for faster decay within walltime)")
+    parser.add_argument("--cosine_eta_min", type=float, default=0,
+                        help="Cosine eta_min (0=lr*1e-4)")
     parser.add_argument("--grad_clip", type=float, default=1.0,
                         help="Max gradient norm for clipping (0=disabled)")
     parser.add_argument("--hidden_channels", type=int, default=32)
@@ -447,7 +451,9 @@ def main():
     print(f"Batch size: {args.batch_size}, LR: {args.lr}")
     print(f"Data mode: {'HDF5' if args.hdf5_path else 'on-the-fly'}, num_workers={args.num_workers}")
     if args.scheduler == "cosine":
-        print(f"LR schedule: CosineAnnealingLR (T_max={args.max_epochs}, eta_min={args.lr*1e-4:.1e})")
+        cosine_T_max = args.cosine_T_max if args.cosine_T_max > 0 else args.max_epochs
+        cosine_eta_min = args.cosine_eta_min if args.cosine_eta_min > 0 else args.lr * 1e-4
+        print(f"LR schedule: CosineAnnealingLR (T_max={cosine_T_max}, eta_min={cosine_eta_min:.1e})")
     else:
         print(f"LR schedule: ReduceLROnPlateau (patience={args.lr_patience}, factor={args.lr_factor})")
     print(f"Gradient clipping: {args.grad_clip if args.grad_clip > 0 else 'disabled'}")
@@ -573,8 +579,10 @@ def main():
     # Training setup
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     if args.scheduler == "cosine":
+        cosine_T_max = args.cosine_T_max if args.cosine_T_max > 0 else args.max_epochs
+        cosine_eta_min = args.cosine_eta_min if args.cosine_eta_min > 0 else args.lr * 1e-4
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=args.max_epochs, eta_min=args.lr * 1e-4
+            optimizer, T_max=cosine_T_max, eta_min=cosine_eta_min
         )
         use_plateau = False
     else:
