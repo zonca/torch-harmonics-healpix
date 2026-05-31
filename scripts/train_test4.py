@@ -310,7 +310,12 @@ def train_one_epoch(model, dataloader, optimizer, device, grad_clip=0):
 
         optimizer.zero_grad()
         pred = model(batch_x)
-        loss = nn.functional.mse_loss(pred, batch_y)
+        # Clamp τ prediction (col 1) to [0.01, 0.12] to prevent divergence
+        # τ true range is [0.03, 0.08]; clamping prevents gradient explosion
+        # when τ wanders to 10+ or negative values
+        pred_clamped = pred.clone()
+        pred_clamped[:, 1] = pred[:, 1].clamp(min=0.01, max=0.12)
+        loss = nn.functional.mse_loss(pred_clamped, batch_y)
         loss.backward()
         if grad_clip > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
@@ -407,7 +412,7 @@ def main():
                         help="Cosine T_max (0=use max_epochs, set lower for faster decay within walltime)")
     parser.add_argument("--cosine_eta_min", type=float, default=0,
                         help="Cosine eta_min (0=lr*1e-4)")
-    parser.add_argument("--grad_clip", type=float, default=1.0,
+    parser.add_argument("--grad_clip", type=float, default=0.1,
                         help="Max gradient norm for clipping (0=disabled)")
     parser.add_argument("--hidden_channels", type=int, default=32)
     parser.add_argument("--num_blocks", type=int, default=3)
