@@ -6,6 +6,7 @@ Improvements over the original:
 2. Quadratic interpolation for sub-grid resolution
 3. Configurable ℓ_max for BB (BB signal only at low-ℓ, high-ℓ adds noise)
 4. Fiducial-point evaluation (same as CNN) for apples-to-apples comparison
+5. CAMB spectra on a REGULAR (r, τ) grid (not random sampling)
 """
 
 import argparse
@@ -17,9 +18,10 @@ import os
 import psutil
 
 from torch_harmonics_healpix.data_generation_test4 import (
-    precompute_camb_spectra_r_tau, generate_r_tau_map, R_MAX
+    generate_camb_spectra_r_tau, R_MAX
 )
 from torch_harmonics_healpix.data_generation_test2 import create_sky_mask
+from torch_harmonics_healpix.data_generation_test4 import generate_r_tau_map
 
 
 def noise_arcmin_to_uK(noise_arcmin, nside):
@@ -44,7 +46,7 @@ def chi2_grid_search(
         cl_bb_obs: Observed BB power spectrum (length lmax+1).
         r_grid: 1D array of r values.
         tau_grid: 1D array of τ values.
-        cl_ee_array: Pre-computed EE spectra, shape (n_r * n_tau, lmax+1).
+        cl_ee_array: Pre-computed EE spectra, shape (n_tau * n_r, lmax+1).
             Ordered as flattened (tau_idx * n_r + r_idx).
         cl_bb_array: Pre-computed BB spectra, same shape convention.
         noise_cl: Noise power (scalar).
@@ -64,13 +66,9 @@ def chi2_grid_search(
 
     chi2_grid = np.full((n_tau, n_r), np.inf)
 
-    # Pre-compute EE inverse variance (changes per grid point)
     for i in range(n_tau):
         for j in range(n_r):
             spec_idx = i * n_r + j
-            if spec_idx >= cl_ee_array.shape[0]:
-                continue
-
             cl_ee_model = cl_ee_array[spec_idx]
             cl_bb_model = cl_bb_array[spec_idx]
 
@@ -121,6 +119,57 @@ def chi2_grid_search(
     return r_best, tau_best, chi2_min
 
 
+def precompute_spectra_on_grid(r_grid, tau_grid, lmax, cache_path=None):
+    """Pre-compute CAMB spectra on a regular (r, τ) grid.
+
+    Returns arrays of shape (n_tau * n_r, lmax+1).
+    """
+    from astropy.io import fits as pf
+
+    n_r = len(r_grid)
+    n_tau = len(tau_grid)
+    n_spectra = n_r * n_tau
+
+    if cache_path and os.path.exists(cache_path):
+        print(f"Loading cached spectra from {cache_path}")
+        with pf.open(cache_path) as hdul:
+            cl_ee_array = np.array(hdul["CL_EE"].data, dtype=np.float64)
+            cl_bb_array = np.array(hdul["CL_BB"].data, dtype=np.float64)
+        print(f"Loaded {cl_ee_array.shape[0]} spectra from cache")
+        return cl_ee_array, cl_bb_array
+
+    print(f"Pre-computing {n_spectra} CAMB spectra on "
+          f"{n_tau}×{n_r} regular grid...")
+    cl_ee_array = np.zeros((n_spectra, lmax + 1), dtype=np.float64)
+    cl_bb_array = np.zeros((n_spectra, lmax + 1), dtype=np.float64)
+
+    t0 = time.time()
+    for i in range(n_tau):
+        for j in range(n_r):
+            spec_idx = i * n_r + j
+            cl_ee, cl_bb = generate_camb_spectra_r_tau(
+                r_grid[j], tau_grid[i], lmax
+            )
+            cl_ee_array[spec_idx] = cl_ee
+            cl_bb_array[spec_idx] = cl_bb
+        elapsed = time.time() - t0
+        remaining = elapsed / (i + 1) * (n_tau - i - 1)
+        print(f"  τ={tau_grid[i]:.4f}: {i+1}/{n_tau} rows done "
+              f"({elapsed:.0f}s elapsed, ~{remaining:.0f}s remaining)")
+
+    total_time = time.time() - t0
+    print(f"CAMB pre-computation: {total_time:.1f}s")
+
+    if cache_path:
+        hdu_ee = pf.ImageHDU(cl_ee_array); hdu_ee.name = "CL_EE"
+        hdu_bb = pf.ImageHDU(cl_bb_array); hdu_bb.name = "CL_BB"
+        hdul = pf.HDUList([pf.PrimaryHDU(), hdu_ee, hdu_bb])
+        hdul.writeto(cache_path, overwrite=True)
+        print(f"Saved cache to {cache_path} ({os.path.getsize(cache_path)/1e6:.1f} MB)")
+
+    return cl_ee_array, cl_bb_array
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Improved MCMC baseline for Test 4 (joint r/τ estimation)"
@@ -139,13 +188,13 @@ def main():
     parser.add_argument("--coarse_grid", type=int, default=100,
                         help="Coarse grid size per dimension (default: 100)")
     parser.add_argument("--fine_grid", type=int, default=50,
-                        help="Fine grid size per dimension (default: 50)")
+                        help="Fine grid size for refinement (default: 50)")
     parser.add_argument("--r_fiducial", type=float, default=0.003,
-                        help="Fiducial r value for evaluation (default: 0.003)")
+                        help="Fiducial r value (default: 0.003)")
     parser.add_argument("--tau_fiducial", type=float, default=0.054,
-                        help="Fiducial τ value for evaluation (default: 0.054)")
+                        help="Fiducial τ value (default: 0.054)")
     parser.add_argument("--fiducial_only", action="store_true",
-                        help="Only evaluate at fiducial point (for Fisher comparison)")
+                        help="Only evaluate at fiducial point")
     args = parser.parse_args()
 
     if args.lmax is None:
@@ -167,42 +216,19 @@ def main():
 
     rng = np.random.default_rng(42)
 
-    # Pre-compute CAMB spectra on coarse grid
+    # Define regular (r, τ) grid
     r_grid = np.linspace(0, R_MAX, args.coarse_grid)
     tau_grid = np.linspace(0.03, 0.08, args.coarse_grid)
 
+    # Pre-compute CAMB spectra on REGULAR grid
     from astropy.io import fits as pf
-
     camb_cache = os.path.join(results_dir,
-        f"test4_camb_spectra_mcmc_improved_nside{nside}_{args.coarse_grid}grid.fits")
-    if os.path.exists(camb_cache):
-        print(f"Loading cached CAMB spectra from {camb_cache}")
-        with pf.open(camb_cache) as hdul:
-            r_values = np.array(hdul["R_VALUES"].data, dtype=np.float32)
-            tau_values = np.array(hdul["TAU_VALUES"].data, dtype=np.float32)
-            cl_ee_array = np.array(hdul["CL_EE"].data, dtype=np.float64)
-            cl_bb_array = np.array(hdul["CL_BB"].data, dtype=np.float64)
-        print(f"Loaded {len(r_values)} spectra from cache")
-    else:
-        n_spectra = args.coarse_grid ** 2
-        print(f"Pre-computing {n_spectra} CAMB spectra on "
-              f"{args.coarse_grid}×{args.coarse_grid} grid...")
-        t0 = time.time()
-        r_values, tau_values, cl_ee_array, cl_bb_array = precompute_camb_spectra_r_tau(
-            n_spectra, lmax, seed=12345
-        )
-        camb_time = time.time() - t0
-        print(f"CAMB pre-computation: {camb_time:.1f}s")
-        hdu_r = pf.ImageHDU(r_values); hdu_r.name = "R_VALUES"
-        hdu_tau = pf.ImageHDU(tau_values); hdu_tau.name = "TAU_VALUES"
-        hdu_ee = pf.ImageHDU(cl_ee_array); hdu_ee.name = "CL_EE"
-        hdu_bb = pf.ImageHDU(cl_bb_array); hdu_bb.name = "CL_BB"
-        hdul = pf.HDUList([pf.PrimaryHDU(), hdu_r, hdu_tau, hdu_ee, hdu_bb])
-        hdul.writeto(camb_cache, overwrite=True)
-        print(f"Saved CAMB cache ({os.path.getsize(camb_cache)/1e6:.1f} MB)")
+        f"test4_camb_spectra_regular_nside{nside}_{args.coarse_grid}grid.fits")
+    cl_ee_array, cl_bb_array = precompute_spectra_on_grid(
+        r_grid, tau_grid, lmax, cache_path=camb_cache
+    )
 
     # Build spectra interpolator for two-stage refinement
-    # Reshape to 2D grid: (n_tau, n_r, lmax+1)
     cl_ee_2d = cl_ee_array.reshape(args.coarse_grid, args.coarse_grid, -1)
     cl_bb_2d = cl_bb_array.reshape(args.coarse_grid, args.coarse_grid, -1)
 
@@ -218,15 +244,14 @@ def main():
         cl_ee_new = np.zeros((n_tau_new * n_r_new, lmax + 1))
         cl_bb_new = np.zeros((n_tau_new * n_r_new, lmax + 1))
 
-        # Interpolate each ℓ mode (vectorized over grid points)
         for ell_idx in range(lmax + 1):
             interp_ee = RegularGridInterpolator(
                 (tau_grid, r_grid), cl_ee_2d[:, :, ell_idx],
-                method='linear', bounds_error=False, fill_value=None,
+                method='linear', bounds_error=False, fill_value=0.0,
             )
             interp_bb = RegularGridInterpolator(
                 (tau_grid, r_grid), cl_bb_2d[:, :, ell_idx],
-                method='linear', bounds_error=False, fill_value=None,
+                method='linear', bounds_error=False, fill_value=0.0,
             )
             cl_ee_new[:, ell_idx] = interp_ee(pts)
             cl_bb_new[:, ell_idx] = interp_bb(pts)
@@ -272,17 +297,15 @@ def main():
                 r_true = args.r_fiducial
                 tau_true = args.tau_fiducial
             else:
-                idx = rng.integers(0, len(r_values))
-                r_true = float(r_values[idx])
-                tau_true = float(tau_values[idx])
+                r_true = rng.uniform(0, R_MAX)
+                tau_true = rng.uniform(0.03, 0.08)
 
             q, u, _ = generate_r_tau_map(
                 r_true, tau_true, nside, lmax, noise_uK, f_sky, rng,
             )
 
-            # Compute observed C_ℓ from masked Q/U maps
-            # hp.anafast on masked maps gives pseudo-C_ℓ biased low by ~f_sky.
-            # De-bias by dividing by f_sky (crude but far better than nothing).
+            # Compute observed pseudo-C_ℓ from masked Q/U maps
+            # De-bias by dividing by f_sky
             maps_in = np.array([np.zeros_like(q), q, u])
             cl_obs = hp.anafast(maps_in, lmax=lmax, pol=True)
             cl_ee_obs = cl_obs[1] / f_sky
@@ -345,12 +368,12 @@ def main():
             r_pct_error = float(rmse_r / args.r_fiducial * 100)
             tau_pct_error = float(rmse_tau / args.tau_fiducial * 100)
         else:
-            r_bias = float(np.mean(r_preds - r_values[:n_test]))
-            tau_bias = float(np.mean(tau_preds - tau_values[:n_test]))
-            sigma_r = float(np.std(r_preds - r_values[:n_test]))
-            sigma_tau = float(np.std(tau_preds - tau_values[:n_test]))
-            rmse_r = float(np.sqrt(r_bias**2 + sigma_r**2))
-            rmse_tau = float(np.sqrt(tau_bias**2 + sigma_tau**2))
+            r_bias = float(np.mean(r_preds))
+            tau_bias = float(np.mean(tau_preds))
+            sigma_r = float(np.std(r_preds))
+            sigma_tau = float(np.std(tau_preds))
+            rmse_r = sigma_r
+            rmse_tau = sigma_tau
             r_pct_error = None
             tau_pct_error = None
 
@@ -393,10 +416,8 @@ def main():
             print(f"  τ: mean={np.mean(tau_preds):.5f}, bias={tau_bias:.5f}, "
                   f"σ={sigma_tau:.5f}, RMSE={rmse_tau:.5f} ({tau_pct_error:.1f}%)")
         else:
-            print(f"  r: mean={np.mean(r_preds):.5f}, bias={r_bias:.5f}, "
-                  f"σ={sigma_r:.5f}, RMSE={rmse_r:.5f}")
-            print(f"  τ: mean={np.mean(tau_preds):.5f}, bias={tau_bias:.5f}, "
-                  f"σ={sigma_tau:.5f}, RMSE={rmse_tau:.5f}")
+            print(f"  r: mean={np.mean(r_preds):.5f}, σ={sigma_r:.5f}")
+            print(f"  τ: mean={np.mean(tau_preds):.5f}, σ={sigma_tau:.5f}")
         print(f"  CPU time: {elapsed:.1f}s, Peak memory: {mem_peak:.1f}GB")
 
     print("\n=== All improved MCMC baselines complete ===")
