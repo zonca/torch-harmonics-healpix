@@ -47,16 +47,16 @@ RMSE = √(bias² + σ²) vs Fisher σ (Cramér-Rao lower bound for unbiased est
 | f_sky=0.1, noise=0  | 0.39×                     | 1.02×                     |
 | f_sky=0.1, noise=6  | 0.38×                     | 0.56×                     |
 
-**NSIDE=128** (422M params, training in progress):
+**NSIDE=128** (422M params, fiducial-point evaluation):
 
-| Config              | Fisher σ(r) % | CNN best r % | Status |
-|---------------------|---------------|--------------|--------|
-| f_sky=1.0, noise=0  | 7.5%          | ~54%         | 🔄 Training |
-| f_sky=1.0, noise=6  | 7.7%          | ~57%         | 🔄 Training |
-| f_sky=0.1, noise=0  | 23.8%         | ~54%         | 🔄 Training |
-| f_sky=0.1, noise=6  | 24.2%         | ~56%         | 🔄 Training |
+| Config              | Fisher σ(r) % | CNN RMSE/Fisher (r) | CNN RMSE/Fisher (τ) |
+|---------------------|---------------|---------------------|---------------------|
+| f_sky=1.0, noise=0  | 7.5%          | 5.21×               | 2.90×               |
+| f_sky=1.0, noise=6  | 7.7%          | 8.16×               | 1.23×               |
+| f_sky=0.1, noise=0  | 23.8%         | 2.13×               | 1.66×               |
+| f_sky=0.1, noise=6  | 24.2%         | 2.39×               | **0.53×**           |
 
-> High-resolution NSIDE=128 training uses HDF5 pre-generated maps (100K/config) on Expanse with Lustre striping, ChunkShuffleSampler, Huber loss for τ, and CosineAnnealingLR. Current best r errors are far from the Fisher bound — further training improvements needed.
+> NSIDE=128 underperforms NSIDE=16 due to τ divergence at epoch 11 limiting training to 5-10 epochs. Best result: τ at f_sky=0.1/noise=6 beats Fisher bound (0.53×). Longer training or τ-stable architecture needed.
 
 **Main finding:** SpectralCNN dominates for polarization estimation (Tests 2, 3, 4) — the spectral prior provides a strong global physical prior. For noisy scalar maps (Test 1), pixel-space convolution is more robust due to implicit low-pass filtering.
 

@@ -267,22 +267,60 @@ Cramér-Rao lower bound at fiducial point (r=0.003, τ=0.054).
 | T4-c   | 0.1   | 0     | 0.000713 | 0.00347 | 23.8% | 6.4% |
 | T4-d   | 0.1   | 6     | 0.000727 | 0.00348 | 24.2% | 6.4% |
 
-#### SpectralCNN NSIDE=128 (range-averaged % errors)
+#### SpectralCNN NSIDE=128 (fiducial-point evaluation)
 
-Best results from multi-epoch training runs with CosineAnnealingLR + Huber τ loss.
-Fiducial-point evaluation pending (requires trained model checkpoint + eval_test4_at_fiducial.py).
+Best model checkpoints from Huber τ loss + CosineAnnealingLR (T_max=25) training.
+Evaluated at fiducial point (r=0.003, τ=0.054) with 1000 noise realizations.
+RMSE = √(bias² + σ²).
 
-| Config | f_sky | Noise | Best r % error | Best τ % error | Training epochs | Model params |
-|--------|-------|-------|----------------|----------------|-----------------|--------------|
-| T4-a   | 1.0   | 0     | ~54%           | ~7.8%          | 22              | 422M         |
-| T4-b   | 1.0   | 6     | ~57%           | ~22%           | 22              | 422M         |
-| T4-c   | 0.1   | 0     | ~54%           | ~24%           | 23              | 422M         |
-| T4-d   | 0.1   | 6     | ~56%           | ~24%           | 22              | 422M         |
+**CNN on r (variance + bias decomposition at fiducial point):**
 
-**Status:** Training with Huber τ loss + CosineAnnealingLR (T_max=25) is in progress (Expanse jobs 49918615-8).
-Previous runs with MSE τ loss showed τ divergence to 10^12% at epoch 11 — Huber loss eliminates this.
-Preliminary epoch 1 results show τ at 24-26% (normal). Full results and fiducial-point evaluation
-will be added when training completes.
+| Config | f_sky | Noise | σ(r) | bias(r) | RMSE(r) | Fisher σ(r) | RMSE/Fisher |
+|--------|-------|-------|------|---------|---------|-------------|-------------|
+| T4-a   | 1.0   | 0     | 0.000872 | −0.000784 | 0.001173 | 0.000225 | **5.21** |
+| T4-b   | 1.0   | 6     | 0.000487 | −0.001813 | 0.001877 | 0.000230 | **8.16** |
+| T4-c   | 0.1   | 0     | 0.000458 | −0.001448 | 0.001519 | 0.000713 | **2.13** |
+| T4-d   | 0.1   | 6     | 0.000237 | −0.001720 | 0.001736 | 0.000727 | **2.39** |
+
+**CNN on τ (variance + bias decomposition at fiducial point):**
+
+| Config | f_sky | Noise | σ(τ) | bias(τ) | RMSE(τ) | Fisher σ(τ) | RMSE/Fisher |
+|--------|-------|-------|------|---------|---------|-------------|-------------|
+| T4-a   | 1.0   | 0     | 0.000382 | +0.003168 | 0.003191 | 0.001100 | **2.90** |
+| T4-b   | 1.0   | 6     | 0.000708 | −0.001147 | 0.001348 | 0.001100 | **1.23** |
+| T4-c   | 0.1   | 0     | 0.004671 | −0.003388 | 0.005770 | 0.003470 | **1.66** |
+| T4-d   | 0.1   | 6     | 0.001100 | −0.001484 | 0.001847 | 0.003480 | **0.53** |
+
+**Best epochs** (before τ divergence): T4-a=8, T4-b=6, T4-c=5, T4-d=10.
+
+#### Comparison: NSIDE=16 vs NSIDE=128
+
+| Config | f_sky | Noise | N16 RMSE/Fisher (r) | N128 RMSE/Fisher (r) | N16 RMSE/Fisher (τ) | N128 RMSE/Fisher (τ) |
+|--------|-------|-------|---------------------|----------------------|---------------------|----------------------|
+| T4-a   | 1.0   | 0     | **1.11×**           | 5.21×                | **1.34×**           | 2.90×                |
+| T4-b   | 1.0   | 6     | **1.06×**           | 8.16×                | **0.33×**           | 1.23×                |
+| T4-c   | 0.1   | 0     | **0.39×**           | 2.13×                | **1.02×**           | 1.66×                |
+| T4-d   | 0.1   | 6     | **0.38×**           | 2.39×                | **0.56×**           | **0.53×**            |
+
+**Key findings for NSIDE=128:**
+
+1. **The NSIDE=128 model underperforms NSIDE=16** on r estimation (2–8× Fisher vs 0.4–1.1×).
+   The 422M-parameter model has not converged sufficiently — training hits τ divergence
+   at epoch 11, and best checkpoints are from epochs 5–10. The large r bias (−0.001 to
+   −0.002) dominates the RMSE, indicating the model regresses toward the training mean.
+
+2. **On τ, NSIDE=128 is competitive** at f_sky=0.1 with noise (RMSE/Fisher = 0.53×),
+   matching the NSIDE=16 result (0.56×). The CNN beats the Fisher bound on τ for this
+   configuration.
+
+3. **τ divergence remains a critical problem** for 3 of 4 configs at epoch 11, even with
+   Huber loss. Only cfg4 (f_sky=0.1, noise=6) survives past epoch 11. The instability
+   occurs when predictions become overconfident — the zero-noise configs have no
+   stochastic regularization from noise realizations.
+
+4. **Longer training is needed.** With only 5–10 effective epochs before divergence,
+   the model hasn't had enough gradient steps to learn the r–τ degeneracy structure.
+   The NSIDE=16 model trained for 24–31 epochs with early stopping.
 
 #### MCMC (chi-squared grid search baseline)
 
@@ -376,7 +414,8 @@ will be added when training completes.
 | Test 4 fiducial-point evaluation  | ✅ Done   | 1000 noise realizations at r=0.003, τ=0.054; RMSE/Fisher = 0.38–1.11 (r) |
 | Test 4 NSIDE=128 HDF5 data        | ✅ Done   | 100K train / 10K val / 1K test per config, striped HDF5 on Expanse Lustre |
 | Test 4 NSIDE=128 Fisher forecast  | ✅ Done   | Fisher σ(r) = 7.5% (fsky=1.0) to 24.2% (fsky=0.1) at fiducial |
-| Test 4 NSIDE=128 CNN training     | 🔄 In progress | Huber τ loss + CosineAnnealingLR (T_max=25), Expanse jobs 49918615-8 |
+| Test 4 NSIDE=128 CNN training     | ✅ Done   | Huber τ loss + CosineAnnealingLR (T_max=25), best epochs 5-10 |
+| Test 4 NSIDE=128 fiducial eval    | ✅ Done   | RMSE/Fisher(r)=2.1-8.2×, RMSE/Fisher(τ)=0.5-2.9× |
 
 ---
 
