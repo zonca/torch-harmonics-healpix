@@ -2,6 +2,7 @@
 #SBATCH --job-name=thh-mcmc-t4
 #SBATCH --partition=shared
 #SBATCH --account=sds275
+#SBATCH --qos=shared-normal
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=64G
