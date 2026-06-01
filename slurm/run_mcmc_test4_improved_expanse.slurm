@@ -1,7 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=thh-mcmc-t4
-#SBATCH --partition=compute
+#SBATCH --partition=gpu-shared
 #SBATCH --account=sds275
+#SBATCH --qos=gpu-shared-normal
+#SBATCH --gpus=0
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=64G
