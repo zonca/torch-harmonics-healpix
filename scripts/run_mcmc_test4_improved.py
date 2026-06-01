@@ -281,10 +281,12 @@ def main():
             )
 
             # Compute observed C_ℓ from masked Q/U maps
+            # hp.anafast on masked maps gives pseudo-C_ℓ biased low by ~f_sky.
+            # De-bias by dividing by f_sky (crude but far better than nothing).
             maps_in = np.array([np.zeros_like(q), q, u])
             cl_obs = hp.anafast(maps_in, lmax=lmax, pol=True)
-            cl_ee_obs = cl_obs[1]
-            cl_bb_obs = cl_obs[2]
+            cl_ee_obs = cl_obs[1] / f_sky
+            cl_bb_obs = cl_obs[2] / f_sky
 
             # Stage 1: Coarse grid search
             r_best, tau_best, _ = chi2_grid_search(
