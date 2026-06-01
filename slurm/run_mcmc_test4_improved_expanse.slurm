@@ -30,7 +30,7 @@ UV_LINK_MODE=copy uv venv .venv --python 3.11
 source .venv/bin/activate
 
 echo "=== Installing packages ==="
-uv pip install healpy h5py scipy matplotlib camb astropy 2>&1 | tail -1
+uv pip install healpy h5py scipy matplotlib camb astropy psutil 2>&1 | tail -1
 
 REPO_SRC=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/repo_latest
 cd $REPO_SRC
