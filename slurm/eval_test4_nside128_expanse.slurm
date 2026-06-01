@@ -33,7 +33,7 @@ uv pip install healpy h5py scipy matplotlib camb astropy 2>&1 | tail -1
 REPO_SRC=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/repo_latest
 uv pip install -e "$REPO_SRC[dev]" --no-deps 2>&1 | tail -1
 
-RESULTS_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/repo_latest/results
+RESULTS_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results
 
 echo "=== Evaluating NSIDE=128 models at fiducial point ==="
 python3 $REPO_SRC/scripts/eval_test4_at_fiducial.py \
