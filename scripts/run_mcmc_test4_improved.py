@@ -312,7 +312,10 @@ def main():
         t_start = time.time()
 
         for i in range(n_test):
-            # Generate map at fiducial point
+            # Generate map at fiducial point using CORRECT C_ℓ (raw_cl=True)
+            # NOTE: generate_r_tau_map feeds CAMB D_ℓ to hp.synfast which
+            # expects C_ℓ, creating maps with wrong amplitudes. We generate
+            # maps directly here using C_ℓ from CAMB raw_cl=True.
             if args.fiducial_only:
                 r_true = args.r_fiducial
                 tau_true = args.tau_fiducial
@@ -320,16 +323,51 @@ def main():
                 r_true = rng.uniform(0, R_MAX)
                 tau_true = rng.uniform(0.03, 0.08)
 
-            q, u, _ = generate_r_tau_map(
-                r_true, tau_true, nside, lmax, noise_uK, f_sky, rng,
-            )
+            # Get C_ℓ from CAMB (raw_cl=True)
+            import camb as _camb
+            _pars = _camb.CAMBparams()
+            _pars.set_cosmology(H0=67.4, ombh2=0.0224, omch2=0.120, tau=tau_true)
+            _pars.InitPower.set_params(As=2.1e-9, ns=0.965, r=r_true)
+            _pars.WantTensors = True
+            _pars.set_for_lmax(lmax)
+            _results = _camb.get_results(_pars)
+            _cls = _results.get_total_cls(lmax, CMB_unit="muK", raw_cl=True)
+            cl_ee_true = _cls[:, 1]
+            cl_bb_true = _cls[:, 2]
+            if len(cl_ee_true) < lmax + 1:
+                cl_ee_true = np.pad(cl_ee_true, (0, lmax + 1 - len(cl_ee_true)))
+                cl_bb_true = np.pad(cl_bb_true, (0, lmax + 1 - len(cl_bb_true)))
+            else:
+                cl_ee_true = cl_ee_true[:lmax + 1]
+                cl_bb_true = cl_bb_true[:lmax + 1]
+
+            # Build full TEB spectrum for hp.synfast (expects C_ℓ)
+            cl_tt = np.full(lmax + 1, 1e-5)  # placeholder
+            cl_te = np.zeros(lmax + 1)
+            cl_eb = np.zeros(lmax + 1)
+            cl_tb = np.zeros(lmax + 1)
+            cl_full = np.array([cl_tt, cl_ee_true, cl_bb_true, cl_te, cl_eb, cl_tb])
+
+            # Generate map
+            seed = int(rng.integers(0, 2**31))
+            np.random.seed(seed)
+            maps = hp.synfast(cl_full, nside=nside, lmax=lmax)
+            q_map = maps[1].astype(np.float32)
+            u_map = maps[2].astype(np.float32)
+
+            # Add noise
+            if noise_uK > 0:
+                q_map += rng.normal(0, noise_uK, size=q_map.shape).astype(np.float32)
+                u_map += rng.normal(0, noise_uK, size=u_map.shape).astype(np.float32)
+
+            # Apply mask
+            q_map *= mask
+            u_map *= mask
 
             # Compute observed C_ℓ from masked Q/U maps
-            # hp.anafast returns C_ℓ (μK²·sr).
-            # CAMB with CMB_unit="muK", raw_cl=False returns D_ℓ = ℓ(ℓ+1)C_ℓ/(2π).
-            # So we convert model D_ℓ → C_ℓ before comparison.
+            # Both maps and model now use C_ℓ (raw_cl=True), same units as hp.anafast.
             # Also de-bias pseudo-C_ℓ by dividing by f_sky.
-            maps_in = np.array([np.zeros_like(q), q, u])
+            maps_in = np.array([np.zeros_like(q_map), q_map, u_map])
             cl_obs = hp.anafast(maps_in, lmax=lmax, pol=True)
             cl_ee_obs = cl_obs[1] / f_sky
             cl_bb_obs = cl_obs[2] / f_sky
