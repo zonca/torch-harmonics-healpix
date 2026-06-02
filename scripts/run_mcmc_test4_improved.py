@@ -304,12 +304,17 @@ def main():
                 r_true, tau_true, nside, lmax, noise_uK, f_sky, rng,
             )
 
-            # Compute observed pseudo-C_ℓ from masked Q/U maps
-            # De-bias by dividing by f_sky
+            # Compute observed D_ℓ from masked Q/U maps
+            # hp.anafast returns C_ℓ (μK²·sr), CAMB with CMB_unit="muK"
+            # returns D_ℓ = ℓ(ℓ+1)C_ℓ/(2π). Convert observed to D_ℓ for comparison.
+            # Also de-bias pseudo-C_ℓ by dividing by f_sky.
             maps_in = np.array([np.zeros_like(q), q, u])
             cl_obs = hp.anafast(maps_in, lmax=lmax, pol=True)
-            cl_ee_obs = cl_obs[1] / f_sky
-            cl_bb_obs = cl_obs[2] / f_sky
+            ell = np.arange(lmax + 1)
+            ell_factor = np.zeros(lmax + 1)
+            ell_factor[1:] = ell[1:] * (ell[1:] + 1) / (2 * np.pi)
+            cl_ee_obs = cl_obs[1] / f_sky * ell_factor  # D_ℓ in μK²
+            cl_bb_obs = cl_obs[2] / f_sky * ell_factor  # D_ℓ in μK²
 
             # Stage 1: Coarse grid search
             r_best, tau_best, _ = chi2_grid_search(
