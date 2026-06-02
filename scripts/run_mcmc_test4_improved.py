@@ -150,8 +150,14 @@ def precompute_spectra_on_grid(r_grid, tau_grid, lmax, cache_path=None):
             cl_ee, cl_bb = generate_camb_spectra_r_tau(
                 r_grid[j], tau_grid[i], lmax
             )
-            cl_ee_array[spec_idx] = cl_ee
-            cl_bb_array[spec_idx] = cl_bb
+            # Convert CAMB D_ℓ → C_ℓ for comparison with hp.anafast output
+            # D_ℓ = ℓ(ℓ+1)C_ℓ/(2π) → C_ℓ = D_ℓ * 2π / (ℓ(ℓ+1))
+            ell_arr = np.arange(lmax + 1)
+            ell_arr[0] = 1  # avoid division by zero
+            dl_to_cl = 2 * np.pi / (ell_arr * (ell_arr + 1))
+            dl_to_cl[0] = 0  # ℓ=0 has no CMB signal
+            cl_ee_array[spec_idx] = cl_ee * dl_to_cl
+            cl_bb_array[spec_idx] = cl_bb * dl_to_cl
         elapsed = time.time() - t0
         remaining = elapsed / (i + 1) * (n_tau - i - 1)
         print(f"  τ={tau_grid[i]:.4f}: {i+1}/{n_tau} rows done "
@@ -223,7 +229,7 @@ def main():
     # Pre-compute CAMB spectra on REGULAR grid
     # Cache to /tmp (compute node local disk) since home may be full
     camb_cache = os.path.join("/tmp",
-        f"test4_camb_spectra_regular_nside{nside}_{args.coarse_grid}grid.fits")
+        f"test4_camb_spectra_C_ell_nside{nside}_{args.coarse_grid}grid.fits")
     cl_ee_array, cl_bb_array = precompute_spectra_on_grid(
         r_grid, tau_grid, lmax, cache_path=camb_cache
     )
@@ -304,17 +310,15 @@ def main():
                 r_true, tau_true, nside, lmax, noise_uK, f_sky, rng,
             )
 
-            # Compute observed D_ℓ from masked Q/U maps
-            # hp.anafast returns C_ℓ (μK²·sr), CAMB with CMB_unit="muK"
-            # returns D_ℓ = ℓ(ℓ+1)C_ℓ/(2π). Convert observed to D_ℓ for comparison.
+            # Compute observed C_ℓ from masked Q/U maps
+            # hp.anafast returns C_ℓ (μK²·sr).
+            # CAMB with CMB_unit="muK", raw_cl=False returns D_ℓ = ℓ(ℓ+1)C_ℓ/(2π).
+            # So we convert model D_ℓ → C_ℓ before comparison.
             # Also de-bias pseudo-C_ℓ by dividing by f_sky.
             maps_in = np.array([np.zeros_like(q), q, u])
             cl_obs = hp.anafast(maps_in, lmax=lmax, pol=True)
-            ell = np.arange(lmax + 1)
-            ell_factor = np.zeros(lmax + 1)
-            ell_factor[1:] = ell[1:] * (ell[1:] + 1) / (2 * np.pi)
-            cl_ee_obs = cl_obs[1] / f_sky * ell_factor  # D_ℓ in μK²
-            cl_bb_obs = cl_obs[2] / f_sky * ell_factor  # D_ℓ in μK²
+            cl_ee_obs = cl_obs[1] / f_sky
+            cl_bb_obs = cl_obs[2] / f_sky
 
             # Stage 1: Coarse grid search
             r_best, tau_best, _ = chi2_grid_search(
