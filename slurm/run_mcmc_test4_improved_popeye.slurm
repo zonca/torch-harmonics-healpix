@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=48
 #SBATCH --time=12:00:00
-#SBATCH --output=/home/zonca/torch-harmonics-healpix/logs/mcmc_test4_improved_%j.out
+#SBATCH --output=/home/azonca/torch-harmonics-healpix/logs/mcmc_test4_improved_%j.out
 
 # Improved MCMC baseline for Test 4 NSIDE=128
 # Two-stage grid search with BB ℓ_max cutoff
