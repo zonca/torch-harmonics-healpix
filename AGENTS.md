@@ -3,7 +3,7 @@
 ## Remote Compute
 
 - **Expanse** (`ssh expanse`): GPU jobs only. Use Slurm with `sbatch`. Partition `gpu-shared`, account `sds275`. **NEVER submit CPU-only jobs on Expanse — that wastes GPU allocation.** CPU work goes on Popeye.
-- **Popeye** (`ssh popeye`): CPU jobs only. Use Slurm with `sbatch`. Partition `gen`. **SSH requires keyboard-interactive 2FA — cannot be automated from Hermes.** User must submit Popeye jobs manually after `git pull`.
+- **Popeye** (`ssh popeye`): CPU jobs only. Use Slurm with `sbatch`. Partition `gen`. **SSH requires keyboard-interactive 2FA — cannot be automated from Hermes.** User must submit Popeye jobs manually after `git pull`. Home directory: `/mnt/home/azonca` (NOT `/home/azonca`). Use ControlMaster socket: `ssh -o ControlPath=~/.ssh/sockets/%r@%h-%p -o ControlMaster=no popeye`.
 - **NRP Nautilus** (`https://nrp.ai`): GPU via Kubernetes. Namespace `sdsc-scicomp`. See `../nrp/AGENTS.md` for setup.
   - Training job YAML: `../nrp/examples/train-test4-nside128.yaml`
   - PVC `thh-data` (50Gi, `rook-cephfs`) for persistent results at `/data`
