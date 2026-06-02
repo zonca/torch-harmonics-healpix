@@ -147,17 +147,31 @@ def precompute_spectra_on_grid(r_grid, tau_grid, lmax, cache_path=None):
     for i in range(n_tau):
         for j in range(n_r):
             spec_idx = i * n_r + j
-            cl_ee, cl_bb = generate_camb_spectra_r_tau(
-                r_grid[j], tau_grid[i], lmax
-            )
-            # Convert CAMB D_ℓ → C_ℓ for comparison with hp.anafast output
-            # D_ℓ = ℓ(ℓ+1)C_ℓ/(2π) → C_ℓ = D_ℓ * 2π / (ℓ(ℓ+1))
-            ell_arr = np.arange(lmax + 1)
-            ell_arr[0] = 1  # avoid division by zero
-            dl_to_cl = 2 * np.pi / (ell_arr * (ell_arr + 1))
-            dl_to_cl[0] = 0  # ℓ=0 has no CMB signal
-            cl_ee_array[spec_idx] = cl_ee * dl_to_cl
-            cl_bb_array[spec_idx] = cl_bb * dl_to_cl
+            try:
+                # Use raw_cl=True to get C_ℓ directly (same units as hp.anafast)
+                import camb as _camb
+                _pars = _camb.CAMBparams()
+                _pars.set_cosmology(H0=67.4, ombh2=0.0224, omch2=0.120, tau=tau_grid[i])
+                _pars.InitPower.set_params(As=2.1e-9, ns=0.965, r=r_grid[j])
+                _pars.WantTensors = True
+                _pars.set_for_lmax(lmax)
+                _results = _camb.get_results(_pars)
+                _cls = _results.get_total_cls(lmax, CMB_unit="muK", raw_cl=True)
+                cl_ee = _cls[:, 1]
+                cl_bb = _cls[:, 2]
+                if len(cl_ee) < lmax + 1:
+                    cl_ee = np.pad(cl_ee, (0, lmax + 1 - len(cl_ee)))
+                    cl_bb = np.pad(cl_bb, (0, lmax + 1 - len(cl_bb)))
+                else:
+                    cl_ee = cl_ee[:lmax + 1]
+                    cl_bb = cl_bb[:lmax + 1]
+                cl_ee_array[spec_idx] = cl_ee
+                cl_bb_array[spec_idx] = cl_bb
+            except Exception as e:
+                print(f"  WARNING: CAMB failed at r={r_grid[j]:.5f}, τ={tau_grid[i]:.4f}: {e}")
+                cl_ee_array[spec_idx] = 0
+                cl_bb_array[spec_idx] = 0
+                continue
         elapsed = time.time() - t0
         remaining = elapsed / (i + 1) * (n_tau - i - 1)
         print(f"  τ={tau_grid[i]:.4f}: {i+1}/{n_tau} rows done "
@@ -229,7 +243,7 @@ def main():
     # Pre-compute CAMB spectra on REGULAR grid
     # Cache to /tmp (compute node local disk) since home may be full
     camb_cache = os.path.join("/tmp",
-        f"test4_camb_spectra_C_ell_nside{nside}_{args.coarse_grid}grid.fits")
+        f"test4_camb_spectra_rawcl_nside{nside}_{args.coarse_grid}grid.fits")
     cl_ee_array, cl_bb_array = precompute_spectra_on_grid(
         r_grid, tau_grid, lmax, cache_path=camb_cache
     )

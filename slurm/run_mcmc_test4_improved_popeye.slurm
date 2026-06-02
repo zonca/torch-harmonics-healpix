@@ -10,7 +10,7 @@
 # Two-stage grid search with BB ℓ_max cutoff
 # Uses Popeye CPU (no GPU needed)
 
-set -e
+# No set -e — CAMB segfaults would kill the job; Python handles errors internally
 export PYTHONUNBUFFERED=1
 
 echo "=== Improved MCMC Test 4 NSIDE=128 ==="
