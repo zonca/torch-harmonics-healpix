@@ -221,8 +221,8 @@ def main():
     tau_grid = np.linspace(0.03, 0.08, args.coarse_grid)
 
     # Pre-compute CAMB spectra on REGULAR grid
-    from astropy.io import fits as pf
-    camb_cache = os.path.join(results_dir,
+    # Cache to /tmp (compute node local disk) since home may be full
+    camb_cache = os.path.join("/tmp",
         f"test4_camb_spectra_regular_nside{nside}_{args.coarse_grid}grid.fits")
     cl_ee_array, cl_bb_array = precompute_spectra_on_grid(
         r_grid, tau_grid, lmax, cache_path=camb_cache
