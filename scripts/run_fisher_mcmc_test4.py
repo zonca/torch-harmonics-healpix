@@ -98,11 +98,11 @@ def log_likelihood(cl_ee_obs, cl_bb_obs, cl_ee_model, cl_bb_model,
                    noise_cl, f_sky, lmax_ee=None, lmax_bb=None):
     """Gaussian log-likelihood for observed vs model C_ℓ.
 
-    L = -1/2 Σ_ℓ (2ℓ+1) f_sky
-        × [ (Ĉ_ℓ^EE - C_ℓ^EE)² / (C_ℓ^EE + N_ℓ)²
-          + (Ĉ_ℓ^BB - C_ℓ^BB)² / (C_ℓ^BB + N_ℓ)² ]
+    L = -1/2 Σ_ℓ (2ℓ+1) f_sky / 2
+        × [ (Ĉ_ℓ^EE - C_ℓ^EE)² / Var(C_ℓ^EE)
+          + (Ĉ_ℓ^BB - C_ℓ^BB)² / Var(C_ℓ^BB) ]
 
-    where Ĉ is observed, C is model, N is noise.
+    where Var(C_ℓ) = 2/(2ℓ+1)/f_sky × (C_ℓ + N_ℓ)²  (cosmic + noise variance).
     """
     if lmax_ee is None:
         lmax_ee = len(cl_ee_obs) - 1
@@ -110,23 +110,23 @@ def log_likelihood(cl_ee_obs, cl_bb_obs, cl_ee_model, cl_bb_model,
         lmax_bb = len(cl_bb_obs) - 1
 
     ell = np.arange(max(lmax_ee, lmax_bb) + 1)
-    weight = (2 * ell + 1) * f_sky
 
     # EE contribution
     ee_slice = slice(0, lmax_ee + 1)
     sig_ee = cl_ee_model[ee_slice] + noise_cl
     valid_ee = sig_ee > 0
-    chi2_ee = np.sum(weight[ee_slice][valid_ee] *
-                     (cl_ee_obs[ee_slice][valid_ee] - cl_ee_model[ee_slice][valid_ee])**2 /
-                     sig_ee[valid_ee]**2)
+    # Variance = 2/(2ℓ+1)/f_sky * sig²  →  weight = (2ℓ+1)*f_sky/2 / sig²
+    var_ee = 2.0 / ((2 * ell[ee_slice] + 1) * f_sky) * sig_ee**2
+    chi2_ee = np.sum((cl_ee_obs[ee_slice][valid_ee] - cl_ee_model[ee_slice][valid_ee])**2
+                     / var_ee[valid_ee])
 
     # BB contribution
     bb_slice = slice(0, lmax_bb + 1)
     sig_bb = cl_bb_model[bb_slice] + noise_cl
     valid_bb = sig_bb > 0
-    chi2_bb = np.sum(weight[bb_slice][valid_bb] *
-                     (cl_bb_obs[bb_slice][valid_bb] - cl_bb_model[bb_slice][valid_bb])**2 /
-                     sig_bb[valid_bb]**2)
+    var_bb = 2.0 / ((2 * ell[bb_slice] + 1) * f_sky) * sig_bb**2
+    chi2_bb = np.sum((cl_bb_obs[bb_slice][valid_bb] - cl_bb_model[bb_slice][valid_bb])**2
+                     / var_bb[valid_bb])
 
     return -0.5 * (chi2_ee + chi2_bb)
 
