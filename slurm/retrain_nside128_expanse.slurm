@@ -9,9 +9,9 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/logs/retrain_n128_%j.out
 
-# Phase 1: Generate HDF5 v2 data on Expanse Lustre (CPU, ~3-4h per config)
+# Phase 1: Generate HDF5 v2 data on Expanse Lustre
 # Phase 2: Train CNN (GPU)
-# All on one GPU node to avoid data transfer issues
+# All on one GPU node to avoid Popeye→Expanse data transfer issues
 
 export PYTHONUNBUFFERED=1
 export HDF5_USE_FILE_LOCKING=FALSE
@@ -20,15 +20,24 @@ echo "=== NSIDE=128 retrain with v2 C_ℓ fix ==="
 date
 hostname
 
-# Setup
+# Setup venv
 REPO=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/repo_latest
 DATA_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data_v2
 RESULTS_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v2
+VENV=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/venv
 mkdir -p $DATA_DIR $RESULTS_DIR
 
-# Install packages if needed
-pip install healpy camb 2>/dev/null
-pip install --no-deps torch-harmonics==0.8.0 2>/dev/null
+# Create venv if needed
+if [ ! -d $VENV ]; then
+    echo "Creating venv..."
+    uv venv $VENV
+fi
+source $VENV/bin/activate
+
+# Install packages
+echo "Installing packages..."
+uv pip install healpy camb torch-harmonics==0.8.0 --no-deps 2>/dev/null
+uv pip install h5py scipy numpy matplotlib 2>/dev/null
 
 cd $REPO
 
@@ -58,7 +67,11 @@ for FSKY_NOISE in "1.0_0" "1.0_6" "0.1_0" "0.1_6"; do
         --nside $NSIDE --f_sky $FSKY --noise_std $NOISE \
         --n_train 100000 --n_val 10000 --n_test 1000 \
         --output $DATA_DIR/$FILENAME
-    echo "  Done: $FILENAME"
+    if [ $? -ne 0 ]; then
+        echo "  FAILED: $LABEL"
+    else
+        echo "  Done: $FILENAME"
+    fi
 done
 
 echo "=== Phase 1 complete ==="
