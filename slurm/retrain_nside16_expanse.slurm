@@ -55,7 +55,7 @@ for CFG in "1.0 0" "1.0 6" "0.1 0" "0.1 6"; do
         --nside 16 --lmax 47 \
         --max_epochs 150 --patience 20 --batch_size 64 --lr 1e-3 \
         --hidden_channels 32 --num_blocks 3 \
-        --huber_tau_delta 0.01 --cosine_T_max 25 \
+        --cosine_T_max 25 \
         --output $RESULTS_DIR/test4_nside16_${LABEL}.json || echo "CONFIG ${LABEL} FAILED"
 done
 

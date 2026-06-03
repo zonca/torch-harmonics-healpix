@@ -73,22 +73,20 @@ def compute_fisher_matrix(r_fid, tau_fid, lmax, f_sky, noise_uK=None, nside=None
     dcl_ee_dtau = (cl_ee_tp - cl_ee_tm) / (2 * dtau)
     dcl_bb_dtau = (cl_bb_tp - cl_bb_tm) / (2 * dtau)
 
-    # Fisher matrix elements
+    # Fisher matrix elements — skip ℓ where total C_ℓ = 0 (e.g. BB at ℓ=0,1)
     ell = np.arange(lmax + 1)
     weight = (2 * ell + 1) * f_sky / 2.0
 
-    F_rr = np.sum(weight * (
-        dcl_ee_dr**2 / cl_ee_tot**2 +
-        dcl_bb_dr**2 / cl_bb_tot**2
-    ))
-    F_tt = np.sum(weight * (
-        dcl_ee_dtau**2 / cl_ee_tot**2 +
-        dcl_bb_dtau**2 / cl_bb_tot**2
-    ))
-    F_rt = np.sum(weight * (
-        dcl_ee_dr * dcl_ee_dtau / cl_ee_tot**2 +
-        dcl_bb_dr * dcl_bb_dtau / cl_bb_tot**2
-    ))
+    # Mask: only include multipoles where both EE and BB have signal
+    valid_ee = cl_ee_tot > 0
+    valid_bb = cl_bb_tot > 0
+
+    F_rr = np.sum(weight[valid_ee] * (dcl_ee_dr[valid_ee] / cl_ee_tot[valid_ee])**2) + \
+           np.sum(weight[valid_bb] * (dcl_bb_dr[valid_bb] / cl_bb_tot[valid_bb])**2)
+    F_tt = np.sum(weight[valid_ee] * (dcl_ee_dtau[valid_ee] / cl_ee_tot[valid_ee])**2) + \
+           np.sum(weight[valid_bb] * (dcl_bb_dtau[valid_bb] / cl_bb_tot[valid_bb])**2)
+    F_rt = np.sum(weight[valid_ee] * dcl_ee_dr[valid_ee] * dcl_ee_dtau[valid_ee] / cl_ee_tot[valid_ee]**2) + \
+           np.sum(weight[valid_bb] * dcl_bb_dr[valid_bb] * dcl_bb_dtau[valid_bb] / cl_bb_tot[valid_bb]**2)
 
     F = np.array([[F_rr, F_rt], [F_rt, F_tt]])
     return F
@@ -117,16 +115,18 @@ def log_likelihood(cl_ee_obs, cl_bb_obs, cl_ee_model, cl_bb_model,
     # EE contribution
     ee_slice = slice(0, lmax_ee + 1)
     sig_ee = cl_ee_model[ee_slice] + noise_cl
-    chi2_ee = np.sum(weight[ee_slice] *
-                     (cl_ee_obs[ee_slice] - cl_ee_model[ee_slice])**2 /
-                     sig_ee**2)
+    valid_ee = sig_ee > 0
+    chi2_ee = np.sum(weight[ee_slice][valid_ee] *
+                     (cl_ee_obs[ee_slice][valid_ee] - cl_ee_model[ee_slice][valid_ee])**2 /
+                     sig_ee[valid_ee]**2)
 
     # BB contribution
     bb_slice = slice(0, lmax_bb + 1)
     sig_bb = cl_bb_model[bb_slice] + noise_cl
-    chi2_bb = np.sum(weight[bb_slice] *
-                     (cl_bb_obs[bb_slice] - cl_bb_model[bb_slice])**2 /
-                     sig_bb[bb_slice]**2)
+    valid_bb = sig_bb > 0
+    chi2_bb = np.sum(weight[bb_slice][valid_bb] *
+                     (cl_bb_obs[bb_slice][valid_bb] - cl_bb_model[bb_slice][valid_bb])**2 /
+                     sig_bb[valid_bb]**2)
 
     return -0.5 * (chi2_ee + chi2_bb)
 
