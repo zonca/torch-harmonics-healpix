@@ -51,6 +51,8 @@ def generate_camb_spectra_r_tau(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Generate CAMB E-mode and B-mode power spectra for given r and τ.
 
+    Returns C_ℓ (not D_ℓ) in μK² units, compatible with hp.synfast/hp.anafast.
+
     Args:
         r: Tensor-to-scalar ratio.
         tau: Optical depth to reionization.
@@ -84,7 +86,7 @@ def generate_camb_spectra_r_tau(
     pars.set_for_lmax(lmax)
 
     results = camb.get_results(pars)
-    cls = results.get_total_cls(lmax, CMB_unit="muK")
+    cls = results.get_total_cls(lmax, CMB_unit="muK", raw_cl=True)
 
     cl_ee = cls[:, 1]  # EE
     cl_bb = cls[:, 2]  # BB (from tensors, amplitude set by r)
