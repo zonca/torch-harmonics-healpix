@@ -45,6 +45,21 @@ All Slurm scripts are in `slurm/`:
 - `run_mcmc_benchmark_popeye.slurm` — Popeye CPU: MCMC baseline benchmark (1000 maps)
 - `generate_test4_nside128_popeye.slurm` — Popeye CPU: HDF5 pre-generation for Test 4
 
+### Paper-Ready Pipeline (v2 — C_ℓ fix)
+
+These scripts implement the corrected pipeline with `raw_cl=True` in CAMB:
+
+- `slurm/run_fisher_mcmc_popeye.slurm` — Popeye CPU: Fisher matrix + MH-MCMC baseline (both NSIDEs)
+- `slurm/generate_hdf5_nside128_popeye.slurm` — Popeye CPU: regenerate HDF5 with C_ℓ fix → scp to Expanse
+- `slurm/retrain_nside16_expanse.slurm` — Expanse GPU: retrain CNN at NSIDE=16
+- `slurm/retrain_nside128_expanse.slurm` — Expanse GPU: retrain CNN at NSIDE=128 (needs HDF5 v2)
+- `scripts/run_fisher_mcmc_test4.py` — Fisher matrix + MH-MCMC with A_lens nuisance param
+
+Key scripts:
+- `scripts/run_fisher_mcmc_test4.py` — Computes Fisher Cramér-Rao bounds + Metropolis-Hastings MCMC
+  with lensing BB as A_lens nuisance parameter. Uses pre-computed 50×50 CAMB spectral grid
+  with bilinear interpolation for O(1) MCMC steps (avoiding ~10s CAMB calls per step).
+
 ### NRP Nautilus (GPU — Kubernetes)
 
 Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full details.
@@ -72,13 +87,24 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
 - **HDF5 on Lustre**: set `HDF5_USE_FILE_LOCKING=FALSE` in Slurm scripts. Random DataLoader shuffle + single-chunk RAM cache = 95% cache miss rate (eviction every call). Fix: use `ChunkShuffleSampler` (groups indices by chunk, shuffles chunk order + within-chunk indices).
 - **τ divergence bug**: MSE loss on τ causes gradient explosion around epoch 11 (τ %err → 10^12%+) regardless of LR scheduler type. Root cause: MSE gradient = 2(τ_pred - τ_true) grows linearly with prediction error → positive feedback loop. Fix: use Huber loss for τ (delta=0.01) — linear gradient far from target caps magnitude, quadratic near target preserves accuracy. Hard clamping (torch.clamp) creates dead gradients and makes it worse. **Note:** Huber loss fixes cfg1/2/4 but cfg3 (fsky=0.1, noise=0) still diverges at ep11 — this config has the most extreme signal-to-noise ratio (small sky patch, zero noise) causing overconfident predictions. Best checkpoint is saved before divergence.
 - **CosineAnnealingLR T_max**: With 24h walltime and ~58 min/epoch, only ~24 epochs fit. Set `--cosine_T_max 25` for full cosine decay cycle; default T_max=150 leaves LR essentially constant.
+- **D_ℓ→C_ℓ unit bug (CRITICAL, fixed)**: `generate_camb_spectra_r_tau` was calling CAMB's default `get_total_cls(CMB_unit='muK')` which returns D_ℓ = ℓ(ℓ+1)C_ℓ/(2π) in μK², but `hp.synfast` expects C_ℓ in μK²·sr. This boosted map amplitudes at high ℓ by a factor of ℓ(ℓ+1)/(2π). **Fix**: use `raw_cl=True` to get C_ℓ directly. All HDF5 datasets and trained models before this fix have wrong amplitudes — must regenerate and retrain.
+- **Fisher matrix (Cramér-Rao bounds)** at fiducial r=0.003, τ=0.054:
+  - NSIDE=16: σ_r=0.00156 (52%), σ_τ=0.00223 (4.1%) for fsky=1.0/noise=0
+  - NSIDE=16: σ_r=0.00495 (165%), σ_τ=0.00704 (13%) for fsky=0.1/noise=0
+  - NSIDE=128: similar but with more high-ℓ modes
+  - **Key insight**: fsky=0.1 configs have σ_r > r_fiducial (cannot constrain r at all)
+- **MCMC speed**: Never call CAMB per MCMC step (~10s each). Pre-compute a 50×50 spectral grid and use bilinear interpolation for O(1) evaluations. 100× speedup.
+- **Popeye disk**: `/mnt/home/azonca` is at 100% (500GB). Use `/tmp` (3.4TB node-local) for large files, but `/tmp` is wiped after job ends.
 
 ### HDF5 Data on Expanse Lustre
 
-- **Original directory**: `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data/`
+- **Original directory (v1 — D_ℓ bug)**: `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data/`
   - 4 HDF5 files (~244 GB each): fsky1.0_noise0, fsky1.0_noise6, fsky0.1_noise0, fsky0.1_noise6
   - 100K train + 10K val + 1K test maps per file, NSIDE=128
-  - **Problem**: `lfs getstripe` shows `stripe_count=1` (single OST). Bandwidth capped at ~80 MB/s per file, causing ~60 min/epoch I/O time
+  - **DEPRECATED**: Generated with D_ℓ (CAMB default), not C_ℓ. Wrong amplitudes.
+- **v2 directory (C_ℓ fix)**: `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data_v2/`
+  - Same structure, generated with `raw_cl=True` in CAMB
+  - Regenerated via `slurm/generate_hdf5_nside128_popeye.slurm` → scp to Expanse
 - **Striped directory**: `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_striped/`
   - Created with `lfs setstripe -c 16 -S 4M` (16 OSTs, 4 MB stripe size)
   - Expected bandwidth: 8-16x faster (~0.5-1+ GB/s), reducing I/O per epoch from ~40 min to ~3-5 min
@@ -86,6 +112,9 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
   - Run from login node: `nohup bash -c 'for f in hdf5_data/*.h5; do cp "$f" hdf5_striped/; done' &`
   - Or from compute node via `srun --jobid=XXX --overlap` (faster, ~5 min per file)
   - **After restriping**: update Slurm scripts to point `--hdf5_path` to `hdf5_striped/` instead of `hdf5_data/`
+- **Results directories**:
+  - v1 (D_ℓ bug): `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results/`
+  - v2 (C_ℓ fix): `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v2/`
 - **Epoch timing** (single-striped files, batch_size=16, 422M params, V100):
   - I/O: ~40 min (20 chunks × ~120s avg, varying 7-650s due to OST variability)
   - GPU training: ~20 min (6250 batches × ~0.2s)
