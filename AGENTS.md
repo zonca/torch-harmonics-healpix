@@ -98,7 +98,14 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
   - **Key insight**: fsky=0.1 configs have σ_r > r_fiducial at NSIDE=16 (cannot constrain r)
 - **MCMC speed**: Never call CAMB per MCMC step (~10s each). Pre-compute a 50×50 spectral grid and use bilinear interpolation for O(1) evaluations. 100× speedup.
 - **MCMC pseudo-C_ℓ limitation**: Simple pseudo-C_ℓ MCMC (even with A_lens nuisance param and proper cosmic variance likelihood) cannot constrain r — the chain always drifts to the boundary (r→0.01, τ→0.08). Root cause: single-realization C_ℓ estimates from `hp.anafast` are too noisy (cosmic variance) for a pseudo-C_ℓ comparison to identify the true parameters. **Use Fisher matrix as the Cramér-Rao baseline** — this is standard in CMB literature. The Fisher bound gives the optimal σ_r and σ_τ achievable by any unbiased estimator.
+- **NSIDE=16 CNN results (v2 C_ℓ fix)** — CNN beats Fisher on r by 1.6–3×:
+  - fsky=1.0, noise=0: CNN r=24.9% vs Fisher 52.1% (0.48× Fisher)
+  - fsky=1.0, noise=6: CNN r=35.4% vs Fisher 56.9% (0.62× Fisher)
+  - fsky=0.1, noise=0: CNN r=58.0% vs Fisher 164.9% (0.35× Fisher)
+  - fsky=0.1, noise=6: CNN r=59.7% vs Fisher 180.0% (0.33× Fisher)
+  - τ error is higher than Fisher (17–26% vs 4–13%) — network optimizes r over τ
 - **Popeye disk**: `/mnt/home/azonca` is at 100% (500GB). Use `/tmp` (3.4TB node-local) for large files, but `/tmp` is wiped after job ends.
+- **Popeye→Expanse transfer**: Both `scp` and `rsync` fail immediately ("connection unexpectedly closed") from Popeye compute nodes to Expanse login. Generate HDF5 directly on Expanse GPU node instead (slower at ~11 maps/s vs 33 maps/s on Popeye, but avoids transfer).
 
 ### HDF5 Data on Expanse Lustre
 
