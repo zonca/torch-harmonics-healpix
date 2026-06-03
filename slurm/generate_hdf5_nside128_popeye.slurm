@@ -1,20 +1,21 @@
 #!/bin/bash
-#SBATCH --job-name=thh-gen-hdf5
+#SBATCH --job-name=thh-hdf5-xfer
 #SBATCH --partition=gen
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=24:00:00
 #SBATCH --mem=32G
-#SBATCH --output=/mnt/home/azonca/torch-harmonics-healpix/logs/gen_hdf5_n128_%j.out
+#SBATCH --output=/mnt/home/azonca/torch-harmonics-healpix/logs/hdf5_xfer_%j.out
 
-# Regenerate NSIDE=128 HDF5 datasets with corrected C_ℓ (raw_cl=True)
-# Generate to /tmp (3.4TB local disk), then scp to Expanse Lustre
+# Regenerate HDF5 v2 with C_ℓ fix and transfer to Expanse via rsync
+# Uses /tmp for local generation, rsync --partial for resumable transfers
+# Deletes each file from /tmp after successful transfer to save space
 # CPU only — Popeye
 
 export PYTHONUNBUFFERED=1
 export HDF5_USE_FILE_LOCKING=FALSE
 
-echo "=== Regenerating HDF5 datasets (C_ℓ fix) ==="
+echo "=== HDF5 v2 generation + rsync transfer ==="
 date
 hostname
 
@@ -25,46 +26,41 @@ NSIDE=128
 LOCAL_DIR=/tmp/hdf5_nside128_$SLURM_JOB_ID
 mkdir -p $LOCAL_DIR
 
-EXSPANSE_LUSTRE=zonca@login.expanse.sdsc.edu:/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data_v2
+REMOTE=zonca@login.expanse.sdsc.edu:/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data_v2/
 
-# Config 1: fsky=1.0, noise=0
-echo ""
-echo "=== Config 1: fsky=1.0, noise=0 ==="
-python3 scripts/generate_test4_hdf5.py \
-    --nside $NSIDE --f_sky 1.0 --noise_std 0 \
-    --n_train 100000 --n_val 10000 --n_test 1000 \
-    --output $LOCAL_DIR/test4_nside128_fsky1.0_noise0.h5
-scp $LOCAL_DIR/test4_nside128_fsky1.0_noise0.h5 $EXSPANSE_LUSTRE/ || echo "SCP failed for cfg1"
+# Function: generate one config and rsync it
+generate_and_transfer() {
+    local FSKY=$1
+    local NOISE=$2
+    local LABEL="fsky${FSKY}_noise${NOISE}"
+    local FILENAME="test4_nside128_${LABEL}.h5"
 
-# Config 2: fsky=1.0, noise=6
-echo ""
-echo "=== Config 2: fsky=1.0, noise=6 ==="
-python3 scripts/generate_test4_hdf5.py \
-    --nside $NSIDE --f_sky 1.0 --noise_std 6 \
-    --n_train 100000 --n_val 10000 --n_test 1000 \
-    --output $LOCAL_DIR/test4_nside128_fsky1.0_noise6.h5
-scp $LOCAL_DIR/test4_nside128_fsky1.0_noise6.h5 $EXSPANSE_LUSTRE/ || echo "SCP failed for cfg2"
+    echo ""
+    echo "=== Config: f_sky=${FSKY}, noise=${NOISE} ==="
+    python3 scripts/generate_test4_hdf5.py \
+        --nside $NSIDE --f_sky ${FSKY} --noise_std ${NOISE} \
+        --n_train 100000 --n_val 10000 --n_test 1000 \
+        --output $LOCAL_DIR/${FILENAME}
 
-# Config 3: fsky=0.1, noise=0
-echo ""
-echo "=== Config 3: fsky=0.1, noise=0 ==="
-python3 scripts/generate_test4_hdf5.py \
-    --nside $NSIDE --f_sky 0.1 --noise_std 0 \
-    --n_train 100000 --n_val 10000 --n_test 1000 \
-    --output $LOCAL_DIR/test4_nside128_fsky0.1_noise0.h5
-scp $LOCAL_DIR/test4_nside128_fsky0.1_noise0.h5 $EXSPANSE_LUSTRE/ || echo "SCP failed for cfg3"
+    echo "Transferring ${FILENAME}..."
+    rsync -av --partial --progress \
+        -e 'ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=10' \
+        $LOCAL_DIR/${FILENAME} $REMOTE
+    if [ $? -eq 0 ]; then
+        echo "Transfer successful, cleaning up local file"
+        rm -f $LOCAL_DIR/${FILENAME}
+    else
+        echo "Transfer FAILED for ${FILENAME} — local file kept in $LOCAL_DIR"
+    fi
+}
 
-# Config 4: fsky=0.1, noise=6
-echo ""
-echo "=== Config 4: fsky=0.1, noise=6 ==="
-python3 scripts/generate_test4_hdf5.py \
-    --nside $NSIDE --f_sky 0.1 --noise_std 6 \
-    --n_train 100000 --n_val 10000 --n_test 1000 \
-    --output $LOCAL_DIR/test4_nside128_fsky0.1_noise6.h5
-scp $LOCAL_DIR/test4_nside128_fsky0.1_noise6.h5 $EXSPANSE_LUSTRE/ || echo "SCP failed for cfg4"
+generate_and_transfer 1.0 0
+generate_and_transfer 1.0 6
+generate_and_transfer 0.1 0
+generate_and_transfer 0.1 6
 
 # Cleanup
 rm -rf $LOCAL_DIR
 
-echo "=== HDF5 generation + transfer complete ==="
+echo "=== All HDF5 v2 generation + transfer complete ==="
 date
