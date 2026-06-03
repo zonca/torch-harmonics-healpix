@@ -40,7 +40,9 @@ echo "Installing packages..."
 uv pip install astropy healpy camb h5py scipy numpy matplotlib 2>/dev/null
 uv pip install torch-harmonics==0.8.0 --no-deps 2>/dev/null
 
+# Install the torch-harmonics-healpix package itself
 cd $REPO
+uv pip install -e . 2>/dev/null
 
 NSIDE=128
 
