@@ -91,9 +91,13 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
 - **Fisher matrix (Cramér-Rao bounds)** at fiducial r=0.003, τ=0.054:
   - NSIDE=16: σ_r=0.00156 (52%), σ_τ=0.00223 (4.1%) for fsky=1.0/noise=0
   - NSIDE=16: σ_r=0.00495 (165%), σ_τ=0.00704 (13%) for fsky=0.1/noise=0
-  - NSIDE=128: similar but with more high-ℓ modes
-  - **Key insight**: fsky=0.1 configs have σ_r > r_fiducial (cannot constrain r at all)
+  - NSIDE=128: σ_r=0.000225 (7.5%), σ_τ=0.00110 (2.0%) for fsky=1.0/noise=0
+  - NSIDE=128: σ_r=0.000555 (18.5%), σ_τ=0.00134 (2.5%) for fsky=1.0/noise=6
+  - NSIDE=128: σ_r=0.000713 (23.8%), σ_τ=0.00347 (6.4%) for fsky=0.1/noise=0
+  - NSIDE=128: σ_r=0.00176 (58.5%), σ_τ=0.00424 (7.8%) for fsky=0.1/noise=6
+  - **Key insight**: fsky=0.1 configs have σ_r > r_fiducial at NSIDE=16 (cannot constrain r)
 - **MCMC speed**: Never call CAMB per MCMC step (~10s each). Pre-compute a 50×50 spectral grid and use bilinear interpolation for O(1) evaluations. 100× speedup.
+- **MCMC pseudo-C_ℓ limitation**: Simple pseudo-C_ℓ MCMC (even with A_lens nuisance param and proper cosmic variance likelihood) cannot constrain r — the chain always drifts to the boundary (r→0.01, τ→0.08). Root cause: single-realization C_ℓ estimates from `hp.anafast` are too noisy (cosmic variance) for a pseudo-C_ℓ comparison to identify the true parameters. **Use Fisher matrix as the Cramér-Rao baseline** — this is standard in CMB literature. The Fisher bound gives the optimal σ_r and σ_τ achievable by any unbiased estimator.
 - **Popeye disk**: `/mnt/home/azonca` is at 100% (500GB). Use `/tmp` (3.4TB node-local) for large files, but `/tmp` is wiped after job ends.
 
 ### HDF5 Data on Expanse Lustre
