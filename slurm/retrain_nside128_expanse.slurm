@@ -27,17 +27,18 @@ RESULTS_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/r
 VENV=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/venv
 mkdir -p $DATA_DIR $RESULTS_DIR
 
-# Create venv if needed
-if [ ! -d $VENV ]; then
+# Create venv if needed (recreate if broken)
+if [ ! -f $VENV/bin/python3 ]; then
     echo "Creating venv..."
+    rm -rf $VENV
     uv venv $VENV
 fi
 source $VENV/bin/activate
 
 # Install packages
 echo "Installing packages..."
-uv pip install healpy camb torch-harmonics==0.8.0 --no-deps 2>/dev/null
-uv pip install h5py scipy numpy matplotlib 2>/dev/null
+uv pip install astropy healpy camb h5py scipy numpy matplotlib 2>/dev/null
+uv pip install torch-harmonics==0.8.0 --no-deps 2>/dev/null
 
 cd $REPO
 
