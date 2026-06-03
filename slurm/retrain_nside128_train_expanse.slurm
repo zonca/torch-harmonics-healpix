@@ -63,7 +63,7 @@ for FSKY_NOISE in "1.0_0" "1.0_6" "0.1_0" "0.1_6"; do
         --f_sky $FSKY \
         --noise_std $NOISE \
         --batch_size 16 \
-        --epochs 25 \
+        --max_epochs 25 \
         --hidden_channels 32 \
         --num_blocks 3 \
         --cosine_T_max 25 \
