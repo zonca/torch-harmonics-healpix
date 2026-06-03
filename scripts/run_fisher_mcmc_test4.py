@@ -131,22 +131,85 @@ def log_likelihood(cl_ee_obs, cl_bb_obs, cl_ee_model, cl_bb_model,
     return -0.5 * (chi2_ee + chi2_bb)
 
 
+def precompute_spectral_grid(lmax, n_r=50, n_tau=50):
+    """Pre-compute CAMB C_ℓ on a regular (r, τ) grid for fast interpolation.
+
+    Returns: r_grid, tau_grid, cl_ee_grid[n_tau, n_r, lmax+1], cl_bb_grid[...]
+    Also returns lensing BB template (at r=0, tau=0.054).
+    """
+    r_grid = np.linspace(0, R_MAX, n_r)
+    tau_grid = np.linspace(TAU_MIN, TAU_MAX, n_tau)
+
+    cl_ee_grid = np.zeros((n_tau, n_r, lmax + 1))
+    cl_bb_grid = np.zeros((n_tau, n_r, lmax + 1))
+
+    print(f"  Pre-computing {n_r}×{n_tau} CAMB grid for MCMC...")
+    t0 = time.time()
+    for i, tau in enumerate(tau_grid):
+        for j, r in enumerate(r_grid):
+            try:
+                cl_ee, cl_bb = generate_camb_spectra_r_tau(r, tau, lmax)
+                cl_ee_grid[i, j] = cl_ee
+                cl_bb_grid[i, j] = cl_bb
+            except Exception:
+                cl_ee_grid[i, j] = 0
+                cl_bb_grid[i, j] = 0
+        if (i + 1) % 10 == 0:
+            print(f"    τ row {i+1}/{n_tau} ({time.time()-t0:.0f}s)")
+
+    # Lensing BB template (r=0, τ=0.054 → all BB is lensing)
+    _, cl_lensing_bb = generate_camb_spectra_r_tau(0.0, 0.054, lmax)
+
+    print(f"  Grid computed in {time.time()-t0:.0f}s")
+    return r_grid, tau_grid, cl_ee_grid, cl_bb_grid, cl_lensing_bb
+
+
+def interp_spectra(r, tau, r_grid, tau_grid, cl_ee_grid, cl_bb_grid):
+    """Bilinear interpolation of C_ℓ on the (r, τ) grid."""
+    n_tau, n_r = cl_ee_grid.shape[:2]
+
+    # Find grid cell
+    r_idx = np.searchsorted(r_grid, r) - 1
+    tau_idx = np.searchsorted(tau_grid, tau) - 1
+    r_idx = np.clip(r_idx, 0, n_r - 2)
+    tau_idx = np.clip(tau_idx, 0, n_tau - 2)
+
+    # Fractional positions
+    dr = (r - r_grid[r_idx]) / (r_grid[r_idx + 1] - r_grid[r_idx])
+    dtau = (tau - tau_grid[tau_idx]) / (tau_grid[tau_idx + 1] - tau_grid[tau_idx])
+    dr = np.clip(dr, 0, 1)
+    dtau = np.clip(dtau, 0, 1)
+
+    # Bilinear interpolation
+    w00 = (1 - dtau) * (1 - dr)
+    w01 = (1 - dtau) * dr
+    w10 = dtau * (1 - dr)
+    w11 = dtau * dr
+
+    cl_ee = (w00 * cl_ee_grid[tau_idx, r_idx] +
+             w01 * cl_ee_grid[tau_idx, r_idx + 1] +
+             w10 * cl_ee_grid[tau_idx + 1, r_idx] +
+             w11 * cl_ee_grid[tau_idx + 1, r_idx + 1])
+
+    cl_bb = (w00 * cl_bb_grid[tau_idx, r_idx] +
+             w01 * cl_bb_grid[tau_idx, r_idx + 1] +
+             w10 * cl_bb_grid[tau_idx + 1, r_idx] +
+             w11 * cl_bb_grid[tau_idx + 1, r_idx + 1])
+
+    return cl_ee, cl_bb
+
+
 def run_mcmc_one_map(cl_ee_obs, cl_bb_obs, r_true, tau_true,
                      lmax, f_sky, noise_cl, nside,
+                     r_grid, tau_grid, cl_ee_grid, cl_bb_grid, cl_lensing_bb,
                      n_steps=5000, burn_in=2000,
                      lmax_ee=None, lmax_bb=None):
     """Run Metropolis-Hastings MCMC for a single map.
 
-    Parameters: (r, τ, A_lens) where A_lens scales the lensing BB contribution.
+    Parameters: (r, τ, A_lens) where A_lens scales the lensing BB.
+    Uses pre-computed spectral grid with bilinear interpolation — no CAMB calls.
     Prior: r ∈ [0, 0.01], τ ∈ [0.03, 0.08], A_lens ∈ [0.5, 2.0].
     """
-    # Get lensing BB template at fiducial cosmology (r=0, τ=0.054)
-    # The lensing BB is approximately independent of r and τ
-    _, cl_bb_lens_template = generate_camb_spectra_r_tau(0.0, 0.054, lmax)
-    # Subtract the tensor BB (which is ~0 for r=0) to get pure lensing
-    # Actually for r=0, the entire BB is from lensing, so template = lensing BB
-    cl_lensing_bb = cl_bb_lens_template.copy()
-
     # Starting point
     r_cur = r_true + np.random.normal(0, 0.001)
     tau_cur = tau_true + np.random.normal(0, 0.005)
@@ -155,11 +218,10 @@ def run_mcmc_one_map(cl_ee_obs, cl_bb_obs, r_true, tau_true,
     tau_cur = np.clip(tau_cur, TAU_MIN, TAU_MAX)
     a_lens_cur = np.clip(a_lens_cur, 0.5, 2.0)
 
-    # Get model at current point
-    cl_ee_cur, cl_bb_cur = generate_camb_spectra_r_tau(r_cur, tau_cur, lmax)
-    # Add lensing BB scaled by A_lens
-    # cl_bb from CAMB with r>0 already includes lensing, so we need to
-    # subtract the default lensing and add A_lens * lensing
+    # Get model at current point via interpolation
+    cl_ee_cur, cl_bb_cur = interp_spectra(r_cur, tau_cur, r_grid, tau_grid,
+                                           cl_ee_grid, cl_bb_grid)
+    # Scale lensing BB by A_lens
     cl_bb_cur = cl_bb_cur - cl_lensing_bb + a_lens_cur * cl_lensing_bb
 
     ll_cur = log_likelihood(cl_ee_obs, cl_bb_obs, cl_ee_cur, cl_bb_cur,
@@ -182,31 +244,18 @@ def run_mcmc_one_map(cl_ee_obs, cl_bb_obs, r_true, tau_true,
         a_lens_prop = a_lens_cur + np.random.normal(0, sigma_alens)
 
         # Apply priors
-        if r_prop < 0 or r_prop > R_MAX:
-            samples_r[step] = r_cur
-            samples_tau[step] = tau_cur
-            samples_alens[step] = a_lens_cur
-            continue
-        if tau_prop < TAU_MIN or tau_prop > TAU_MAX:
-            samples_r[step] = r_cur
-            samples_tau[step] = tau_cur
-            samples_alens[step] = a_lens_cur
-            continue
-        if a_lens_prop < 0.5 or a_lens_prop > 2.0:
+        if r_prop < 0 or r_prop > R_MAX or \
+           tau_prop < TAU_MIN or tau_prop > TAU_MAX or \
+           a_lens_prop < 0.5 or a_lens_prop > 2.0:
             samples_r[step] = r_cur
             samples_tau[step] = tau_cur
             samples_alens[step] = a_lens_cur
             continue
 
-        # Compute model at proposed point
-        try:
-            cl_ee_prop, cl_bb_prop = generate_camb_spectra_r_tau(r_prop, tau_prop, lmax)
-            cl_bb_prop = cl_bb_prop - cl_lensing_bb + a_lens_prop * cl_lensing_bb
-        except Exception:
-            samples_r[step] = r_cur
-            samples_tau[step] = tau_cur
-            samples_alens[step] = a_lens_cur
-            continue
+        # Compute model at proposed point via interpolation (fast!)
+        cl_ee_prop, cl_bb_prop = interp_spectra(r_prop, tau_prop, r_grid, tau_grid,
+                                                  cl_ee_grid, cl_bb_grid)
+        cl_bb_prop = cl_bb_prop - cl_lensing_bb + a_lens_prop * cl_lensing_bb
 
         ll_prop = log_likelihood(cl_ee_obs, cl_bb_obs, cl_ee_prop, cl_bb_prop,
                                  noise_cl, f_sky, lmax_ee, lmax_bb)
@@ -216,8 +265,6 @@ def run_mcmc_one_map(cl_ee_obs, cl_bb_obs, r_true, tau_true,
             r_cur = r_prop
             tau_cur = tau_prop
             a_lens_cur = a_lens_prop
-            cl_ee_cur = cl_ee_prop
-            cl_bb_cur = cl_bb_prop
             ll_cur = ll_prop
             n_accept += 1
 
@@ -334,6 +381,10 @@ def main():
 
         print("\n--- MCMC (Metropolis-Hastings) ---")
 
+        # Pre-compute CAMB spectral grid for fast interpolation (once per NSIDE)
+        r_grid, tau_grid, cl_ee_grid, cl_bb_grid, cl_lensing_bb = \
+            precompute_spectral_grid(lmax, n_r=50, n_tau=50)
+
         for cfg in configs:
             f_sky = cfg["f_sky"]
             noise_uK = (noise_arcmin_to_uK(cfg["noise_arcmin"], nside)
@@ -388,6 +439,7 @@ def main():
                 r_mean, tau_mean, r_std, tau_std, acc = run_mcmc_one_map(
                     cl_ee_obs, cl_bb_obs, r_true, tau_true,
                     lmax, f_sky, noise_cl, nside,
+                    r_grid, tau_grid, cl_ee_grid, cl_bb_grid, cl_lensing_bb,
                     n_steps=args.mcmc_steps, burn_in=args.mcmc_burn,
                     lmax_ee=lmax, lmax_bb=lmax,
                 )
