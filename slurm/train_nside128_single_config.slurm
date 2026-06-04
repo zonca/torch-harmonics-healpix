@@ -32,21 +32,30 @@ if [ ! -f ${DATA_DIR}/test4_nside128_${LABEL}.h5 ]; then
     exit 1
 fi
 
-# Use shared venv if it exists
-VENV=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/venv
-if [ -f $VENV/bin/python3 ]; then
-    source $VENV/bin/activate
-else
-    echo "Creating venv..."
-    uv venv $VENV
-    source $VENV/bin/activate
-    uv pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
-    uv pip install torch-harmonics==0.8.0 --no-deps
-    uv pip install healpy h5py scipy matplotlib camb astropy
-    cd $REPO && uv pip install -e .
-fi
+# Per-job venv on compute node /tmp (fast local storage)
+WORKDIR=/tmp/zonca_n128train_$SLURM_JOB_ID
+mkdir -p $WORKDIR
+cd $WORKDIR
+
+echo "Creating venv..."
+uv venv .venv --python 3.11
+source .venv/bin/activate
+
+echo "Installing torch..."
+uv pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124 2>&1 | tail -1
+
+echo "Installing torch-harmonics..."
+uv pip install torch-harmonics==0.8.0 --no-deps 2>&1 | tail -1
+
+echo "Installing other deps..."
+uv pip install healpy h5py scipy matplotlib camb astropy 2>&1 | tail -1
 
 cd $REPO
+uv pip install -e . 2>&1 | tail -1
+
+echo "CUDA check..."
+python3 -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}, Devices: {torch.cuda.device_count()}')"
+
 git pull origin main 2>&1 | tail -2
 
 python3 scripts/train_test4.py \
