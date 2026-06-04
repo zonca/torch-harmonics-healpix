@@ -640,7 +640,7 @@ def main():
         epoch_reached = epoch
         r_err = val_results["r_pct_error"]
         tau_err = val_results["tau_pct_error"]
-        print(f"{epoch:4d} | {train_loss:10.6f} | {r_err:5.1f}% | {tau_err:5.1f}% | {lr:9.6f} | {epochs_no_improve:3d}  ({epoch_time:.1f}s)")
+        print(f"{epoch:4d} | {train_loss:10.6f} | {r_err:5.1f}% | {tau_err:5.1f}% | {lr:9.6f} | {epochs_no_improve:3d}  ({epoch_time:.1f}s)", flush=True)
 
         if epochs_no_improve >= args.patience:
             print(f"\n*** Early stopping at epoch {epoch} ***")
