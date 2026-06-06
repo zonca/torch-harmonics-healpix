@@ -27,12 +27,13 @@ def evaluate(model, dataloader, device):
     r_preds, r_trues, tau_preds, tau_trues = [], [], [], []
     
     with torch.no_grad():
-        for batch in dataloader:
-            x = batch['x'].to(device)
-            target_r_log = batch['target_r_log'].to(device)
-            target_tau = batch['target_tau'].to(device)
+        for batch_x, batch_y in dataloader:
+            batch_x = batch_x.to(device)
+            # batch_y: [batch, 2] with [r_log, tau]
+            target_r_log = batch_y[:, 0:1].to(device)
+            target_tau = batch_y[:, 1:2].to(device)
             
-            out = model(x)
+            out = model(batch_x)
             pred_r_log = out[:, 0:1]
             pred_tau = out[:, 1:2]
             
