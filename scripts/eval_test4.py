@@ -83,12 +83,16 @@ def main():
     parser.add_argument('--hdf5_path', required=True)
     parser.add_argument('--output', required=True)
     parser.add_argument('--nside', type=int, default=128)
-    parser.add_argument('--lmax', type=int, default=384)
+    parser.add_argument('--lmax', type=int, default=None)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--hidden_channels', type=int, default=32)
     parser.add_argument('--num_blocks', type=int, default=3)
     parser.add_argument('--n_test', type=int, default=1000)
     args = parser.parse_args()
+    
+    # Default lmax matches training convention
+    if args.lmax is None:
+        args.lmax = 3 * args.nside - 1
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
