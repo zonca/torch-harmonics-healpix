@@ -92,7 +92,7 @@ python3 scripts/train_test4.py \
     --num_blocks 3 \
     --hdf5_path "$HDF5" \
     --num_workers 0 \
-    --cache_chunk_size 5000 \
+    --cache_chunk_size 2000 \
     --resume "$USE_CKPT" \
     $START_EPOCH \
     --output "$OUTPUT" || echo "FAILED: ${LABEL}"
