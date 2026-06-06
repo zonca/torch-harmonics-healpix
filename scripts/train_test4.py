@@ -640,7 +640,9 @@ def main():
             epoch_reached = args.start_epoch
             print(f"  Overriding start epoch to {args.start_epoch + 1}")
         
-        best_state = {k: v.clone() for k, v in model.state_dict().items()}
+        # Don't clone best_state on resume — it doubles model memory at startup.
+        # The training loop will clone it on first validation improvement.
+        best_state = None
     else:
         print(f"\nStarting training from scratch")
 
