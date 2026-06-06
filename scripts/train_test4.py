@@ -437,6 +437,12 @@ def main():
                              "Recommended for NSIDE=128 on Lustre: 5000-10000 "
                              "(5K maps ≈ 11.5 GB RAM at NSIDE=128). "
                              "Converts slow random I/O into fast sequential reads.")
+    parser.add_argument("--resume", type=str, default=None,
+                        help="Path to checkpoint to resume training from. "
+                             "Loads model weights, optimizer state, scheduler state, "
+                             "and epoch counter. Continues training from last epoch.")
+    parser.add_argument("--start_epoch", type=int, default=None,
+                        help="Override start epoch for resume. Ignored if --resume not set.")
     args = parser.parse_args()
 
     if args.lmax is None:
@@ -603,12 +609,50 @@ def main():
     epochs_no_improve = 0
     epoch_reached = 0
 
+    # Resume from checkpoint if specified
+    if args.resume:
+        print(f"\nResuming from checkpoint: {args.resume}")
+        ckpt = torch.load(args.resume, map_location=device, weights_only=False)
+        
+        # Handle both old-format (just state dict) and new-format (full checkpoint)
+        if isinstance(ckpt, dict):
+            if 'model_state' in ckpt:
+                # Full checkpoint format
+                model.load_state_dict(ckpt['model_state'])
+                optimizer.load_state_dict(ckpt['optimizer_state'])
+                scheduler.load_state_dict(ckpt['scheduler_state'])
+                best_val_loss = ckpt['best_val_loss']
+                epochs_no_improve = ckpt['epochs_no_improve']
+                epoch_reached = ckpt['epoch']
+                print(f"  Resumed from epoch {epoch_reached} (best_val_loss={best_val_loss:.6f}, "
+                      f"epochs_no_improve={epochs_no_improve})")
+            else:
+                # Old format: just model state dict
+                model.load_state_dict(ckpt)
+                print(f"  Loaded model weights from old-format checkpoint (epoch unknown, starting from epoch 1)")
+        else:
+            # Old format: tensor/state dict directly
+            model.load_state_dict(ckpt)
+            print(f"  Loaded model weights from old-format checkpoint (epoch unknown, starting from epoch 1)")
+        
+        # Override start epoch if specified
+        if args.start_epoch is not None:
+            epoch_reached = args.start_epoch
+            print(f"  Overriding start epoch to {args.start_epoch + 1}")
+        
+        best_state = {k: v.clone() for k, v in model.state_dict().items()}
+    else:
+        print(f"\nStarting training from scratch")
+
+    start_epoch = epoch_reached + 1
+    print(f"Training will start from epoch {start_epoch}")
+
     print(f"\nEpoch | Train Loss | r %err | τ %err | LR | No Imp")
     print("-" * 70)
 
     train_start = time.time()
 
-    for epoch in range(1, args.max_epochs + 1):
+    for epoch in range(start_epoch, args.max_epochs + 1):
         t0 = time.time()
         # Update sampler epoch so each epoch gets a different chunk shuffle
         if train_sampler is not None:
@@ -633,6 +677,16 @@ def main():
             os.makedirs(ckpt_dir, exist_ok=True)
             ckpt_path = args.output.replace(".json", f"_nside{args.nside}_best.pt")
             torch.save(best_state, ckpt_path)
+            # Also save full training state for resume
+            resume_path = ckpt_path.replace("_best.pt", "_best_resume.pt")
+            torch.save({
+                "model_state": best_state,
+                "optimizer_state": optimizer.state_dict(),
+                "scheduler_state": scheduler.state_dict(),
+                "epoch": epoch,
+                "best_val_loss": best_val_loss,
+                "epochs_no_improve": epochs_no_improve,
+            }, resume_path)
         else:
             epochs_no_improve += 1
 
