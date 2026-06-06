@@ -91,8 +91,8 @@ python3 scripts/train_test4.py \
     --hidden_channels 32 \
     --num_blocks 3 \
     --hdf5_path "$HDF5" \
-    --num_workers 1 \
-    --cache_chunk_size 2000 \
+    --num_workers 0 \
+    --cache_chunk_size 5000 \
     --resume "$USE_CKPT" \
     $START_EPOCH \
     --output "$OUTPUT" || echo "FAILED: ${LABEL}"
