@@ -50,7 +50,7 @@ python3 -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda
 for FSKY_NOISE in "1.0_noise0" "1.0_noise6" "0.1_noise0" "0.1_noise6"; do
     LABEL="fsky${FSKY_NOISE}"
     CKPT="$RESULTS_DIR/test4_nside128_${LABEL}"
-    HDF5="/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data_v2/test4_nside128_${FSKY_NOISE}.h5"
+    HDF5="/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data_v2/test4_nside128_${LABEL}.h5"
     OUT="$RESULTS_DIR/test4_nside128_${LABEL}_eval.json"
 
     echo ""
