@@ -17,11 +17,33 @@ DATA_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5
 RESULTS_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v2
 VENV=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/venv
 
-source $VENV/bin/activate
-cd $REPO
-
-echo "=== Evaluating resumed N128 best checkpoints ==="
+echo "=== Recreating venv and evaluating resumed N128 checkpoints ==="
 date
+
+# Recreate venv from scratch
+rm -rf $VENV
+uv venv $VENV --python 3.11
+source $VENV/bin/activate
+
+# Install packages - cu124 wheels require CUDA driver >= 535
+uv pip install astropy healpy camb h5py scipy numpy matplotlib
+uv pip install "torch==2.6.0+cu124" "torchvision==0.21.0+cu124" "torchaudio==2.6.0+cu124" --index-url https://download.pytorch.org/whl/cu124
+uv pip install torch-harmonics==0.8.0 --no-deps
+
+# Verify CUDA works
+python3 -c "import torch; print(f'PyTorch {torch.__version__}, CUDA available: {torch.cuda.is_available()}')"
+CUDA_OK=$(python3 -c "import torch; print(1 if torch.cuda.is_available() else 0)" 2>/dev/null)
+if [ "$CUDA_OK" != "1" ]; then
+    echo "ERROR: CUDA not available on $(hostname). Exiting - will resubmit to different node."
+    exit 1
+fi
+
+# Install the package
+cd $REPO
+uv pip install -e .
+
+echo ""
+echo "=== Evaluating resumed N128 best checkpoints ==="
 
 for FSKY_NOISE in "1.0_0" "1.0_6" "0.1_0" "0.1_6"; do
     FSKY=$(echo $FSKY_NOISE | cut -d_ -f1)

@@ -441,6 +441,8 @@ def main():
                         help="Path to checkpoint to resume training from. "
                              "Loads model weights, optimizer state, scheduler state, "
                              "and epoch counter. Continues training from last epoch.")
+    parser.add_argument("--weight_decay", type=float, default=0.0,
+                        help="L2 weight decay for optimizer (0=disabled)")
     parser.add_argument("--start_epoch", type=int, default=None,
                         help="Override start epoch for resume. Ignored if --resume not set.")
     args = parser.parse_args()
@@ -590,7 +592,7 @@ def main():
     print(f"Model parameters: {n_params:,}")
 
     # Training setup
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     if args.scheduler == "cosine":
         cosine_T_max = args.cosine_T_max if args.cosine_T_max > 0 else args.max_epochs
         cosine_eta_min = args.cosine_eta_min if args.cosine_eta_min > 0 else args.lr * 1e-4
@@ -752,6 +754,7 @@ def main():
             "early_stopping_patience": args.patience,
             "hidden_channels": args.hidden_channels,
             "num_blocks": args.num_blocks,
+            "weight_decay": float(args.weight_decay),
             "inpaint": bool(args.f_sky < 1.0),
             "nside": args.nside,
             "lmax": args.lmax,
