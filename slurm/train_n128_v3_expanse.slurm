@@ -2,7 +2,7 @@
 #SBATCH --job-name=thh-n128-v3
 #SBATCH --partition=gpu-shared
 #SBATCH --account=sds275
-#SBATCH --qos=gpu-shared-normal
+#SBATCH --qos=gpu-shared-cosmic2
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus=1
