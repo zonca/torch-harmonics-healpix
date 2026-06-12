@@ -1,0 +1,24 @@
+{
+  "nside": 16,
+  "config": "fsky0.1_noise6",
+  "f_sky": 0.1,
+  "noise_arcmin": 6,
+  "r_fiducial": 0.003,
+  "tau_fiducial": 0.054,
+  "sigma_r_fisher": 0.005400786223420659,
+  "sigma_tau_fisher": 0.007156016889552118,
+  "r_fisher_pct": 180.0262074473553,
+  "tau_fisher_pct": 13.251883128800218,
+  "correlation_r_tau": -0.03469611600193358,
+  "fisher_matrix": [
+    [
+      34324.88992553323,
+      898.8260372456626
+    ],
+    [
+      898.8260372456626,
+      19551.514920037574
+    ]
+  ],
+  "lmax": 47
+}

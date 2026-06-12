@@ -57,6 +57,11 @@ def main():
     cnn = {}
     for f in cnn_files:
         data = load_json(f)
+        # CNN JSONs may not have 'config' — construct from f_sky and noise
+        if 'config' not in data:
+            noise_val = data.get('noise_std_uK_arcmin', 0)
+            cfg_label = f"fsky{data['f_sky']}_noise{int(noise_val)}"
+            data['config'] = cfg_label
         key = f"nside{data['nside']}_{data['config']}"
         cnn[key] = data
 
@@ -132,8 +137,9 @@ def main():
             mcmc_r = "—"
             mcmc_ratio = "—"
 
-        label = f"n{key.split('_')[0].replace('nside', '')} {key.split('_')[1]}"
-        print(f"{label:<25} {fisher_r_pct:>11.1f}% {str(cnn_r):>8} {str(cnn_ratio):>10} {str(mcmc_r):>8} {str(mcmc_ratio):>10}")
+        label = f"n{key.split('_')[0].replace('nside', '')} {key.split('_')[1]} {key.split('_')[2]}"
+        cnn_r_str = f"{cnn_r:.1f}%" if isinstance(cnn_r, (int, float)) else cnn_r
+        print(f"{label:<25} {fisher_r_pct:>11.1f}% {cnn_r_str:>8} {str(cnn_ratio):>10} {str(mcmc_r):>8} {str(mcmc_ratio):>10}")
 
     # Save summary as JSON
     summary = {}
