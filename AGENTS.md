@@ -45,6 +45,13 @@ All Slurm scripts are in `slurm/`:
 - `run_mcmc_benchmark_popeye.slurm` — Popeye CPU: MCMC baseline benchmark (1000 maps)
 - `generate_test4_nside128_popeye.slurm` — Popeye CPU: HDF5 pre-generation for Test 4
 
+### Paper-Ready Pipeline (v3 — C_ℓ fix + Huber τ loss)
+
+- `slurm/run_fisher_mcmc_popeye_v3.slurm` — Popeye CPU: Fisher matrix + MH-MCMC baseline (both NSIDEs)
+- `slurm/run_mcmc_baseline_popeye_v3.slurm` — Popeye CPU: MCMC-only baseline
+- `slurm/train_n128_v3_hc32_expanse.slurm` — Expanse GPU: N128 all configs with hc=32 (422M params)
+- `slurm/train_n128_v3_hc32_single_expanse.slurm` — Expanse GPU: N128 single config with hc=32 (sbatch script.sh FSKY NOISE)
+
 ### Paper-Ready Pipeline (v2 — C_ℓ fix)
 
 These scripts implement the corrected pipeline with `raw_cl=True` in CAMB:
@@ -97,7 +104,7 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
   - NSIDE=128: σ_r=0.00176 (58.5%), σ_τ=0.00424 (7.8%) for fsky=0.1/noise=6
   - **Key insight**: fsky=0.1 configs have σ_r > r_fiducial at NSIDE=16 (cannot constrain r)
 - **MCMC speed**: Never call CAMB per MCMC step (~10s each). Pre-compute a 50×50 spectral grid and use bilinear interpolation for O(1) evaluations. 100× speedup.
-- **MCMC pseudo-C_ℓ limitation**: Simple pseudo-C_ℓ MCMC (even with A_lens nuisance param and proper cosmic variance likelihood) cannot constrain r — the chain always drifts to the boundary (r→0.01, τ→0.08). Root cause: single-realization C_ℓ estimates from `hp.anafast` are too noisy (cosmic variance) for a pseudo-C_ℓ comparison to identify the true parameters. **Use Fisher matrix as the Cramér-Rao baseline** — this is standard in CMB literature. The Fisher bound gives the optimal σ_r and σ_τ achievable by any unbiased estimator.
+- **MCMC pseudo-C_ℓ limitation**: Simple pseudo-C_ℓ MCMC (even with A_lens nuisance param and proper cosmic variance likelihood) cannot constrain r — the chain always drifts to the boundary (r→0.01, τ→0.08). Root cause: single-realization C_ℓ estimates from `hp.anafast` are too noisy (cosmic variance) for a pseudo-C_ℓ comparison to identify the true parameters. **Use Fisher matrix as the Cramér-Rao baseline** — this is standard in CMB literature. The Fisher bound gives the optimal σ_r and σ_τ achievable by any unbiased estimator. MCMC v3 results (all ~200–230% r error, chains converge to r_max=0.01) saved in `results_v3/test4_mcmc_mh_*.json`.
 - **NSIDE=16 CNN results (v3)** — CNN beats Fisher on r by 1.6–3×:
   - fsky=1.0, noise=0: CNN r=21.9% vs Fisher 52.1% (0.42× Fisher)
   - fsky=1.0, noise=6: CNN r=32.7% vs Fisher 56.9% (0.57× Fisher)
