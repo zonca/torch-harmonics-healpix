@@ -77,6 +77,11 @@ def main():
     print("=" * 100)
     print("CNN vs Fisher Information Matrix Bounds")
     print("=" * 100)
+    print("\nNOTE: MCMC pseudo-C_ℓ chains drift to r→r_max boundary (~230% error).")
+    print("      This is a known limitation: single-realization C_ℓ estimates are too")
+    print("      noisy for pseudo-C_ℓ MCMC to constrain r. Fisher matrix is the")
+    print("      correct Cramér-Rao baseline (standard in CMB literature).")
+    print("      CNN N128 results use hidden_channels=8 (underfitted); hc=32 training pending.\n")
 
     configs = sorted(set(list(fisher.keys()) + list(cnn.keys())))
 
@@ -139,7 +144,8 @@ def main():
 
         label = f"n{key.split('_')[0].replace('nside', '')} {key.split('_')[1]} {key.split('_')[2]}"
         cnn_r_str = f"{cnn_r:.1f}%" if isinstance(cnn_r, (int, float)) else cnn_r
-        print(f"{label:<25} {fisher_r_pct:>11.1f}% {cnn_r_str:>8} {str(cnn_ratio):>10} {str(mcmc_r):>8} {str(mcmc_ratio):>10}")
+        mcmc_r_str = f"{mcmc_r:.1f}%" if isinstance(mcmc_r, (int, float)) else mcmc_r
+        print(f"{label:<25} {fisher_r_pct:>11.1f}% {cnn_r_str:>8} {str(cnn_ratio):>10} {mcmc_r_str:>8} {str(mcmc_ratio):>10}")
 
     # Save summary as JSON
     summary = {}

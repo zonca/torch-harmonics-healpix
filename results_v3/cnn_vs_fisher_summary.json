@@ -8,13 +8,21 @@
     "cnn_tau_pct": 24.29887026069849,
     "cnn_r_ratio": 2.4590544018650364,
     "cnn_tau_ratio": 3.7856844247938,
-    "cnn_n_params": 29923778
+    "cnn_n_params": 29923778,
+    "mcmc_r_pct": 230.37237213142282,
+    "mcmc_tau_pct": 47.31937844798492,
+    "mcmc_r_ratio": 9.694941674341921,
+    "mcmc_tau_ratio": 7.372204224292628
   },
   "nside128_fsky0.1_noise6": {
     "fisher_sigma_r": 0.0017561145024513982,
     "fisher_sigma_tau": 0.004237594017256725,
     "fisher_r_pct": 58.53715008171327,
-    "fisher_tau_pct": 7.847396328253193
+    "fisher_tau_pct": 7.847396328253193,
+    "mcmc_r_pct": 231.22501284438587,
+    "mcmc_tau_pct": 47.485645291726506,
+    "mcmc_r_ratio": 3.9500558623303985,
+    "mcmc_tau_ratio": 6.051133816290462
   },
   "nside128_fsky1.0_noise0": {
     "fisher_sigma_r": 0.00022542726827512693,
@@ -25,7 +33,11 @@
     "cnn_tau_pct": 21.68765804098919,
     "cnn_r_ratio": 7.867843741057714,
     "cnn_tau_ratio": 10.684912819068527,
-    "cnn_n_params": 29923778
+    "cnn_n_params": 29923778,
+    "mcmc_r_pct": 218.18842464230656,
+    "mcmc_tau_pct": 29.57195173869679,
+    "mcmc_r_ratio": 29.03665022139395,
+    "mcmc_tau_ratio": 14.569287546884677
   },
   "nside128_fsky1.0_noise6": {
     "fisher_sigma_r": 0.0005553321659799766,
@@ -36,7 +48,11 @@
     "cnn_tau_pct": 21.129968759818002,
     "cnn_r_ratio": 3.1654297474861575,
     "cnn_tau_ratio": 8.514776796560993,
-    "cnn_n_params": 29923778
+    "cnn_n_params": 29923778,
+    "mcmc_r_pct": 225.1027203023306,
+    "mcmc_tau_pct": 28.682259152336343,
+    "mcmc_r_ratio": 12.160436622922742,
+    "mcmc_tau_ratio": 11.558135152934614
   },
   "nside16_fsky0.1_noise0": {
     "fisher_sigma_r": 0.004946581055080296,
@@ -47,7 +63,11 @@
     "cnn_tau_pct": 26.898012561164798,
     "cnn_r_ratio": 0.34909061856254414,
     "cnn_tau_ratio": 2.062793942499358,
-    "cnn_n_params": 6653122
+    "cnn_n_params": 6653122,
+    "mcmc_r_pct": 230.33174811537367,
+    "mcmc_tau_pct": 47.18767929576411,
+    "mcmc_r_ratio": 1.3969148319857145,
+    "mcmc_tau_ratio": 3.618797440538091
   },
   "nside16_fsky0.1_noise6": {
     "fisher_sigma_r": 0.005400786223420659,
@@ -58,7 +78,11 @@
     "cnn_tau_pct": 28.422628737736492,
     "cnn_r_ratio": 0.3127970730421496,
     "cnn_tau_ratio": 2.144799230530928,
-    "cnn_n_params": 6653122
+    "cnn_n_params": 6653122,
+    "mcmc_r_pct": 230.26321496975092,
+    "mcmc_tau_pct": 47.13240444792941,
+    "mcmc_r_ratio": 1.2790538568507384,
+    "mcmc_tau_ratio": 3.556657117319191
   },
   "nside16_fsky1.0_noise0": {
     "fisher_sigma_r": 0.0015642462764692549,
@@ -69,7 +93,11 @@
     "cnn_tau_pct": 15.120413990326226,
     "cnn_r_ratio": 0.4205401168897727,
     "cnn_tau_ratio": 3.6669022880387985,
-    "cnn_n_params": 6653122
+    "cnn_n_params": 6653122,
+    "mcmc_r_pct": 197.8911281427856,
+    "mcmc_tau_pct": 48.12351539244495,
+    "mcmc_r_ratio": 3.7952680045265583,
+    "mcmc_tau_ratio": 11.670595052088219
   },
   "nside16_fsky1.0_noise6": {
     "fisher_sigma_r": 0.0017078785621668297,
@@ -80,6 +108,10 @@
     "cnn_tau_pct": 20.042279054671525,
     "cnn_r_ratio": 0.5743570328247262,
     "cnn_tau_ratio": 4.782659996125888,
-    "cnn_n_params": 6653122
+    "cnn_n_params": 6653122,
+    "mcmc_r_pct": 199.70447243852735,
+    "mcmc_tau_pct": 48.123104214780845,
+    "mcmc_r_ratio": 3.5079392094217248,
+    "mcmc_tau_ratio": 11.483546596153385
   }
 }
