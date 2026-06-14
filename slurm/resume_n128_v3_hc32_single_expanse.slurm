@@ -16,7 +16,7 @@ export HDF5_USE_FILE_LOCKING=FALSE
 REPO=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/repo_latest
 VENV=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/venv
 RESULTS_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3
-HDF5_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_data_v2
+HDF5_DIR=/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_striped
 
 FSKY=${1:-1.0}
 NOISE=${2:-0}
