@@ -30,7 +30,26 @@ from torch_harmonics_healpix.data_generation_test4 import (
 
 # ── Fisher Matrix ──────────────────────────────────────────────────────
 
-def compute_fisher_matrix(r_fid, tau_fid, lmax, f_sky, noise_uK=None, nside=None):
+# Fixed high lmax for CAMB calculations. CAMB's set_for_lmax() changes
+# internal accuracy parameters (max_eta_k, etc.), producing *different*
+# C_ℓ values at the same ℓ depending on the lmax setting. To make Fisher
+# bounds comparable across NSIDEs, all spectra must be computed with the
+# same CAMB configuration. We use a fixed high lmax and truncate.
+LMAX_CALC_FIXED = 500
+
+
+def _generate_spectra_fixed_lmax(r, tau, lmax_out, lmax_calc=LMAX_CALC_FIXED):
+    """Generate CAMB spectra at fixed high lmax, then truncate to lmax_out.
+
+    This ensures consistent C_ℓ values across different output lmax values,
+    which is essential for comparing Fisher bounds across NSIDEs.
+    """
+    cl_ee, cl_bb = generate_camb_spectra_r_tau(r, tau, lmax_calc)
+    return cl_ee[: lmax_out + 1], cl_bb[: lmax_out + 1]
+
+
+def compute_fisher_matrix(r_fid, tau_fid, lmax, f_sky, noise_uK=None, nside=None,
+                          lmax_calc=LMAX_CALC_FIXED):
     """Compute Fisher matrix for (r, τ) at fiducial point.
 
     Uses the Cramér-Rao bound: F_ij = Σ_ℓ (2ℓ+1) f_sky / 2
@@ -42,9 +61,15 @@ def compute_fisher_matrix(r_fid, tau_fid, lmax, f_sky, noise_uK=None, nside=None
               + (∂C_ℓ^BB/∂θ_i)(∂C_ℓ^BB/∂θ_j) / (C_ℓ^BB + N_ℓ)² ]
 
     where N_ℓ is the noise power spectrum.
+
+    Args:
+        lmax_calc: Fixed lmax for CAMB calculation (ensures consistent
+            C_ℓ across NSIDEs). Default 500.
     """
-    # Fiducial spectra
-    cl_ee_fid, cl_bb_fid = generate_camb_spectra_r_tau(r_fid, tau_fid, lmax)
+    # Fiducial spectra — computed at fixed high lmax, truncated to lmax
+    cl_ee_fid, cl_bb_fid = _generate_spectra_fixed_lmax(
+        r_fid, tau_fid, lmax, lmax_calc
+    )
 
     # Noise power spectrum
     if noise_uK is not None and nside is not None:
@@ -62,14 +87,22 @@ def compute_fisher_matrix(r_fid, tau_fid, lmax, f_sky, noise_uK=None, nside=None
     dtau = max(tau_fid * 1e-3, 1e-5)
 
     # ∂C_ℓ/∂r via finite differences
-    cl_ee_rp, cl_bb_rp = generate_camb_spectra_r_tau(r_fid + dr, tau_fid, lmax)
-    cl_ee_rm, cl_bb_rm = generate_camb_spectra_r_tau(max(r_fid - dr, 0), tau_fid, lmax)
+    cl_ee_rp, cl_bb_rp = _generate_spectra_fixed_lmax(
+        r_fid + dr, tau_fid, lmax, lmax_calc
+    )
+    cl_ee_rm, cl_bb_rm = _generate_spectra_fixed_lmax(
+        max(r_fid - dr, 0), tau_fid, lmax, lmax_calc
+    )
     dcl_ee_dr = (cl_ee_rp - cl_ee_rm) / (2 * dr if r_fid > dr else dr)
     dcl_bb_dr = (cl_bb_rp - cl_bb_rm) / (2 * dr if r_fid > dr else dr)
 
     # ∂C_ℓ/∂τ via finite differences
-    cl_ee_tp, cl_bb_tp = generate_camb_spectra_r_tau(r_fid, tau_fid + dtau, lmax)
-    cl_ee_tm, cl_bb_tm = generate_camb_spectra_r_tau(r_fid, max(tau_fid - dtau, 0.01), lmax)
+    cl_ee_tp, cl_bb_tp = _generate_spectra_fixed_lmax(
+        r_fid, tau_fid + dtau, lmax, lmax_calc
+    )
+    cl_ee_tm, cl_bb_tm = _generate_spectra_fixed_lmax(
+        r_fid, max(tau_fid - dtau, 0.01), lmax, lmax_calc
+    )
     dcl_ee_dtau = (cl_ee_tp - cl_ee_tm) / (2 * dtau)
     dcl_bb_dtau = (cl_bb_tp - cl_bb_tm) / (2 * dtau)
 

@@ -38,6 +38,26 @@ from torch_harmonics_healpix.data_generation_test4 import (
 )
 
 
+# Fixed high lmax for CAMB calculations. CAMB's set_for_lmax() changes
+# internal accuracy parameters (max_eta_k, etc.), producing *different*
+# C_ℓ values at the same ℓ depending on the lmax setting. To make Fisher
+# bounds comparable across NSIDEs, all spectra must be computed with the
+# same CAMB configuration. We use a fixed high lmax and truncate.
+LMAX_CALC_FIXED = 500
+
+
+def _generate_spectra_fixed_lmax(
+    r: float, tau: float, lmax_out: int, lmax_calc: int = LMAX_CALC_FIXED
+) -> tuple[np.ndarray, np.ndarray]:
+    """Generate CAMB spectra at a fixed high lmax, then truncate to lmax_out.
+
+    This ensures consistent C_ℓ values across different output lmax values,
+    which is essential for comparing Fisher bounds across NSIDEs.
+    """
+    cl_ee, cl_bb = generate_camb_spectra_r_tau(r, tau, lmax_calc)
+    return cl_ee[: lmax_out + 1], cl_bb[: lmax_out + 1]
+
+
 def compute_fisher_matrix(
     r: float,
     tau: float,
@@ -45,6 +65,7 @@ def compute_fisher_matrix(
     nside: int = 16,
     noise_std_uK: float = 6.0,
     f_sky: float = 1.0,
+    lmax_calc: int = LMAX_CALC_FIXED,
 ) -> np.ndarray:
     """Compute the 2×2 Fisher information matrix for joint (r, τ) estimation.
 
@@ -54,13 +75,15 @@ def compute_fisher_matrix(
     fraction correction.
 
     Args:
-        r: Tensor-to-scalar ratio (fiducial value).
-        tau: Optical depth to reionization (fiducial value).
+        r: Fiducial tensor-to-scalar ratio.
+        tau: Fiducial optical depth to reionization.
         lmax: Maximum multipole moment.
         nside: HEALPix NSIDE parameter (determines pixel count for noise).
         noise_std_uK: White noise standard deviation in μK (per pixel).
             If converting from μK-arcmin, use: noise_uK = noise_arcmin / sqrt(pixel_area_arcmin²).
-        f_sky: Sky fraction observed (0 < f_sky ≤ 1).
+        f_sky: Observed sky fraction.
+        lmax_calc: Fixed lmax for CAMB calculation (ensures consistent
+            C_ℓ across NSIDEs). Default 500.
 
     Returns:
         2×2 Fisher information matrix, F, with indices corresponding to
@@ -71,16 +94,26 @@ def compute_fisher_matrix(
     dr = 1e-5
     dtau = 1e-4
 
-    # Fiducial spectra
-    cl_ee_fid, cl_bb_fid = generate_camb_spectra_r_tau(r, tau, lmax)
+    # Fiducial spectra — computed at fixed high lmax, truncated to lmax
+    cl_ee_fid, cl_bb_fid = _generate_spectra_fixed_lmax(
+        r, tau, lmax, lmax_calc
+    )
 
     # Spectra at r ± dr (tau fixed)
-    cl_ee_rplus, cl_bb_rplus = generate_camb_spectra_r_tau(r + dr, tau, lmax)
-    cl_ee_rminus, cl_bb_rminus = generate_camb_spectra_r_tau(r - dr, tau, lmax)
+    cl_ee_rplus, cl_bb_rplus = _generate_spectra_fixed_lmax(
+        r + dr, tau, lmax, lmax_calc
+    )
+    cl_ee_rminus, cl_bb_rminus = _generate_spectra_fixed_lmax(
+        max(r - dr, 0), tau, lmax, lmax_calc
+    )
 
     # Spectra at tau ± dtau (r fixed)
-    cl_ee_tauplus, cl_bb_tauplus = generate_camb_spectra_r_tau(r, tau + dtau, lmax)
-    cl_ee_tauminus, cl_bb_tauminus = generate_camb_spectra_r_tau(r, tau - dtau, lmax)
+    cl_ee_tauplus, cl_bb_tauplus = _generate_spectra_fixed_lmax(
+        r, tau + dtau, lmax, lmax_calc
+    )
+    cl_ee_tauminus, cl_bb_tauminus = _generate_spectra_fixed_lmax(
+        r, tau - dtau, lmax, lmax_calc
+    )
 
     # Central difference derivatives
     dcl_ee_dr = (cl_ee_rplus - cl_ee_rminus) / (2 * dr)
