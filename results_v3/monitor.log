@@ -1,0 +1,2601 @@
+=== Tue Jun 16 06:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  50818798  PENDING       0:00        thh-n128-hc32
+  50818797  RUNNING   23:57:54        thh-n128-hc32
+  50840325  RUNNING   11:20:19        thh-n128-hc32
+  50927311  RUNNING      28:30              thh-n32
+  50927292  RUNNING      37:12          v6_heatmaps
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   3 |   1.778917 |  64.4% |  35.1% |  0.000965 |   1  (11159.3s)
+   4 |   1.765846 |  63.1% |  25.9% |  0.000938 |   2  (11390.6s)
+   5 |   1.757857 |  62.0% |  25.1% |  0.000905 |   3  (11096.0s)
+--- 50818797 ---
+   7 |   2.182540 |  61.4% |  39.8% |  0.000819 |   2  (10926.2s)
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+--- 50818798 ---
+
+=== N32 RESULTS ===
+=== Tue Jun 16 09:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  50840325  RUNNING   14:20:22        thh-n128-hc32
+  50818798  RUNNING    2:57:15        thh-n128-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   4 |   1.765846 |  63.1% |  25.9% |  0.000938 |   2  (11390.6s)
+   5 |   1.757857 |  62.0% |  25.1% |  0.000905 |   3  (11096.0s)
+   6 |   1.750871 |  65.7% |  29.1% |  0.000864 |   4  (11120.8s)
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+Early stopping: patience=10
+
+=== N32 RESULTS ===
+=== Tue Jun 16 12:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  50840325  RUNNING   17:20:21        thh-n128-hc32
+  50818798  RUNNING    5:57:14        thh-n128-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   5 |   1.757857 |  62.0% |  25.1% |  0.000905 |   3  (11096.0s)
+   6 |   1.750871 |  65.7% |  29.1% |  0.000864 |   4  (11120.8s)
+   7 |   1.745292 |  69.4% |  25.0% |  0.000819 |   5  (11179.4s)
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+Early stopping: patience=10
+   4 |   1.778377 |  63.7% |  24.4% |  0.000938 |   1  (11035.7s)
+
+=== N32 RESULTS ===
+=== Tue Jun 16 15:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  50840325  RUNNING   20:20:22        thh-n128-hc32
+  50818798  RUNNING    8:57:15        thh-n128-hc32
+  50966309  RUNNING    1:50:44          v6_heatmaps
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   6 |   1.750871 |  65.7% |  29.1% |  0.000864 |   4  (11120.8s)
+   7 |   1.745292 |  69.4% |  25.0% |  0.000819 |   5  (11179.4s)
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+Early stopping: patience=10
+   4 |   1.778377 |  63.7% |  24.4% |  0.000938 |   1  (11035.7s)
+   5 |   1.764960 |  62.3% |  29.8% |  0.000905 |   2  (11108.4s)
+
+=== N32 RESULTS ===
+=== Tue Jun 16 18:00:05 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  50840325  RUNNING   23:20:23        thh-n128-hc32
+  50818798  RUNNING   11:57:16        thh-n128-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   7 |   1.745292 |  69.4% |  25.0% |  0.000819 |   5  (11179.4s)
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   4 |   1.778377 |  63.7% |  24.4% |  0.000938 |   1  (11035.7s)
+   5 |   1.764960 |  62.3% |  29.8% |  0.000905 |   2  (11108.4s)
+   6 |   1.755515 |  66.2% |  26.8% |  0.000864 |   3  (11010.9s)
+
+=== N32 RESULTS ===
+=== Tue Jun 16 21:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  50818798  RUNNING   14:59:45        thh-n128-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   5 |   1.764960 |  62.3% |  29.8% |  0.000905 |   2  (11108.4s)
+   6 |   1.755515 |  66.2% |  26.8% |  0.000864 |   3  (11010.9s)
+   7 |   1.749209 |  69.3% |  24.1% |  0.000819 |   4  (11091.1s)
+
+=== N32 RESULTS ===
+=== Wed Jun 17 00:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  50818798  RUNNING   17:59:44        thh-n128-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   6 |   1.755515 |  66.2% |  26.8% |  0.000864 |   3  (11010.9s)
+   7 |   1.749209 |  69.3% |  24.1% |  0.000819 |   4  (11091.1s)
+   8 |   1.744472 |  64.3% |  28.0% |  0.000768 |   5  (11085.3s)
+
+=== N32 RESULTS ===
+=== Wed Jun 17 03:00:04 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  50818798  RUNNING   20:57:16        thh-n128-hc32
+  51005140  RUNNING      26:29          v6_heatmaps
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   7 |   1.749209 |  69.3% |  24.1% |  0.000819 |   4  (11091.1s)
+   8 |   1.744472 |  64.3% |  28.0% |  0.000768 |   5  (11085.3s)
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+
+=== N32 RESULTS ===
+=== Wed Jun 17 06:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  50818798  RUNNING   23:59:44        thh-n128-hc32
+  51005140  RUNNING    3:28:57          v6_heatmaps
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   8 |   1.744472 |  64.3% |  28.0% |  0.000768 |   5  (11085.3s)
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+
+=== N32 RESULTS ===
+=== Wed Jun 17 09:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Wed Jun 17 12:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Wed Jun 17 15:00:01 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Wed Jun 17 18:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Wed Jun 17 21:00:03 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Thu Jun 18 00:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Thu Jun 18 03:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Thu Jun 18 06:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Thu Jun 18 09:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Thu Jun 18 12:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Thu Jun 18 15:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Thu Jun 18 18:00:03 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51122697  PENDING       0:00         thh-n32-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Thu Jun 18 21:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51122697  PENDING       0:00         thh-n32-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Fri Jun 19 00:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51122697  PENDING       0:00         thh-n32-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Fri Jun 19 03:00:01 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51122697  PENDING       0:00         thh-n32-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Fri Jun 19 06:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51122697  PENDING       0:00         thh-n32-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+=== Fri Jun 19 09:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51122697  RUNNING    1:50:12         thh-n32-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+*** Early stopping at epoch 16 ***
+Training time: 3280.7s (54.7 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0_nside32.pt
+=== fsky1.0_noise0 complete ===
+=== CNN training: fsky1.0_noise6 (NSIDE=32) ===
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky1.0_noise6.h5
+Training will start from epoch 1
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Fri Jun 19 12:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51122697  RUNNING    4:52:42         thh-n32-hc32
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+*** Early stopping at epoch 29 ***
+Training time: 6140.4s (102.3 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0_nside32.pt
+=== fsky0.1_noise0 complete ===
+=== CNN training: fsky0.1_noise6 (NSIDE=32) ===
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Fri Jun 19 15:00:03 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Fri Jun 19 18:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Fri Jun 19 21:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sat Jun 20 00:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sat Jun 20 03:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sat Jun 20 06:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sat Jun 20 09:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51182905  PENDING       0:00            nb_v6_pdf
+  51182904  RUNNING      19:20           nb_v6_exec
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sat Jun 20 12:00:01 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51184089  PENDING       0:00           nb_v6_pdf2
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sat Jun 20 15:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sat Jun 20 18:00:01 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sat Jun 20 21:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sun Jun 21 00:00:03 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sun Jun 21 03:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sun Jun 21 06:00:01 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sun Jun 21 09:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sun Jun 21 12:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sun Jun 21 15:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sun Jun 21 18:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Sun Jun 21 21:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Mon Jun 22 00:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51281560  RUNNING    1:29:37          thh-n32-cap
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Mon Jun 22 03:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51281560  RUNNING    4:27:03          thh-n32-cap
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Mon Jun 22 06:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51281560  RUNNING    7:27:03          thh-n32-cap
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Mon Jun 22 09:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51281560  RUNNING   10:29:35          thh-n32-cap
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+[Mon Jun 22 11:22:13 AM PDT 2026] Pulled hc64 fsky0.1_noise0
+=== Mon Jun 22 12:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51281560  RUNNING   13:27:06          thh-n32-cap
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Mon Jun 22 15:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51281560  RUNNING   16:27:05          thh-n32-cap
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+[Mon Jun 22 03:22:41 PM PDT 2026] Pulled hc64 fsky0.1_noise6
+[Mon Jun 22 03:22:58 PM PDT 2026] All 4 hc=64 configs complete! Regenerating figures...
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/figures/fig1_fisher_vs_cnn_n32.png
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/figures/fig2_capacity_scaling_n32.png
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/figures/fig3_r_bias_n32.png
+All figures generated.
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/n32_comprehensive_summary.json
+
+=== NSIDE=32 Comprehensive Summary ===
+
+Config               Fisher σr%   hc32 r%    hc64 r%    hc32/hc64 
+-----------------------------------------------------------------
+fsky1.0_noise0       8.64         56.67048636540209 54.77018613577138 1.03×     
+fsky1.0_noise6       19.64        58.30695599634356 55.07351568469068 1.06×     
+fsky0.1_noise0       27.33        59.038103307484334 54.79199744243502 1.08×     
+fsky0.1_noise6       62.09        56.600135365727056 55.73960870105353 1.02×     
+[Mon Jun 22 03:23:00 PM PDT 2026] Figures and summary regenerated. Done.
+[Mon Jun 22 03:25:12 PM PDT 2026] All 4 hc=64 configs local! Regenerating figures + summary...
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/figures/fig1_fisher_vs_cnn_n32.png
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/figures/fig2_capacity_scaling_n32.png
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/figures/fig3_r_bias_n32.png
+All figures generated.
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/n32_comprehensive_summary.json
+
+=== NSIDE=32 Comprehensive Summary ===
+
+Config               Fisher σr%   hc32 r%    hc64 r%    hc32/hc64 
+-----------------------------------------------------------------
+fsky1.0_noise0       8.64         56.67048636540209 54.77018613577138 1.03×     
+fsky1.0_noise6       19.64        58.30695599634356 55.07351568469068 1.06×     
+fsky0.1_noise0       27.33        59.038103307484334 54.79199744243502 1.08×     
+fsky0.1_noise6       62.09        56.600135365727056 55.73960870105353 1.02×     
+[Mon Jun 22 03:25:14 PM PDT 2026] Figures and summary regenerated.
+[Mon Jun 22 03:27:41 PM PDT 2026] All 4 hc=64 configs local! Regenerating figures + summary...
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/figures/fig1_fisher_vs_cnn_n32.png
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/figures/fig2_capacity_scaling_n32.png
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/figures/fig3_r_bias_n32.png
+All figures generated.
+Saved /home/zonca/zonca/p/software/project_work/torch-harmonics-healpix/scripts/../results_v3/n32_comprehensive_summary.json
+
+=== NSIDE=32 Comprehensive Summary ===
+
+Config               Fisher σr%   hc32 r%    hc64 r%    hc32/hc64 
+-----------------------------------------------------------------
+fsky1.0_noise0       8.64         56.67048636540209 54.77018613577138 1.03×     
+fsky1.0_noise6       19.64        58.30695599634356 55.07351568469068 1.06×     
+fsky0.1_noise0       27.33        59.038103307484334 54.79199744243502 1.08×     
+fsky0.1_noise6       62.09        56.600135365727056 55.73960870105353 1.02×     
+[Mon Jun 22 03:27:43 PM PDT 2026] Figures and summary regenerated.
+=== Mon Jun 22 18:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51281560  RUNNING   19:27:05          thh-n32-cap
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Mon Jun 22 21:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+  51281560  RUNNING   22:27:05          thh-n32-cap
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Tue Jun 23 00:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Tue Jun 23 03:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Tue Jun 23 06:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Tue Jun 23 09:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Tue Jun 23 12:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Tue Jun 23 15:00:03 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Tue Jun 23 18:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Tue Jun 23 21:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Wed Jun 24 00:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Wed Jun 24 03:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Wed Jun 24 06:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Wed Jun 24 09:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json
+=== Wed Jun 24 12:00:02 PDT 2026 ===
+=== QUEUE ===
+     JOBID    STATE       TIME                 NAME
+
+=== N32 PROGRESS ===
+--- train_n32_v3_50927311.out ---
+=== Config: fsky1.0_noise0 (NSIDE=32) ===
+--- Step 1: Fisher forecast ---
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+Fisher saved: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_fisher_nside32_fsky1.0_noise0.json
+--- Step 2: Generating HDF5 data ---
+--- train_n32_v3_51122697.out ---
+Training maps: 100000, Val: 10000, Test: 1000
+Early stopping: patience=15
+Using HDF5 dataset: /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/hdf5_n32/test4_nside32_fsky0.1_noise6.h5
+Training will start from epoch 1
+*** Early stopping at epoch 26 ***
+Training time: 5427.5s (90.5 min)
+Results saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+Model saved to /expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6_nside32.pt
+=== fsky0.1_noise6 complete ===
+=== All N32 CNN training complete ===
+
+=== N128 PROGRESS ===
+--- 50840325 ---
+   8 |   1.741171 |  65.1% |  27.1% |  0.000768 |   6  (11014.2s)
+   9 |   1.739310 |  61.8% |  25.3% |  0.000713 |   7  (10927.9s)
+slurmstepd: error: *** JOB 50840325 ON exp-2-58 CANCELLED AT 2026-06-16T18:39:50 DUE TO TIME LIMIT ***
+--- 50818797 ---
+   8 |   2.218675 |  61.3% |  28.5% |  0.000768 |   3  (11234.0s)
+   9 |   2.192548 |  51.9% |  32.4% |  0.000713 |   4  (10883.5s)
+slurmstepd: error: *** JOB 50818797 ON exp-4-57 CANCELLED AT 2026-06-16T06:02:21 DUE TO TIME LIMIT ***
+--- 50818798 ---
+   9 |   1.740578 |  60.0% |  26.5% |  0.000713 |   6  (10977.6s)
+  10 |   1.739186 |  66.7% |  24.2% |  0.000655 |   7  (10892.9s)
+slurmstepd: error: *** JOB 50818798 ON exp-1-59 CANCELLED AT 2026-06-17T06:02:57 DUE TO TIME LIMIT ***
+
+=== N32 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky0.1_noise6.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise0.json
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside32_hc32_fsky1.0_noise6.json
+=== N128 RESULTS ===
+/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/results_v3/test4_nside128_hc32_fsky1.0_noise6.json

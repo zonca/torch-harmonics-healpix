@@ -1,0 +1,91 @@
+{
+  "analysis": "N32 CNN vs Fisher Comparison",
+  "nside": 32,
+  "r_fiducial": 0.003,
+  "tau_fiducial": 0.054,
+  "configs": [
+    {
+      "name": "fsky1.0_noise0",
+      "f_sky": 1.0,
+      "noise_arcmin": 0.0,
+      "fisher": {
+        "sigma_r": 5.805095917402046e-05,
+        "sigma_tau": 0.0019618371370435117,
+        "r_pct_error": 1.935031972467348,
+        "tau_pct_error": 3.633031735265763
+      },
+      "cnn": {
+        "r_pct_error": 56.67048636540209,
+        "tau_pct_error": 19.563963028278202,
+        "r_bias": 0.0007775159911178644,
+        "epochs_reached": 16
+      },
+      "cnn_to_fisher_ratio_r": 29.29,
+      "cnn_to_fisher_ratio_tau": 5.38
+    },
+    {
+      "name": "fsky1.0_noise6",
+      "f_sky": 1.0,
+      "noise_arcmin": 6.0,
+      "fisher": {
+        "sigma_r": 0.00044242954086210796,
+        "sigma_tau": 0.0020259431186395484,
+        "r_pct_error": 14.747651362070267,
+        "tau_pct_error": 3.7517465159991636
+      },
+      "cnn": {
+        "r_pct_error": 58.30695599634356,
+        "tau_pct_error": 16.323442502237857,
+        "r_bias": 0.0007243059004568273,
+        "epochs_reached": 35
+      },
+      "cnn_to_fisher_ratio_r": 3.95,
+      "cnn_to_fisher_ratio_tau": 4.35
+    },
+    {
+      "name": "fsky0.1_noise0",
+      "f_sky": 0.1,
+      "noise_arcmin": 0.0,
+      "fisher": {
+        "sigma_r": 0.0001835732513473515,
+        "sigma_tau": 0.006203873751361387,
+        "r_pct_error": 6.119108378245049,
+        "tau_pct_error": 11.48865509511368
+      },
+      "cnn": {
+        "r_pct_error": 59.038103307484334,
+        "tau_pct_error": 24.56409181910753,
+        "r_bias": 0.000700971594871214,
+        "epochs_reached": 29
+      },
+      "cnn_to_fisher_ratio_r": 9.65,
+      "cnn_to_fisher_ratio_tau": 2.14
+    },
+    {
+      "name": "fsky0.1_noise6",
+      "f_sky": 0.1,
+      "noise_arcmin": 6.0,
+      "fisher": {
+        "sigma_r": 0.0013990850532667977,
+        "sigma_tau": 0.006406594664845704,
+        "r_pct_error": 46.63616844222659,
+        "tau_pct_error": 11.864064194158711
+      },
+      "cnn": {
+        "r_pct_error": 56.600135365727056,
+        "tau_pct_error": 26.5633887435738,
+        "r_bias": 0.0007713649954114642,
+        "epochs_reached": 26
+      },
+      "cnn_to_fisher_ratio_r": 1.21,
+      "cnn_to_fisher_ratio_tau": 2.24
+    }
+  ],
+  "summary": {
+    "key_finding": "CNN approaches Fisher bound for difficult configs (low fsky, high noise) but underperforms on easy configs",
+    "best_cnn_config": "fsky0.1_noise6 (1.21x Fisher bound on r)",
+    "worst_cnn_config": "fsky1.0_noise0 (29.3x Fisher bound on r)",
+    "note": "Fisher represents theoretical optimal (Cramér-Rao bound); CNN is practical estimator"
+  },
+  "generated": "2026-06-19T13:30:00-07:00"
+}

@@ -1,0 +1,314 @@
+{
+  "nside16_fsky1.0_noise0": {
+    "nside": 16,
+    "lmax": 47,
+    "config": "fsky1.0_noise0",
+    "f_sky": 1.0,
+    "noise_arcmin": 0,
+    "noise_uK_per_pixel": 0.0,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.00034640315713771816,
+    "sigma_tau": 0.0019378857448535617,
+    "r_pct_error": 11.546771904590605,
+    "tau_pct_error": 3.5886773052843735,
+    "correlation_r_tau": -0.04687183520571287,
+    "fisher_matrix": [
+      [
+        8352019.469077577,
+        69977.29161103904
+      ],
+      [
+        69977.29161103904,
+        266869.44044268044
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside16_fsky1.0_noise6": {
+    "nside": 16,
+    "lmax": 47,
+    "config": "fsky1.0_noise6",
+    "f_sky": 1.0,
+    "noise_arcmin": 6,
+    "noise_uK_per_pixel": 0.02728871221190636,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.0007058684810110843,
+    "sigma_tau": 0.0020483470674393825,
+    "r_pct_error": 23.52894936703614,
+    "tau_pct_error": 3.793235310072931,
+    "correlation_r_tau": -0.12998966262595482,
+    "fisher_matrix": [
+      [
+        2041519.5204023838,
+        91449.76607266009
+      ],
+      [
+        91449.76607266009,
+        242434.27945691242
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside16_fsky0.1_noise0": {
+    "nside": 16,
+    "lmax": 47,
+    "config": "fsky0.1_noise0",
+    "f_sky": 0.1,
+    "noise_arcmin": 0,
+    "noise_uK_per_pixel": 0.0,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.0010954229358459116,
+    "sigma_tau": 0.006128132788097805,
+    "r_pct_error": 36.51409786153039,
+    "tau_pct_error": 11.34839405203297,
+    "correlation_r_tau": -0.04687183071059882,
+    "fisher_matrix": [
+      [
+        835201.9913602243,
+        6997.728687096096
+      ],
+      [
+        6997.728687096096,
+        26686.944127160983
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside16_fsky0.1_noise6": {
+    "nside": 16,
+    "lmax": 47,
+    "config": "fsky0.1_noise6",
+    "f_sky": 0.1,
+    "noise_arcmin": 6,
+    "noise_uK_per_pixel": 0.02728871221190636,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.0022321521285183395,
+    "sigma_tau": 0.006477442171634972,
+    "r_pct_error": 74.40507095061132,
+    "tau_pct_error": 11.995263280805503,
+    "correlation_r_tau": -0.1299896626259548,
+    "fisher_matrix": [
+      [
+        204151.95204023845,
+        9144.97660726601
+      ],
+      [
+        9144.97660726601,
+        24243.427945691248
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside32_fsky1.0_noise0": {
+    "nside": 32,
+    "lmax": 95,
+    "config": "fsky1.0_noise0",
+    "f_sky": 1.0,
+    "noise_arcmin": 0,
+    "noise_uK_per_pixel": 0.0,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.0002593134831573261,
+    "sigma_tau": 0.0018538993307830407,
+    "r_pct_error": 8.64378277191087,
+    "tau_pct_error": 3.4331469088574833,
+    "correlation_r_tau": 0.10847521987781543,
+    "fisher_matrix": [
+      [
+        15048402.357176779,
+        -228328.3744882802
+      ],
+      [
+        -228328.3744882802,
+        294420.67009860056
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside32_fsky1.0_noise6": {
+    "nside": 32,
+    "lmax": 95,
+    "config": "fsky1.0_noise6",
+    "f_sky": 1.0,
+    "noise_arcmin": 6,
+    "noise_uK_per_pixel": 0.05457742442381272,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.0005890661321312134,
+    "sigma_tau": 0.001973630364070657,
+    "r_pct_error": 19.63553773770711,
+    "tau_pct_error": 3.6548710445752906,
+    "correlation_r_tau": -0.06097031265966083,
+    "fisher_matrix": [
+      [
+        2892606.3635477596,
+        52638.801841389926
+      ],
+      [
+        52638.801841389926,
+        257683.0244446439
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside32_fsky0.1_noise0": {
+    "nside": 32,
+    "lmax": 95,
+    "config": "fsky0.1_noise0",
+    "f_sky": 0.1,
+    "noise_arcmin": 0,
+    "noise_uK_per_pixel": 0.0,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.0008200212347688621,
+    "sigma_tau": 0.005862544437936319,
+    "r_pct_error": 27.33404115896207,
+    "tau_pct_error": 10.856563773956147,
+    "correlation_r_tau": 0.10847521987781551,
+    "fisher_matrix": [
+      [
+        1504840.2357176763,
+        -22832.837448828024
+      ],
+      [
+        -22832.837448828024,
+        29442.06700986005
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside32_fsky0.1_noise6": {
+    "nside": 32,
+    "lmax": 95,
+    "config": "fsky0.1_noise6",
+    "f_sky": 0.1,
+    "noise_arcmin": 6,
+    "noise_uK_per_pixel": 0.05457742442381272,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.0018627906700003306,
+    "sigma_tau": 0.00624116720973062,
+    "r_pct_error": 62.09302233334435,
+    "tau_pct_error": 11.557717055056703,
+    "correlation_r_tau": -0.06097031265966075,
+    "fisher_matrix": [
+      [
+        289260.63635477604,
+        5263.880184138989
+      ],
+      [
+        5263.880184138989,
+        25768.302444464414
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside128_fsky1.0_noise0": {
+    "nside": 128,
+    "lmax": 383,
+    "config": "fsky1.0_noise0",
+    "f_sky": 1.0,
+    "noise_arcmin": 0,
+    "noise_uK_per_pixel": 0.0,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.00024683459504270443,
+    "sigma_tau": 0.00109656121943264,
+    "r_pct_error": 8.227819834756813,
+    "tau_pct_error": 2.0306689248752594,
+    "correlation_r_tau": 0.13729350284413444,
+    "fisher_matrix": [
+      [
+        16728319.59072363,
+        -516982.03042046685
+      ],
+      [
+        -516982.03042046685,
+        847614.9492017326
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside128_fsky1.0_noise6": {
+    "nside": 128,
+    "lmax": 383,
+    "config": "fsky1.0_noise6",
+    "f_sky": 1.0,
+    "noise_arcmin": 6,
+    "noise_uK_per_pixel": 0.21830969769525088,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.0005694654462163091,
+    "sigma_tau": 0.0013350413901265456,
+    "r_pct_error": 18.98218154054364,
+    "tau_pct_error": 2.4722988706047144,
+    "correlation_r_tau": -0.012963990536749518,
+    "fisher_matrix": [
+      [
+        3084169.523309734,
+        17054.916349516057
+      ],
+      [
+        17054.916349516057,
+        561155.9023591478
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside128_fsky0.1_noise0": {
+    "nside": 128,
+    "lmax": 383,
+    "config": "fsky0.1_noise0",
+    "f_sky": 0.1,
+    "noise_arcmin": 0,
+    "noise_uK_per_pixel": 0.0,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.0007805595256602526,
+    "sigma_tau": 0.0034676310472188322,
+    "r_pct_error": 26.01865085534175,
+    "tau_pct_error": 6.4215389763311705,
+    "correlation_r_tau": 0.1372935028441344,
+    "fisher_matrix": [
+      [
+        1672831.9590723636,
+        -51698.203042046705
+      ],
+      [
+        -51698.203042046705,
+        84761.49492017333
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  },
+  "nside128_fsky0.1_noise6": {
+    "nside": 128,
+    "lmax": 383,
+    "config": "fsky0.1_noise6",
+    "f_sky": 0.1,
+    "noise_arcmin": 6,
+    "noise_uK_per_pixel": 0.21830969769525088,
+    "r_fiducial": 0.003,
+    "tau_fiducial": 0.054,
+    "sigma_r": 0.00180080785880765,
+    "sigma_tau": 0.004221771563397312,
+    "r_pct_error": 60.02692862692166,
+    "tau_pct_error": 7.818095487772801,
+    "correlation_r_tau": -0.012963990536749431,
+    "fisher_matrix": [
+      [
+        308416.95233097416,
+        1705.4916349515968
+      ],
+      [
+        1705.4916349515968,
+        56115.5902359148
+      ]
+    ],
+    "lmax_calc_fixed": 500
+  }
+}

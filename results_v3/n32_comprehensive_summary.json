@@ -1,0 +1,114 @@
+{
+  "fsky1.0_noise0": {
+    "nside": 32,
+    "f_sky": 1.0,
+    "noise_arcmin": 0,
+    "fisher": {
+      "sigma_r": 0.0002593134831573261,
+      "sigma_tau": 0.0018538993307830407,
+      "r_pct_error": 8.64378277191087,
+      "tau_pct_error": 3.4331469088574833,
+      "correlation_r_tau": 0.10847521987781543
+    },
+    "hc32": {
+      "r_pct_error": 56.67048636540209,
+      "tau_pct_error": 19.563963028278202,
+      "r_bias": 0.0007775159911178644,
+      "n_params": 26480834,
+      "epochs": 16,
+      "cnn_fisher_ratio_r": 6.556213623225289
+    },
+    "hc64": {
+      "r_pct_error": 54.77018613577138,
+      "tau_pct_error": 24.39856435557455,
+      "r_bias": 0.0008450257140211761,
+      "n_params": 103547074,
+      "epochs": 17,
+      "cnn_fisher_ratio_r": 6.33636772013226
+    }
+  },
+  "fsky1.0_noise6": {
+    "nside": 32,
+    "f_sky": 1.0,
+    "noise_arcmin": 6,
+    "fisher": {
+      "sigma_r": 0.0005890661321312134,
+      "sigma_tau": 0.001973630364070657,
+      "r_pct_error": 19.63553773770711,
+      "tau_pct_error": 3.6548710445752906,
+      "correlation_r_tau": -0.06097031265966083
+    },
+    "hc32": {
+      "r_pct_error": 58.30695599634356,
+      "tau_pct_error": 16.323442502237857,
+      "r_bias": 0.0007243059004568273,
+      "n_params": 26480834,
+      "epochs": 35,
+      "cnn_fisher_ratio_r": 2.969460616521532
+    },
+    "hc64": {
+      "r_pct_error": 55.07351568469068,
+      "tau_pct_error": 26.520955316871405,
+      "r_bias": 0.000825093979947269,
+      "n_params": 103547074,
+      "epochs": 18,
+      "cnn_fisher_ratio_r": 2.8047877486405803
+    }
+  },
+  "fsky0.1_noise0": {
+    "nside": 32,
+    "f_sky": 0.1,
+    "noise_arcmin": 0,
+    "fisher": {
+      "sigma_r": 0.0008200212347688621,
+      "sigma_tau": 0.005862544437936319,
+      "r_pct_error": 27.33404115896207,
+      "tau_pct_error": 10.856563773956147,
+      "correlation_r_tau": 0.10847521987781551
+    },
+    "hc32": {
+      "r_pct_error": 59.038103307484334,
+      "tau_pct_error": 24.56409181910753,
+      "r_bias": 0.000700971594871214,
+      "n_params": 26480834,
+      "epochs": 29,
+      "cnn_fisher_ratio_r": 2.1598746765670755
+    },
+    "hc64": {
+      "r_pct_error": 54.79199744243502,
+      "tau_pct_error": 24.643569575052243,
+      "r_bias": 0.000832919457461685,
+      "n_params": 103547074,
+      "epochs": 23,
+      "cnn_fisher_ratio_r": 2.0045333627688
+    }
+  },
+  "fsky0.1_noise6": {
+    "nside": 32,
+    "f_sky": 0.1,
+    "noise_arcmin": 6,
+    "fisher": {
+      "sigma_r": 0.0018627906700003306,
+      "sigma_tau": 0.00624116720973062,
+      "r_pct_error": 62.09302233334435,
+      "tau_pct_error": 11.557717055056703,
+      "correlation_r_tau": -0.06097031265966075
+    },
+    "hc32": {
+      "r_pct_error": 56.600135365727056,
+      "tau_pct_error": 26.5633887435738,
+      "r_bias": 0.0007713649954114642,
+      "n_params": 26480834,
+      "epochs": 26,
+      "cnn_fisher_ratio_r": 0.9115377741136691
+    },
+    "hc64": {
+      "r_pct_error": 55.73960870105353,
+      "tau_pct_error": 27.117262495450674,
+      "r_bias": 0.0008012945947702974,
+      "n_params": 103547074,
+      "epochs": 17,
+      "cnn_fisher_ratio_r": 0.897679104776335
+    }
+  }
+}
