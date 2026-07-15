@@ -147,22 +147,53 @@ not exploit the additional small-scale information.
 while validation error stalls, pointing at training-set diversity
 (5000 distinct CAMB spectra reused ~20× each across 100k maps).
 
-### Systematic r bias — Jensen's inequality
-
-All NSIDE≥32 configs show bias(r) ≈ +0.0007 (23–26% of r_fid). The network
-predicts log(r+ε); converting back gives
-E[r̂] = (r+ε)·exp(σ_log²/2) − ε. The observed biases imply a consistent
-σ_log ≈ 0.64–0.67 across configs, confirming the mechanism
-(`results_v3/r_bias_analysis.md`). Post-hoc subtraction improves RMSE by
-7–9%; the budget is variance-dominated.
-
 ### Fiducial-point evaluation (RMSE vs Fisher) — v3
 
 1000 signal+noise realizations at (r=0.003, τ=0.054) per config;
-RMSE² = σ² + bias². Produced by `slurm/eval_fiducial_v3_expanse.slurm`
-(NSIDE=16/32/128, hc=32; plus multi-fiducial points at NSIDE=16/32).
+RMSE² = σ² + bias². Produced on Popeye CPU (job 2450946, torch 2.12 CPU) —
+NSIDE=128 on Expanse GPU pending.
 
-*Results pending — table will be filled when the evaluation job completes.*
+| NSIDE | f_sky | noise | σ(r) | bias(r) | RMSE(r) | RMSE/Fisher (r) | RMSE/Fisher (τ) |
+|-------|-------|-------|------|---------|---------|-----------------|-----------------|
+| 16 | 1.0 | 0 | 0.000708 | −0.000090 | 0.000713 | 2.06× | 2.24× |
+| 16 | 1.0 | 6 | 0.000995 | −0.000771 | 0.001259 | 1.78× | 3.25× |
+| 16 | 0.1 | 0 | 0.000130 | −0.001386 | 0.001392 | 1.27× | 1.12× |
+| 16 | 0.1 | 6 | 0.000180 | −0.001636 | 0.001646 | **0.74×** | 3.30× |
+| 32 | 1.0 | 0 | 0.000076 | −0.001898 | 0.001899 | 7.33× | 1.88× |
+| 32 | 1.0 | 6 | 0.000015 | −0.001948 | 0.001948 | 3.31× | 2.76× |
+| 32 | 0.1 | 0 | 0.000007 | −0.001976 | 0.001976 | 2.41× | **0.29×** |
+| 32 | 0.1 | 6 | 0.000074 | −0.001961 | 0.001963 | 1.05× | 1.03× |
+
+Sub-unity ratios are bias-dominated shrinkage (N16 fsky=0.1/noise=6:
+|bias| ≈ 9σ), **not** super-efficiency — see the multi-fiducial test below.
+
+### Multi-fiducial response — N16 calibrated, N32 collapsed
+
+Recovered ⟨r̂⟩ at three true r values (f_sky=1.0, noise=0, 1000
+realizations each):
+
+| NSIDE | r_true=0.001 | r_true=0.003 | r_true=0.006 | response |
+|-------|--------------|--------------|--------------|----------|
+| 16 | 0.00085 | 0.00291 | 0.00597 | **linear, slope 1.02 — calibrated** |
+| 32 | 0.00110 | 0.00110 | 0.00110 | **constant — r channel collapsed** |
+
+The N32 network outputs r̂ ≈ 0.0011 with σ ≈ 8×10⁻⁵ *independently of the
+input*. Consequences:
+
+- The "55–59% r error plateau" at NSIDE≥32 is the error of a near-constant
+  predictor, and the consistent near-zero-r bias of +0.0007 is that constant
+  evaluated at r_true < 0.001. This **supersedes the Jensen's-inequality
+  interpretation** in `results_v3/r_bias_analysis.md` (the Jensen mechanism
+  fits the bias magnitude but predicts a prediction spread the multi-fiducial
+  data rule out).
+- A constant predictor "beats Fisher" (0.67×) at r_true=0.001 where the
+  constant happens to land close — the textbook reason sub-Fisher ratios
+  need a response measurement before being believed.
+- τ keeps a real but shrunk response at both resolutions (slope ≈ 0.37 at
+  N16, ≈ 0.29 at N32 between τ=0.04 and 0.07).
+
+Off-center CNN evals: `results_v3/test4_cnn_fiducial_nside*_r*.json`;
+matching Fisher bounds: `results_v3/fisher_multifid/`.
 
 ### MCMC baseline — negative result
 

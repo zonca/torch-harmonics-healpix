@@ -1,0 +1,20 @@
+{
+  "test": "test4_fisher",
+  "nside": 16,
+  "config": "fsky1.0_noise6",
+  "f_sky": 1.0,
+  "noise_arcmin": 6.0,
+  "noise_uK_per_pixel": 0.02728871221190636,
+  "r_fiducial": 0.001,
+  "tau_fiducial": 0.054,
+  "sigma_r": 0.000418121414263319,
+  "sigma_tau": 0.002067129548955208,
+  "sigma_r_fisher": 0.000418121414263319,
+  "sigma_tau_fisher": 0.002067129548955208,
+  "r_pct_error": 41.8121414263319,
+  "tau_pct_error": 3.8280176832503856,
+  "r_fisher_pct": 41.8121414263319,
+  "tau_fisher_pct": 3.8280176832503856,
+  "correlation_r_tau": -0.0963067634821678,
+  "lmax": 47
+}
