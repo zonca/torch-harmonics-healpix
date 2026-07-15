@@ -99,6 +99,7 @@ class RTauDataset(Dataset):
             self.nside, self.lmax, self.noise_std, self.f_sky, self.rng,
             cl_ee=self.cl_ee_array[spec_idx],
             cl_bb=self.cl_bb_array[spec_idx],
+            mask=self.mask,
         )
 
         # Stack Q, U, mask as 3 channels: [3, npix]

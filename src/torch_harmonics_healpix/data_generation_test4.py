@@ -166,6 +166,7 @@ def generate_r_tau_map(
     rng: np.random.Generator = None,
     cl_ee: np.ndarray = None,
     cl_bb: np.ndarray = None,
+    mask: np.ndarray = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Generate Q/U maps from CAMB spectra with given r and τ.
 
@@ -179,6 +180,10 @@ def generate_r_tau_map(
         rng: NumPy random Generator.
         cl_ee: Pre-computed EE spectrum (optional, avoids CAMB call).
         cl_bb: Pre-computed BB spectrum (optional, avoids CAMB call).
+        mask: Pre-computed sky mask (1D HEALPix array). If None, a new
+            random mask is created via create_sky_mask. Pass a shared
+            mask to ensure the mask channel matches the mask applied
+            to the Q/U maps.
 
     Returns:
         Tuple of (q_map, u_map, mask), each 1D HEALPix array.
@@ -215,7 +220,8 @@ def generate_r_tau_map(
             q_map += np.random.normal(0, noise_std, size=q_map.shape).astype(np.float32)
             u_map += np.random.normal(0, noise_std, size=u_map.shape).astype(np.float32)
 
-    mask = create_sky_mask(f_sky, nside, rng)
+    if mask is None:
+        mask = create_sky_mask(f_sky, nside, rng)
     q_map *= mask
     u_map *= mask
 

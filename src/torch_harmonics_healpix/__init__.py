@@ -11,6 +11,12 @@ from .data_generation_test2 import (
     generate_test2_dataset,
 )
 from .mcmc_baseline import mcmc_estimate_ell_p, evaluate_mcmc_baseline
+from .mcmc_baselines_test2_3 import (
+    mcmc_estimate_ell_ep_bp,
+    evaluate_mcmc_test2,
+    evaluate_mcmc_test3,
+    mcmc_baseline_r_tau,
+)
 
 # Model imports are lazy to avoid requiring torch-harmonics for basic usage
 def __getattr__(name):
@@ -34,6 +40,10 @@ __all__ = [
     "generate_test2_dataset",
     "mcmc_estimate_ell_p",
     "evaluate_mcmc_baseline",
+    "mcmc_estimate_ell_ep_bp",
+    "evaluate_mcmc_test2",
+    "evaluate_mcmc_test3",
+    "mcmc_baseline_r_tau",
     "SpectralCNN",
     "MultiResSpectralCNN",
 ]

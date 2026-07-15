@@ -145,7 +145,8 @@ def main():
 
             q, u, _ = generate_r_tau_map(
                 r_true, tau_true, nside, lmax, noise_uK, f_sky, rng,
-                cl_ee=cl_ee_array[idx], cl_bb=cl_bb_array[idx]
+                cl_ee=cl_ee_array[idx], cl_bb=cl_bb_array[idx],
+                mask=mask,
             )
 
             result = mcmc_baseline_r_tau(

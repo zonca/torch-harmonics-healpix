@@ -43,7 +43,8 @@ def main():
     fisher = {}
     for f in fisher_files:
         data = load_json(f)
-        key = f"nside{data['nside']}_{data['config']}"
+        config = data.get('config', f"fsky{data['f_sky']}_noise{int(data.get('noise_arcmin', 0))}")
+        key = f"nside{data['nside']}_{config}"
         fisher[key] = data
 
     # Load CNN results
@@ -91,14 +92,18 @@ def main():
             continue
 
         f = fisher[key]
+        f_r_pct = f.get('r_fisher_pct', f.get('r_pct_error', 0))
+        f_tau_pct = f.get('tau_fisher_pct', f.get('tau_pct_error', 0))
+        f_sigma_r = f.get('sigma_r_fisher', f.get('sigma_r', 0))
+        f_sigma_tau = f.get('sigma_tau_fisher', f.get('sigma_tau', 0))
         print(f"\n--- {key} (f_sky={f['f_sky']}, noise={f['noise_arcmin']} μK-arcmin) ---")
-        print(f"  Fisher: σ_r={f['sigma_r_fisher']:.6f} ({f['r_fisher_pct']:.1f}%), "
-              f"σ_τ={f['sigma_tau_fisher']:.6f} ({f['tau_fisher_pct']:.1f}%)")
+        print(f"  Fisher: σ_r={f_sigma_r:.6f} ({f_r_pct:.1f}%), "
+              f"σ_τ={f_sigma_tau:.6f} ({f_tau_pct:.1f}%)")
 
         if key in cnn:
             c = cnn[key]
-            cnn_r_factor = c['r_pct_error'] / f['r_fisher_pct'] if f['r_fisher_pct'] > 0 else float('inf')
-            cnn_tau_factor = c['tau_pct_error'] / f['tau_fisher_pct'] if f['tau_fisher_pct'] > 0 else float('inf')
+            cnn_r_factor = c['r_pct_error'] / f_r_pct if f_r_pct > 0 else float('inf')
+            cnn_tau_factor = c['tau_pct_error'] / f_tau_pct if f_tau_pct > 0 else float('inf')
             print(f"  CNN:    r_err={c['r_pct_error']:.1f}% ({cnn_r_factor:.2f}× Fisher), "
                   f"τ_err={c['tau_pct_error']:.1f}% ({cnn_tau_factor:.2f}× Fisher)")
             print(f"         n_params={c['n_params']:,}, epochs={c['epochs_reached']}, "
@@ -106,8 +111,8 @@ def main():
 
         if key in mcmc:
             m = mcmc[key]
-            mcmc_r_factor = m['r_pct_error'] / f['r_fisher_pct'] if f['r_fisher_pct'] > 0 else float('inf')
-            mcmc_tau_factor = m['tau_pct_error'] / f['tau_fisher_pct'] if f['tau_fisher_pct'] > 0 else float('inf')
+            mcmc_r_factor = m['r_pct_error'] / f_r_pct if f_r_pct > 0 else float('inf')
+            mcmc_tau_factor = m['tau_pct_error'] / f_tau_pct if f_tau_pct > 0 else float('inf')
             print(f"  MCMC:   r_err={m['r_pct_error']:.1f}% ({mcmc_r_factor:.2f}× Fisher), "
                   f"τ_err={m['tau_pct_error']:.1f}% ({mcmc_tau_factor:.2f}× Fisher)")
             print(f"         method={m['method']}, n_test={m['n_test']}, "
@@ -124,7 +129,7 @@ def main():
         if key not in fisher:
             continue
         f = fisher[key]
-        fisher_r_pct = f['r_fisher_pct']
+        fisher_r_pct = f.get('r_fisher_pct', f.get('r_pct_error', 0))
 
         if key in cnn:
             c = cnn[key]
@@ -152,19 +157,22 @@ def main():
     for key in configs:
         if key not in fisher:
             continue
+        fdata = fisher[key]
+        fisher_r_pct = fdata.get('r_fisher_pct', fdata.get('r_pct_error', 0))
+        fisher_tau_pct = fdata.get('tau_fisher_pct', fdata.get('tau_pct_error', 0))
         entry = {
-            "fisher_sigma_r": fisher[key]['sigma_r_fisher'],
-            "fisher_sigma_tau": fisher[key]['sigma_tau_fisher'],
-            "fisher_r_pct": fisher[key]['r_fisher_pct'],
-            "fisher_tau_pct": fisher[key]['tau_fisher_pct'],
+            "fisher_sigma_r": fdata.get('sigma_r_fisher', fdata.get('sigma_r', 0)),
+            "fisher_sigma_tau": fdata.get('sigma_tau_fisher', fdata.get('sigma_tau', 0)),
+            "fisher_r_pct": fisher_r_pct,
+            "fisher_tau_pct": fisher_tau_pct,
         }
         if key in cnn:
             c = cnn[key]
             entry.update({
                 "cnn_r_pct": c['r_pct_error'],
                 "cnn_tau_pct": c['tau_pct_error'],
-                "cnn_r_ratio": c['r_pct_error'] / entry['fisher_r_pct'] if entry['fisher_r_pct'] > 0 else None,
-                "cnn_tau_ratio": c['tau_pct_error'] / entry['fisher_tau_pct'] if entry['fisher_tau_pct'] > 0 else None,
+                "cnn_r_ratio": c['r_pct_error'] / fisher_r_pct if fisher_r_pct > 0 else None,
+                "cnn_tau_ratio": c['tau_pct_error'] / fisher_tau_pct if fisher_tau_pct > 0 else None,
                 "cnn_n_params": c['n_params'],
             })
         if key in mcmc:
@@ -172,8 +180,8 @@ def main():
             entry.update({
                 "mcmc_r_pct": m['r_pct_error'],
                 "mcmc_tau_pct": m['tau_pct_error'],
-                "mcmc_r_ratio": m['r_pct_error'] / entry['fisher_r_pct'] if entry['fisher_r_pct'] > 0 else None,
-                "mcmc_tau_ratio": m['tau_pct_error'] / entry['fisher_tau_pct'] if entry['fisher_tau_pct'] > 0 else None,
+                "mcmc_r_ratio": m['r_pct_error'] / fisher_r_pct if fisher_r_pct > 0 else None,
+                "mcmc_tau_ratio": m['tau_pct_error'] / fisher_tau_pct if fisher_tau_pct > 0 else None,
             })
         summary[key] = entry
 

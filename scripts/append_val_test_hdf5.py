@@ -43,6 +43,7 @@ def append_split(h5file, split_name, n_maps, r_values, tau_values,
             float(r_values[idx]), float(tau_values[idx]),
             nside, lmax, noise_std, f_sky, rng,
             cl_ee=cl_ee_array[idx], cl_bb=cl_bb_array[idx],
+            mask=mask,
         )
         maps_ds[i, 0] = q
         maps_ds[i, 1] = u

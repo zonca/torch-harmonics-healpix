@@ -308,8 +308,13 @@ def main():
     if args.output:
         import json, os
         os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
+        r_fisher_pct = float(sigma_r / args.r * 100)
+        tau_fisher_pct = float(sigma_tau / args.tau * 100)
+        config_label = f"fsky{args.f_sky}_noise{int(args.noise_std)}"
         result_data = {
             "test": "test4_fisher",
+            "nside": args.nside,
+            "config": config_label,
             "f_sky": args.f_sky,
             "noise_arcmin": args.noise_std,
             "noise_uK_per_pixel": float(noise_std_uK),
@@ -317,10 +322,13 @@ def main():
             "tau_fiducial": args.tau,
             "sigma_r": float(sigma_r),
             "sigma_tau": float(sigma_tau),
-            "r_pct_error": float(sigma_r / args.r * 100),
-            "tau_pct_error": float(sigma_tau / args.tau * 100),
+            "sigma_r_fisher": float(sigma_r),
+            "sigma_tau_fisher": float(sigma_tau),
+            "r_pct_error": r_fisher_pct,
+            "tau_pct_error": tau_fisher_pct,
+            "r_fisher_pct": r_fisher_pct,
+            "tau_fisher_pct": tau_fisher_pct,
             "correlation_r_tau": float(corr),
-            "nside": args.nside,
             "lmax": args.lmax,
         }
         with open(args.output, "w") as f:

@@ -61,7 +61,7 @@ def generate_camb_spectra(tau: float, lmax: int = LMAX) -> tuple[np.ndarray, np.
     pars.set_for_lmax(lmax)
 
     results = camb.get_results(pars)
-    cls = results.get_total_cls(lmax, CMB_unit="muK")
+    cls = results.get_total_cls(lmax, CMB_unit="muK", raw_cl=True)
 
     cl_ee = cls[:, 1]  # EE
     cl_bb = cls[:, 2]  # BB (from tensors, very small for standard ΛCDM)
