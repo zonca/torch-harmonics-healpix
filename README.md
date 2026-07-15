@@ -1,103 +1,105 @@
 # torch-harmonics-healpix
 
-Bridge HEALPix to [torch-harmonics](https://github.com/Philippe7427/torch-harmonics) for spherical CNNs on CMB data.
+Bridge HEALPix to [torch-harmonics](https://github.com/NVIDIA/torch-harmonics) for spherical CNNs on CMB data.
 
-Reproduces and benchmarks all 4 tests from Krachmalnicoff & Tomasi (2019) [[arXiv:1902.04083](https://arxiv.org/abs/1902.04083)] and adds a Simons Observatory parameter estimation challenge using spectral convolution networks instead of pixel-based NNhealpix.
+Reproduces the three CMB benchmarks of Krachmalnicoff & Tomasi (2019)
+[[A&A 628, A129](https://doi.org/10.1051/0004-6361/201935211), arXiv:1902.04083]
+with harmonic-space (spectral) convolutions instead of the pixel-based NNhealpix,
+and adds a fourth benchmark: joint tensor-to-scalar ratio r / optical depth τ
+estimation relevant to the Simons Observatory, benchmarked against Fisher
+(Cramér–Rao) forecasts.
 
-## Quick Results
+> **Pipeline versions.** Results labeled **v3** use the corrected pipeline
+> (CAMB `raw_cl=True` C_ℓ fix + Huber τ loss + fixed-accuracy Fisher bounds,
+> `lmax_calc=500`). Earlier v1/v2 Test 3/4 results were generated with D_ℓ
+> amplitudes (unit bug) and are kept only for provenance in
+> [BENCHMARKS.md](BENCHMARKS.md). Tests 1–2 do not use CAMB and are
+> unaffected.
 
-### Test 2 (Polarization) — SpectralCNN dominates
+## Key Results
+
+### Test 2 (Polarization peaks) — SpectralCNN dominates
+
+Mean error on (ℓ_Ep, ℓ_Bp) from Q/U maps, NSIDE=16:
 
 | f_sky | SpectralCNN (ℓ_Ep / ℓ_Bp) | NNhealpix | Δ vs NNhealpix |
 |-------|---------------------------|-----------|----------------|
-| 1.0   | **1.69% / 1.53%**         | 2.7% / 2.7% | −37% / −43%  |
-| 0.5   | **1.95% / 1.91%**         | 3.9% / 3.9% | −50% / −51%  |
-| 0.2   | **2.15% / 2.17%**         | 5.3% / 5.3% | −59% / −59%  |
-| 0.1   | **2.56% / 2.70%**         | 6.4% / 6.4% | −60% / −58%  |
-| 0.05  | **3.01% / 3.11%**         | 8.4% / 8.4% | −64% / −63%  |
+| 1.0   | **1.69% / 1.53%**         | 2.7%      | −40%           |
+| 0.5   | **1.95% / 1.91%**         | 3.9%      | −51%           |
+| 0.2   | **2.15% / 2.17%**         | 5.3%      | −59%           |
+| 0.1   | **2.56% / 2.70%**         | 6.4%      | −59%           |
+| 0.05  | **3.01% / 3.11%**         | 8.4%      | −64%           |
 
-### Test 3 (τ estimation) — SpectralCNN wins
-
-| Method         | τ % error |
-|----------------|-----------|
-| MCMC (paper)   | 2.8%      |
-| **SpectralCNN** | **3.6%** |
-| NNhealpix      | 4.0%      |
+The advantage *grows* as the sky fraction shrinks — the spectral prior handles
+aggressive masking far better than pixel-space convolution.
 
 ### Test 1 (Scalar maps) — NNhealpix better at high noise
 
-| σ_n | SpectralCNN | NNhealpix | Winner      |
+| σ_n (μK) | SpectralCNN | NNhealpix | Winner      |
 |-----|-------------|-----------|-------------|
 | 0   | **1.27%**   | 1.3%      | SpectralCNN |
 | 5   | 3.58%       | **2.9%**  | NNhealpix   |
 | 10  | 6.81%       | **5.2%**  | NNhealpix   |
 | 15  | 11.98%      | **8.4%**  | NNhealpix   |
 
-### Test 4 (Joint r/τ estimation) — CNN approaches Fisher bound
+The global SHT spreads local noise across all modes; pixel-space pooling
+filters it.
 
-**NSIDE=16** (9.8M params, fiducial-point evaluation):
+### Test 3 (τ estimation) — v3 retraining in progress
 
-Fiducial-point evaluation at (r=0.003, τ=0.054), 1000 noise realizations.
-RMSE = √(bias² + σ²) vs Fisher σ (Cramér-Rao lower bound for unbiased estimators).
+The v2 result (3.76% vs NNhealpix 4.0%, MCMC 2.8%) predates the C_ℓ fix and
+is not comparable to the published baselines. Retraining with the corrected
+pipeline: `slurm/train_test3_v3_expanse.slurm`.
 
-| Config              | CNN RMSE(r) / Fisher σ(r) | CNN RMSE(τ) / Fisher σ(τ) |
-|---------------------|---------------------------|---------------------------|
-| f_sky=1.0, noise=0  | 1.11×                     | 1.34×                     |
-| f_sky=1.0, noise=6  | 1.06×                     | 0.33×                     |
-| f_sky=0.1, noise=0  | 0.39×                     | 1.02×                     |
-| f_sky=0.1, noise=6  | 0.38×                     | 0.56×                     |
+### Test 4 (Joint r/τ, Simons Observatory) — v3 corrected
 
-**NSIDE=128** (422M params, fiducial-point evaluation):
+Fisher (Cramér–Rao) bounds at fiducial (r=0.003, τ=0.054), fixed CAMB
+accuracy (`lmax_calc=500`):
 
-| Config              | Fisher σ(r) % | CNN RMSE/Fisher (r) | CNN RMSE/Fisher (τ) |
-|---------------------|---------------|---------------------|---------------------|
-| f_sky=1.0, noise=0  | 7.5%          | 5.21×               | 2.90×               |
-| f_sky=1.0, noise=6  | 7.7%          | 8.16×               | 1.23×               |
-| f_sky=0.1, noise=0  | 23.8%         | 2.13×               | 1.66×               |
-| f_sky=0.1, noise=6  | 24.2%         | 2.39×               | **0.53×**           |
+| NSIDE | lmax | σ(r)/r, fsky=1.0/noise=0 | fsky=1.0/noise=6 | fsky=0.1/noise=0 | fsky=0.1/noise=6 |
+|-------|------|--------------------------|------------------|------------------|------------------|
+| 16    | 47   | 11.5%                    | 23.5%            | 36.5%            | 74.4%            |
+| 32    | 95   | 8.6%                     | 19.6%            | 27.3%            | 62.1%            |
+| 128   | 383  | 8.2%                     | 19.0%            | 26.0%            | 60.0%            |
 
-> NSIDE=128 underperforms NSIDE=16 due to τ divergence at epoch 11 limiting training to 5-10 epochs. Best result: τ at f_sky=0.1/noise=6 beats Fisher bound (0.53×). Longer training or τ-stable architecture needed.
+SpectralCNN (range-averaged r error over the test range, v3):
 
-**Main finding:** SpectralCNN dominates for polarization estimation (Tests 2, 3, 4) — the spectral prior provides a strong global physical prior. For noisy scalar maps (Test 1), pixel-space convolution is more robust due to implicit low-pass filtering.
+- **NSIDE=16 (6.7M params):** 21.9–57.6% depending on config — within
+  0.8–1.9× of the Fisher bound.
+- **NSIDE=32/128 (26.5M–422M params):** plateaus at **55–59% r error in every
+  configuration**, regardless of resolution and of a 16× capacity increase
+  (26.5M → 409M params). The bottleneck is training-set diversity (5000
+  distinct CAMB spectra reused ~20× each), not model capacity.
+- **Systematic r bias ≈ +0.0007** (23–26% of the fiducial r) in all
+  high-resolution configs, quantitatively explained by Jensen's inequality on
+  the log-r output parameterization (implied σ_log ≈ 0.65 across configs).
 
-See [BENCHMARKS.md](BENCHMARKS.md) for full results and [ARCHITECTURE.md](ARCHITECTURE.md) for architecture details.
+Fiducial-point RMSE vs Fisher comparisons (1000 noise realizations per
+config) are produced by `slurm/eval_fiducial_v3_expanse.slurm`; see
+[BENCHMARKS.md](BENCHMARKS.md) for the full tables.
+
+**Main finding:** spectral convolution is the right inductive bias for CMB
+polarization (Tests 2–4 at low resolution), while noisy scalar maps favor
+pixel-space convolution (Test 1). Scaling map-based r/τ inference to high
+resolution is currently limited by simulation diversity, not architecture.
+
+See [BENCHMARKS.md](BENCHMARKS.md) for all numbers,
+[ARCHITECTURE.md](ARCHITECTURE.md) for architecture details, and the paper
+repository ([torch-harmonics-healpix-paper](https://github.com/zonca/torch-harmonics-healpix-paper))
+for the manuscript.
 
 ## Pre-trained Models
 
-Trained model weights are available on Hugging Face:
-
+Trained model weights are on Hugging Face:
 <https://huggingface.co/zonca/torch-harmonics-healpix>
 
-| Model           | File                                     | Task              | Error          | Parameters |
-|-----------------|------------------------------------------|-------------------|----------------|------------|
-| SpectralCNN T1  | `models/test1_v2_fix_noise0.pt`          | ℓ_peak from T map | 1.27%          | 6.4M       |
-| SpectralCNN T2  | `models/test2_v2_fix_fsky1.0.pt`         | ℓ_Ep/ℓ_Bp from Q/U | 1.69%/1.53% | 9.8M       |
-| SpectralCNN T3  | `models/test3_v2_fix.pt`                 | τ from Q/U        | 3.6%           | 9.8M       |
-| SpectralCNN T4  | `models/test4_fsky1.0_noise0.pt`         | r, τ from Q/U     | See Test 4     | 9.8M       |
-| SpectralCNN T4  | `models/test4_fsky1.0_noise6.pt`         | r, τ from Q/U     | See Test 4     | 9.8M       |
-| SpectralCNN T4  | `models/test4_fsky0.1_noise0.pt`         | r, τ from Q/U     | See Test 4     | 9.8M       |
-| SpectralCNN T4  | `models/test4_fsky0.1_noise6.pt`         | r, τ from Q/U     | See Test 4     | 9.8M       |
+> **Warning:** the Test 3/4 weights currently on Hugging Face were trained
+> before the C_ℓ fix (v2 pipeline) and should only be used to reproduce the
+> superseded v2 numbers. v3 checkpoints live on the compute clusters
+> (`results_v3/*.pt`) and will replace the HF weights once the v3 campaign is
+> complete. Test 1/2 weights are unaffected.
 
-### Downloading Weights
-
-**Option 1: Using huggingface_hub**
-
-```python
-from huggingface_hub import hf_hub_download
-
-model_path = hf_hub_download(
-    repo_id="zonca/torch-harmonics-healpix",
-    filename="models/test2_v2_fix_fsky1.0.pt",
-)
-```
-
-**Option 2: Direct URL**
-
-```bash
-wget https://huggingface.co/zonca/torch-harmonics-healpix/resolve/main/models/test2_v2_fix_fsky1.0.pt
-```
-
-### Loading and Using Weights
+**Loading example** (Test 2, full sky):
 
 ```python
 import torch
@@ -105,92 +107,40 @@ import numpy as np
 import healpy as hp
 from torch_harmonics_healpix.models import SpectralCNN
 
-# 1. Create model with matching architecture
 model = SpectralCNN(
-    in_channels=3,       # Test 1: 1 (T only), Test 2/3/4: 3 (Q, U, mask)
-    out_channels=1,      # Test 1: 1, Test 2: 2 (ℓ_Ep, ℓ_Bp), Test 3: 1, Test 4: 2
-    nside=16,            # HEALPix resolution
-    hidden_channels=32,  # spectral convolution channels
-    num_blocks=3,        # number of SpectralConvBlocks
-    inpaint=False,       # True for f_sky < 1.0, False for full sky
+    in_channels=3,       # Test 1: 1 (T only); Tests 2/3/4: 3 (Q, U, mask)
+    out_channels=2,      # Test 1: 1; Test 2: 2; Test 3: 1; Test 4: 2
+    nside=16,
+    hidden_channels=32,
+    num_blocks=4,        # Tests 2/3 use 4; Test 4 uses 3
+    inpaint=False,       # True for f_sky < 1.0
 )
-
-# 2. Load trained weights
-state_dict = torch.load("test2_v2_fix_fsky1.0.pt", map_location="cpu")
-model.load_state_dict(state_dict)
+model.load_state_dict(torch.load("test2_v2_fix_fsky1.0.pt", map_location="cpu"))
 model.eval()
 
-# 3. Prepare input map (HEALPix NSIDE=16, 3072 pixels)
-# Test 1: shape [1, 1, 3072]  (just T map)
-# Test 2/3/4: shape [1, 3, 3072] (Q, U, mask stacked)
-q_map = hp.read_map("my_q_map.fits")
-u_map = hp.read_map("my_u_map.fits")
-mask = np.ones_like(q_map)  # 1.0 = observed, 0.0 = masked
-
-input_map = np.stack([q_map, u_map, mask], axis=0).astype(np.float32)
-input_tensor = torch.from_numpy(input_map).unsqueeze(0)  # [1, 3, 3072]
-
-# 4. Run inference
+q = hp.read_map("q.fits"); u = hp.read_map("u.fits")
+mask = np.ones_like(q)
+x = torch.from_numpy(np.stack([q, u, mask]).astype(np.float32)).unsqueeze(0)
 with torch.no_grad():
-    prediction = model(input_tensor)
-
-# Test 1:  prediction[0, 0].item() → ℓ_peak
-# Test 2:  prediction[0, 0].item() → ℓ_Ep,  prediction[0, 1].item() → ℓ_Bp
-# Test 3:  prediction[0, 0].item() → τ
-# Test 4:  prediction[0, 0].item() → log(r+1e-4),  prediction[0, 1].item() → τ
-print(f"Predicted parameter: {prediction[0, 0].item():.4f}")
+    ell_ep, ell_bp = model(x)[0].tolist()
 ```
 
-### Architecture Details per Model
-
-**Test 1** (`in_channels=1`, `out_channels=1`, `inpaint=False`):
-- Input: single T map → Output: ℓ_peak scalar
-- 6.4M parameters
-
-**Test 2** (`in_channels=3`, `out_channels=2`):
-- Input: Q/U/mask → Output: [ℓ_Ep, ℓ_Bp]
-- `inpaint=True` for f_sky < 1.0, `False` for full sky
-- 9.8M parameters
-
-**Test 3** (`in_channels=3`, `out_channels=1`, `inpaint=False`):
-- Input: Q/U/mask → Output: τ scalar
-- 9.8M parameters
-
-**Test 4** (`in_channels=3`, `out_channels=2`, `inpaint=f_sky<1`):
-- Input: Q/U/mask → Output: [log(r + 1e-4), τ]
-- Joint r/τ estimation for Simons Observatory challenge
-- 4 configs: f_sky ∈ {1.0, 0.1} × noise ∈ {0, 6} μK-arcmin
-- Loss: MSE on [log(r + 1e-4), τ]
-- 9.8M parameters (NSIDE=16), 422M parameters (NSIDE=128)
-
-> **Note:** Pre-trained models correspond to the specific configurations above. For different noise levels, f_sky values, or architectures, retrain using the scripts in `scripts/`.
+Output conventions: Test 1 → ℓ_peak; Test 2 → (ℓ_Ep, ℓ_Bp); Test 3 → τ;
+Test 4 → (log(r + 1e-4), τ).
 
 ## Setup
 
 ```bash
-# Create venv
 uv venv .venv --python 3.11
 source .venv/bin/activate
 
-# Install dependencies
 uv pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
-uv pip install torch-harmonics==0.8.0 --no-deps
-uv pip install healpy astropy scipy
-
-# Install in dev mode
+uv pip install torch-harmonics==0.8.0 --no-deps   # >=0.9.0 has a C++ ABI issue on V100
+uv pip install healpy astropy scipy h5py
 uv pip install -e .
-```
 
-For Test 3/4 (τ/r estimation), also install CAMB:
-
-```bash
+# Tests 3/4 (CAMB spectra):
 uv pip install camb
-```
-
-For downloading pre-trained models:
-
-```bash
-uv pip install huggingface_hub
 ```
 
 ## Project Structure
@@ -198,97 +148,80 @@ uv pip install huggingface_hub
 ```
 torch-harmonics-healpix/
 ├── src/torch_harmonics_healpix/
-│   ├── __init__.py
 │   ├── healpix_resample.py          # HEALPix ↔ equiangular resampling
-│   ├── data_generation.py           # Test 1: scalar power spectrum maps
-│   ├── data_generation_test2.py     # Test 2: polarization Q/U maps
-│   ├── data_generation_test3.py     # Test 3: CAMB spectra + τ maps
-│   ├── data_generation_test4.py     # Test 4: Simons Obs r/τ maps
-│   ├── mcmc_baseline.py             # MCMC ℓ_p estimation baseline
-│   ├── mcmc_baselines_test2_3.py    # MCMC baselines for Tests 2 & 3
+│   ├── data_generation.py           # Test 1: scalar power-spectrum maps
+│   ├── data_generation_test2.py     # Test 2: polarization Q/U maps + masks
+│   ├── data_generation_test3.py     # Test 3: CAMB τ spectra (raw_cl=True)
+│   ├── data_generation_test4.py     # Test 4: CAMB r/τ spectra (raw_cl=True)
+│   ├── mcmc_baseline.py             # χ² spectrum-fit baseline (Test 1)
+│   ├── mcmc_baselines_test2_3.py    # baselines for Tests 2 & 3
 │   └── models/
 │       ├── spectral_cnn.py          # SpectralCNN (fixed ℓ_max)
-│       └── multires_spectral_cnn.py # MultiResSpectralCNN (decreasing ℓ_max)
+│       └── multires_spectral_cnn.py # MultiResSpectralCNN (ablation)
 ├── scripts/
-│   ├── train_test1_v2.py            # Test 1 training (4 noise levels)
-│   ├── train_test2_v2.py            # Test 2 training (5 f_sky values)
-│   ├── train_test3_v2.py            # Test 3 training (τ estimation)
-│   ├── train_test4.py               # Test 4 training (r/τ estimation)
-│   ├── fisher_forecast.py           # Fisher matrix forecast
-│   ├── run_mcmc_test4.py            # MCMC baseline for Test 4
-│   └── eval_test4_at_fiducial.py    # Fiducial-point CNN evaluation
-├── slurm/                           # Slurm scripts (Expanse + Popeye)
-├── results/                         # JSON result files + .pt model weights
-├── BENCHMARKS.md                    # Full benchmark comparison
-├── ARCHITECTURE.md                  # Architecture comparison
-└── GPU_USAGE.md                     # GPU hours tally
+│   ├── train_test{1,2,3}_v2.py      # Tests 1–3 training
+│   ├── train_test4.py               # Test 4 training (on-the-fly or HDF5)
+│   ├── generate_test4_hdf5.py       # pre-generate NSIDE=128 datasets
+│   ├── precompute_test3_camb.py     # parallel CAMB cache (CPU cluster)
+│   ├── fisher_forecast.py           # Fisher bounds (fixed lmax_calc=500)
+│   ├── run_fisher_mcmc_test4.py     # Fisher + MH-MCMC baseline
+│   ├── eval_test4_at_fiducial.py    # fiducial-point RMSE evaluation
+│   ├── compare_cnn_fisher.py        # CNN vs Fisher summary tables
+│   ├── monitoring/                  # cron/agent training monitors
+│   └── archive/                     # superseded one-off scripts
+├── slurm/                           # Slurm jobs (Expanse GPU + Popeye CPU)
+│   └── archive/                     # superseded v1/v2 jobs
+├── results/                         # v1/v2 JSONs + model weights (provenance)
+├── results_v3/                      # v3 (corrected) results — current
+├── tests/                           # unit tests (CPU + GPU)
+├── BENCHMARKS.md                    # all benchmark tables
+├── ARCHITECTURE.md                  # architecture notes and comparisons
+├── AGENTS.md                        # cluster workflows and pitfalls
+└── GPU_USAGE.md                     # GPU-hours tally
 ```
 
-## Key Design Decisions
+## Reproducing
 
-### 1. Inpainting for Partial-Sky
-
-The SHT is a global transform — masked pixels set to zero corrupt spectral coefficients. We replace masked pixels with the observed-pixel mean before SHT:
-
-```python
-x_inpainted = x * mask + x_observed_mean * (1 - mask)
-```
-
-### 2. Shared Mask Across Datasets
-
-Train/val/test must use the **same mask** (same center, same shape). The SHT encodes the absolute mask position in spectral coefficients. Different masks per split caused val/test discrepancy (4% vs 17.7% at f_sky=0.2).
-
-### 3. Scalar SHT with Q/U Stacking
-
-torch-harmonics VectorSHT (spin-2) is too slow in v0.8.0. We stack Q/U as independent channels with scalar SHT. Despite lacking explicit E/B separation, SpectralCNN still outperforms NNhealpix on polarization — the spectral prior captures global Q/U structure effectively.
-
-## Retraining Models
-
-Each training script saves both JSON results and `.pt` model weights:
+Each training script writes a JSON with metrics and a `.pt` checkpoint:
 
 ```bash
-# Test 1: ℓ_peak from T maps (4 noise levels)
+# Test 1 (per noise level)
 python scripts/train_test1_v2.py --noise_std 0 --output results/test1_noise0.json
-python scripts/train_test1_v2.py --noise_std 15 --output results/test1_noise15.json
 
-# Test 2: ℓ_Ep/ℓ_Bp from Q/U maps (5 f_sky values)
-python scripts/train_test2_v2.py --f_sky 1.0 --output results/test2_fsky1.0.json
+# Test 2 (per sky fraction)
 python scripts/train_test2_v2.py --f_sky 0.5 --output results/test2_fsky0.5.json
 
-# Test 3: τ estimation (requires CAMB)
-python scripts/train_test3_v2.py --f_sky 1.0 --output results/test3.json
+# Test 3 (uses corrected CAMB cache; ~2h of CAMB calls without one)
+python scripts/precompute_test3_camb.py --output camb_cache_test3_v3.fits
+python scripts/train_test3_v2.py --camb_cache camb_cache_test3_v3.fits \
+    --output results_v3/test3_v3.json
 
-# Test 4: Joint r/τ estimation (requires CAMB)
-python scripts/train_test4.py --f_sky 1.0 --noise_std 0 --output results/test4_fsky1.0_noise0.json
-python scripts/train_test4.py --f_sky 0.1 --noise_std 6 --output results/test4_fsky0.1_noise6.json
+# Test 4 (per config)
+python scripts/train_test4.py --nside 32 --f_sky 0.1 --noise_std 6 \
+    --output results_v3/test4_nside32_fsky0.1_noise6.json
 
-# Test 4 at NSIDE=128 (higher resolution, longer training)
-python scripts/train_test4.py --nside 128 --lmax 383 --f_sky 1.0 --noise_std 0 \
-    --n_train 5000 --n_val 1000 --batch_size 16 \
-    --output results/test4_nside128_fsky1.0_noise0.json
+# Fisher bounds + fiducial-point evaluation
+python scripts/fisher_forecast.py --nside 32 --f_sky 0.1 --noise_std 6 \
+    --output results_v3/test4_fisher_nside32_fsky0.1_noise6.json
+python scripts/eval_test4_at_fiducial.py --nside 32 --hidden_channels 32 \
+    --results_dir results_v3
 ```
 
-Each script outputs:
-- `results/testN_*.json` — metrics, hyperparameters, comparison with baselines
-- `results/testN_*.pt` — best model `state_dict` (based on validation loss)
+## Running on Clusters
 
-## Running on SDSC Clusters
+- **Expanse (GPU, Slurm):** training and fiducial evaluation.
+  `sbatch slurm/eval_fiducial_v3_expanse.slurm`, `sbatch slurm/train_test3_v3_expanse.slurm`, ...
+- **Popeye (CPU, Slurm):** CAMB caches, Fisher forecasts, MCMC baselines.
+  `sbatch slurm/fisher_multifid_popeye.slurm`, `sbatch slurm/precompute_test3_camb_popeye.slurm`, ...
 
-**Expanse (GPU):**
-
-```bash
-sbatch -p gpu-shared -A sds166 -N 1 -n 1 --gpus=1 --mem=64G -t 12:00:00 slurm/run_test4_expanse.slurm
-```
-
-**Popeye (CPU, MCMC/Fisher baselines):**
-
-```bash
-ssh popeye "cd ~/torch-harmonics-healpix && sbatch slurm/run_test4_popeye.slurm"
-```
+Workflow: `git commit && git push` locally, `git pull` on the cluster, submit
+from the repo clone. See [AGENTS.md](AGENTS.md) for accounts, environments,
+and the full list of operational pitfalls (Lustre striping, HDF5 locking,
+CAMB conventions, τ-divergence, shared masks).
 
 ## References
 
-1. Krachmalnicoff & Tomasi (2019), "Convolutional Neural Networks on the HEALPix sphere", A&A 624, A97. [arXiv:1902.04083](https://arxiv.org/abs/1902.04083)
-2. Bonev et al. (2023), "Spherical Fourier Neural Operators", ICML. [arXiv:2306.05420](https://arxiv.org/abs/2306.05420)
-3. [torch-harmonics](https://github.com/Philippe7427/torch-harmonics) — Spherical Harmonics in PyTorch
-4. [NNhealpix](https://github.com/NToulis/nnhealpix) — Pixel-space CNN on HEALPix
+1. Krachmalnicoff & Tomasi (2019), "Convolutional neural networks on the HEALPix sphere", A&A 628, A129. [arXiv:1902.04083](https://arxiv.org/abs/1902.04083)
+2. Bonev et al. (2023), "Spherical Fourier Neural Operators", ICML. [arXiv:2306.03838](https://arxiv.org/abs/2306.03838)
+3. [torch-harmonics](https://github.com/NVIDIA/torch-harmonics) — differentiable spherical harmonics in PyTorch
+4. [NNhealpix](https://github.com/ai4cmb/NNhealpix) — pixel-space CNNs on HEALPix

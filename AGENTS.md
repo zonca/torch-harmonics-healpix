@@ -2,7 +2,7 @@
 
 ## Remote Compute
 
-- **Expanse** (`ssh expanse`): GPU jobs only. Use Slurm with `sbatch`. Partition `gpu-shared`, account `sds275`. **NEVER submit CPU-only jobs on Expanse — that wastes GPU allocation.** CPU work goes on Popeye.
+- **Expanse** (`ssh expanse`): GPU jobs only. Use Slurm with `sbatch`. Partition `gpu-shared`, account `sds166` (as of 2026-07, `sds275` no longer appears in `expanse-client user`; sds166 has GPU QOS and available SUs). **NEVER submit CPU-only jobs on Expanse — that wastes GPU allocation.** CPU work goes on Popeye. Job repo clone: `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/repo_latest` (venv: `../venv`).
 - **Popeye** (`ssh popeye`): CPU jobs only. Use Slurm with `sbatch`. Partition `gen`. SSH requires keyboard-interactive 2FA — **automated via Bitwarden** (Flatiron Popeye entry `d924502d`, same password + TOTP). Use expect script pattern: Verification code (Flatiron TOTP) → Password (Flatiron password). Home directory: `/mnt/home/azonca` (NOT `/home/azonca`). ControlMaster socket: `ssh -o ControlPath=~/.ssh/sockets/%r@%h-%p -o ControlMaster=no popeye`.
 - **NRP Nautilus** (`https://nrp.ai`): GPU via Kubernetes. Namespace `sdsc-scicomp`. See `../nrp/AGENTS.md` for setup.
   - Training job YAML: `../nrp/examples/train-test4-nside128.yaml`
@@ -95,22 +95,25 @@ Training is run as Kubernetes Jobs, not Slurm. See `../nrp/AGENTS.md` for full d
 - **τ divergence bug**: MSE loss on τ causes gradient explosion around epoch 11 (τ %err → 10^12%+) regardless of LR scheduler type. Root cause: MSE gradient = 2(τ_pred - τ_true) grows linearly with prediction error → positive feedback loop. Fix: use Huber loss for τ (delta=0.01) — linear gradient far from target caps magnitude, quadratic near target preserves accuracy. Hard clamping (torch.clamp) creates dead gradients and makes it worse. **Note:** Huber loss fixes cfg1/2/4 but cfg3 (fsky=0.1, noise=0) still diverges at ep11 — this config has the most extreme signal-to-noise ratio (small sky patch, zero noise) causing overconfident predictions. Best checkpoint is saved before divergence.
 - **CosineAnnealingLR T_max**: With 24h walltime and ~58 min/epoch, only ~24 epochs fit. Set `--cosine_T_max 25` for full cosine decay cycle; default T_max=150 leaves LR essentially constant.
 - **D_ℓ→C_ℓ unit bug (CRITICAL, fixed)**: `generate_camb_spectra_r_tau` was calling CAMB's default `get_total_cls(CMB_unit='muK')` which returns D_ℓ = ℓ(ℓ+1)C_ℓ/(2π) in μK², but `hp.synfast` expects C_ℓ in μK²·sr. This boosted map amplitudes at high ℓ by a factor of ℓ(ℓ+1)/(2π). **Fix**: use `raw_cl=True` to get C_ℓ directly. All HDF5 datasets and trained models before this fix have wrong amplitudes — must regenerate and retrain.
-- **Fisher matrix (Cramér-Rao bounds)** at fiducial r=0.003, τ=0.054:
-  - NSIDE=16: σ_r=0.00156 (52%), σ_τ=0.00223 (4.1%) for fsky=1.0/noise=0
-  - NSIDE=16: σ_r=0.00495 (165%), σ_τ=0.00704 (13%) for fsky=0.1/noise=0
-  - NSIDE=128: σ_r=0.000225 (7.5%), σ_τ=0.00110 (2.0%) for fsky=1.0/noise=0
-  - NSIDE=128: σ_r=0.000555 (18.5%), σ_τ=0.00134 (2.5%) for fsky=1.0/noise=6
-  - NSIDE=128: σ_r=0.000713 (23.8%), σ_τ=0.00347 (6.4%) for fsky=0.1/noise=0
-  - NSIDE=128: σ_r=0.00176 (58.5%), σ_τ=0.00424 (7.8%) for fsky=0.1/noise=6
-  - **Key insight**: fsky=0.1 configs have σ_r > r_fiducial at NSIDE=16 (cannot constrain r)
+- **Fisher matrix (Cramér-Rao bounds)** at fiducial r=0.003, τ=0.054 — ALWAYS use the
+  fixed-accuracy values (`lmax_calc=500`, commit 0c88200) in
+  `results_v3/fisher_fixed_lmax_verification.json`. CAMB's `set_for_lmax()` changes
+  internal accuracy with the requested lmax; mixing settings across NSIDE made early
+  bounds non-monotonic (N16 σ_r/r was 52% instead of the correct 11.5%). Corrected
+  σ_r/r at fsky=1.0/noise=0: N16 11.5%, N32 8.6%, N128 8.2% (monotonic ✓). Off-center
+  fiducial bounds in `results_v3/fisher_multifid/`.
 - **MCMC speed**: Never call CAMB per MCMC step (~10s each). Pre-compute a 50×50 spectral grid and use bilinear interpolation for O(1) evaluations. 100× speedup.
 - **MCMC pseudo-C_ℓ limitation**: Simple pseudo-C_ℓ MCMC (even with A_lens nuisance param and proper cosmic variance likelihood) cannot constrain r — the chain always drifts to the boundary (r→0.01, τ→0.08). Root cause: single-realization C_ℓ estimates from `hp.anafast` are too noisy (cosmic variance) for a pseudo-C_ℓ comparison to identify the true parameters. **Use Fisher matrix as the Cramér-Rao baseline** — this is standard in CMB literature. The Fisher bound gives the optimal σ_r and σ_τ achievable by any unbiased estimator. MCMC v3 results (all ~200–230% r error, chains converge to r_max=0.01) saved in `results_v3/test4_mcmc_mh_*.json`.
-- **NSIDE=16 CNN results (v3)** — CNN beats Fisher on r by 1.6–3×:
-  - fsky=1.0, noise=0: CNN r=21.9% vs Fisher 52.1% (0.42× Fisher)
-  - fsky=1.0, noise=6: CNN r=32.7% vs Fisher 56.9% (0.57× Fisher)
-  - fsky=0.1, noise=0: CNN r=57.6% vs Fisher 164.9% (0.35× Fisher)
-  - fsky=0.1, noise=6: CNN r=56.3% vs Fisher 180.0% (0.31× Fisher)
+- **NSIDE=16 CNN results (v3)** — with the CORRECTED Fisher bounds the "beats Fisher"
+  framing does not hold; CNN is 0.8–1.9× Fisher on r:
+  - fsky=1.0, noise=0: CNN r=21.9% vs Fisher 11.5% (1.90×)
+  - fsky=1.0, noise=6: CNN r=32.7% vs Fisher 23.5% (1.39×)
+  - fsky=0.1, noise=0: CNN r=57.6% vs Fisher 36.5% (1.58×)
+  - fsky=0.1, noise=6: CNN r=56.3% vs Fisher 74.4% (0.76× — biased/prior-informed
+    estimator, do NOT report as super-efficiency; see paper Sect. on Fisher caveats)
   - τ error is higher than Fisher (15–28% vs 4–13%) — network optimizes r over τ
+  - Primary publication comparison = fiducial-point RMSE
+    (`slurm/eval_fiducial_v3_expanse.slurm`), not these range-averaged errors
 - **NSIDE=128 CNN results (v3, hc=8 underfitted)** — CNN ~58% r error (hc=8 underfits, hc=32 training pending):
   - fsky=1.0, noise=0: CNN r=59.1% vs Fisher 7.5% (7.87× Fisher)
   - fsky=1.0, noise=6: CNN r=58.6% vs Fisher 18.5% (3.17× Fisher)

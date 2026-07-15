@@ -1,426 +1,212 @@
-# Benchmark Comparison: torch-harmonics-healpix vs Krachmalnicoff & Tomasi (2019)
+# Benchmarks: torch-harmonics-healpix vs Krachmalnicoff & Tomasi (2019)
 
-This document tracks our reproduction of the three benchmarks from
-[Krachmalnicoff & Tomasi 2019, arXiv:1902.04083](https://arxiv.org/abs/1902.04083)
-(Sections 6.1.1–6.2) using spectral CNNs from torch-harmonics instead of NNhealpix.
+Reproduction of the three CMB benchmarks of
+[Krachmalnicoff & Tomasi 2019, A&A 628, A129](https://arxiv.org/abs/1902.04083)
+(KT19) with spectral CNNs, plus the new joint r/τ benchmark (Test 4)
+compared against Fisher (Cramér–Rao) bounds.
+
+**Pipeline versions**
+
+| Version | Status | Notes |
+|---------|--------|-------|
+| v3      | **current** | CAMB `raw_cl=True` (C_ℓ fix), Huber τ loss, Fisher at fixed `lmax_calc=500` |
+| v2      | superseded | Test 3/4 maps generated with D_ℓ amplitudes (unit bug); Tests 1–2 unaffected and still current |
+| v1      | superseded | early runs, per-split masks bug |
+
+All v1/v2 JSONs remain in `results/` for provenance; v3 results are in
+`results_v3/`.
 
 ---
 
 ## Hardware & Runtime
 
-### Expanse (GPU — SDSC)
+### Expanse (GPU — SDSC, allocation sds166)
 
-- **Node:** GPU-shared partition
-- **GPU:** NVIDIA Tesla V100-SXM2-32GB, Driver 525.85.12, CUDA 12.0
-- **CPU:** Intel Xeon Platinum 8268
-- **Software:** Python 3.11.5, PyTorch 2.6.0+cu124, torch-harmonics 0.8.0, healpy 1.19.0, numpy 2.4.4, scipy 1.17.1
-- **Account:** sds166
+- NVIDIA Tesla V100-SXM2-32GB, CUDA 12.0; Python 3.11, PyTorch 2.6.0+cu124,
+  torch-harmonics 0.8.0, healpy 1.19.0
+- Test 1–3 training (100k maps): ~70 min/config
+- Test 4 NSIDE=32 training: ~1–2 h/config; NSIDE=128 (422M params, HDF5 on
+  striped Lustre): ~60 min/epoch (I/O-dominated)
 
-| Component | Time |
-|-----------|------|
-| SpectralCNN v2 training (100k maps, ~70 epochs, batch 32) | ~70 min per noise level |
-| SpectralCNN inference (1 map) | ~0.05 ms |
-| MCMC inference (1 map) | ~1.7 ms |
+### Popeye (CPU — SDSC/Flatiron)
 
-### Popeye (CPU — SDSC)
-
-- **Node:** gen partition, Intel Xeon Platinum 8168 @ 2.70GHz
-- **Software:** Python 3.11.11, healpy 1.19.0, numpy 2.4.6, scipy 1.17.1
-- **Venv:** `~/torch-hh-venv`
-
-| Component | Time |
-|-----------|------|
-| MCMC baseline (1000 maps × 4 noise levels) | ~2s per noise level |
-| MCMC inference (1 map) | ~1.7 ms |
+- Intel Xeon Platinum 8168, 48 cores; Python 3.11 via module + `~/torch-hh-venv`
+- Fisher forecast: seconds per config; 5000-spectra CAMB cache: minutes
+  (48-way parallel, `scripts/precompute_test3_camb.py`)
 
 ---
 
-## Summary of Key Results
+## Test 1: ℓ_p from scalar (T) maps — NSIDE=16
 
-| Test | Config | SpectralCNN | NNhealpix | MCMC | Winner |
-|------|--------|------------|-----------|------|--------|
-| T1 | σ=0 | **1.27%** | 1.3% | 2.22% | SpectralCNN ✅ |
-| T1 | σ=5 | 3.58% | **2.9%** | 2.87% | NNhealpix |
-| T1 | σ=10 | 6.81% | **5.2%** | 5.18% | NNhealpix |
-| T1 | σ=15 | 11.98% | **8.4%** | 8.24% | NNhealpix |
-| T2 | f_sky=1.0 | **1.69%/1.53%** | 2.7%/2.7% | 7.1%/6.9% | SpectralCNN ✅ |
-| T2 | f_sky=0.5 | **1.95%/1.91%** | 3.9%/3.9% | 82.8%/79.2% | SpectralCNN ✅ |
-| T2 | f_sky=0.2 | **2.15%/2.17%** | 5.3%/5.3% | 80.5%/76.5% | SpectralCNN ✅ |
-| T2 | f_sky=0.1 | **2.56%/2.70%** | 6.4%/6.4% | 75.7%/71.3% | SpectralCNN ✅ |
-| T2 | f_sky=0.05 | **3.01%/3.11%** | 8.4%/8.4% | 66.3%/63.3% | SpectralCNN ✅ |
-|| T3 | full sky | **3.76%** | 4.0% | 2.8% (paper) | SpectralCNN ✅ |
-|| T4 | f_sky=1.0, noise=0 | 1.11×/1.34× Fisher (r/τ RMSE) | — | 337%/25.0% | Near Fisher bound ✅ |
-|| T4 | f_sky=0.1, noise=0 | 0.39×/1.02× Fisher (r/τ RMSE) | — | 341%/40.1% | Beats Fisher on r ✅ |
+Estimate the peak multipole of C_ℓ = exp(−(ℓ−ℓ_p)²/2σ_p²)+10⁻⁵, σ_p=5,
+ℓ_p ∈ [5, 20]. 100k train / 10k val / 1k test, four noise levels.
+No CAMB → v2 results current.
 
-**Main finding:** SpectralCNN dominates for polarization estimation (Tests 2 & 3) but
-underperforms for noisy scalar maps (Test 1). For Test 4 (joint r/τ), the CNN approaches
-the Fisher Cramér-Rao bound at full sky (1.06–1.11×) and **exceeds** it at f_sky=0.1
-(0.38–0.39× on r), exploiting nonlinear features beyond the Gaussian/Fisher approximation.
+| σ_n (μK) | SpectralCNN | NNhealpix (KT19) | MCMC (KT19) | χ² fit (ours) |
+|----------|-------------|------------------|-------------|---------------|
+| 0        | **1.27%**   | 1.3%             | 0.7%        | 2.22%         |
+| 5        | 3.58%       | **2.9%**         | 2.5%        | 2.87%         |
+| 10       | 6.81%       | **5.2%**         | 4.8%        | 5.18%         |
+| 15       | 11.98%      | **8.4%**         | 7.8%        | 8.24%         |
 
-> ✅ **Test 4 Fisher vs. CNN comparison is now valid.** Fiducial-point evaluation (1000
-> noise realizations at r=0.003, τ=0.054) provides a fair, apples-to-apples comparison
-> using RMSE = √(bias² + σ²) vs Fisher σ. See the detailed results in the Test 4 section.
+The SHT spreads white noise into every (ℓ, m) mode; pixel-space pooling
+low-passes it. Parity without noise, growing deficit with noise.
 
----
+## Test 2: ℓ_Ep/ℓ_Bp from Q/U maps — NSIDE=16
 
-## Test 1: ℓ_p estimation from scalar (T) maps
+3 input channels (Q, U, mask), 2 outputs. **Shared mask** across splits
+(mandatory — see ARCHITECTURE.md), mean-inpainting for f_sky<1.
+No CAMB → v2 results current.
 
-**Problem:** Estimate the peak multipole ℓ_p of a Gaussian-peaked power spectrum
-C_ℓ = exp(-(ℓ - ℓ_p)² / (2σ²_p)) + 10⁻⁵, with σ_p=5, ℓ_p ∈ [5, 20].
+| f_sky | SpectralCNN (ℓ_Ep/ℓ_Bp) | NNhealpix (KT19) | Δ mean vs KT19 |
+|-------|--------------------------|------------------|----------------|
+| 1.0   | **1.69% / 1.53%**        | 2.7%             | −40%           |
+| 0.5   | **1.95% / 1.91%**        | 3.9%             | −51%           |
+| 0.2   | **2.15% / 2.17%**        | 5.3%             | −59%           |
+| 0.1   | **2.56% / 2.70%**        | 6.4%             | −59%           |
+| 0.05  | **3.01% / 3.11%**        | 8.4%             | −64%           |
 
-### v2 Results (σ_p=5.0 — paper-matching)
+KT19's accuracy scales as f_sky^−0.36; the SpectralCNN degrades much more
+slowly (1.6% → 3.1% over the same range). KT19's full-sky MCMC reference:
+0.7%.
 
-Setup: 100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau (patience=5, factor=0.1),
-early stopping (patience=20).
+## Test 3: τ from Q/U maps — NSIDE=16
 
-| Noise σ_n | NNhealpix | MCMC (paper) | MCMC (ours) | SpectralCNN v2 | Epochs |
-|-----------|-----------|-------------|-------------|----------------|--------|
-| 0         | 1.3%      | 0.7%        | 2.22%       | **1.27%**      | 86     |
-| 5         | **2.9%**  | 2.5%        | 2.87%       | 3.58%          | 66     |
-| 10        | **5.2%**  | 4.8%        | 5.18%       | 6.81%          | 117    |
-| 15        | **8.4%**  | 7.8%        | 8.24%       | 11.98%         | 48     |
+CAMB EE spectra, τ ∈ [0.03, 0.08], full sky, noiseless.
 
-**Analysis:** SpectralCNN matches NNhealpix at σ_n=0 but underperforms at higher noise.
-The spectral convolution architecture captures global frequency content well in the
-noiseless case, but pixel-based NNhealpix with multi-resolution pooling (Nside 16→8→4→2→1)
-appears more robust to noise. The SHT spreads noise across all spectral modes, while
-pixel-space convolution provides implicit low-pass filtering.
+| Method | τ error | Pipeline |
+|--------|---------|----------|
+| MCMC (KT19) | 2.8% | — |
+| SpectralCNN | *v3 retraining in progress* | v3 |
+| NNhealpix (KT19) | 4.0% | — |
+| SpectralCNN (superseded) | 3.76% | v2 (D_ℓ bug — not comparable) |
 
----
-
-## Test 2: ℓ_Ep and ℓ_Bp estimation from tensor (Q/U) maps
-
-**Problem:** Estimate the peak multipoles of E-mode and B-mode power spectra
-from polarization Q/U maps, with varying sky fraction f_sky.
-
-**Setup:** HEALPix N_side=16, spin-2 fields, Q/U+mask stacked as 3 input channels.
-100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
-**Shared mask** across train/val/test (critical for SHT-based models — see ARCHITECTURE.md).
-**Inpainting** for f_sky < 1.0 (replace masked zeros with observed-pixel mean before SHT).
-
-| f_sky | NNhealpix (ℓ_Ep/ℓ_Bp) | MCMC (ours) | SpectralCNN v2 (ℓ_Ep/ℓ_Bp) | Epochs | Δ vs NNhealpix |
-|-------|----------------------|-------------|---------------------------|--------|---------------|
-| 1.0   | 2.7% / 2.7%          | 7.1% / 6.9% | **1.69% / 1.53%**        | 63     | **-37% / -43%** |
-| 0.5   | 3.9% / 3.9%          | 82.8%/79.2% | **1.95% / 1.91%**        | 56     | **-50% / -51%** |
-| 0.2   | 5.3% / 5.3%          | 80.5%/76.5% | **2.15% / 2.17%**        | 84     | **-59% / -59%** |
-| 0.1   | 6.4% / 6.4%          | 75.7%/71.3% | **2.56% / 2.70%**        | 85     | **-60% / -58%** |
-| 0.05  | 8.4% / 8.4%          | 66.3%/63.3% | **3.01% / 3.11%**        | 80     | **-64% / -63%** |
-
-**Key finding:** SpectralCNN **dominates** NNhealpix at all sky fractions for polarization
-estimation. The advantage **increases** with smaller f_sky: from +37% at full sky to +64%
-at 5% sky. The spectral representation's global context is overwhelmingly beneficial for
-partial-sky polarization, where E/B separation via spin-2 SHT provides a strong physical
-prior that pixel-space methods must learn from scratch.
-
-**Why MCMC fails:** Our MCMC baseline uses naive χ² fitting on full-sky power spectra,
-which doesn't properly handle E/B leakage from masks. The paper's MCMC result (0.7%)
-uses specialized CMB tools with proper E/B separation.
-
-**Why shared mask matters:** The SHT is a global operation — spectral coefficients encode
-the absolute position of the mask boundary. With different masks for train/val/test
-(our initial bug), the model learned mask-position-specific features that didn't
-generalize. Using a single shared mask (as the paper does) fixed this completely.
+The v2 number was internally consistent but trained/tested on maps with
+D_ℓ amplitudes; the v3 retrain (`slurm/train_test3_v3_expanse.slurm`,
+corrected cache from `scripts/precompute_test3_camb.py`) provides the
+publication number.
 
 ---
 
-## Test 3: τ estimation from Q/U maps
+## Test 4: joint r/τ (Simons Observatory challenge) — v3
 
-**Problem:** Estimate the optical depth to reionization τ from CMB polarization maps,
-using realistic CAMB power spectra with τ ∈ [0.03, 0.08].
+r ∈ [0, 0.01], τ ∈ [0.03, 0.08]; targets [log(r+10⁻⁴), τ];
+loss MSE(log r) + Huber(τ, δ=0.01). Four configs:
+f_sky ∈ {1.0, 0.1} × noise ∈ {0, 6} μK-arcmin.
 
-**Setup:** HEALPix N_side=16, CAMB spectra (5000 pre-computed, paper approach),
-other cosmological parameters fixed to Planck best-fit.
-100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
+### Fisher (Cramér–Rao) bounds — fixed lmax_calc=500
 
-| Method         | Mean % error |
-|----------------|-------------|
-| MCMC (paper)   | **2.8%**    |
-| SpectralCNN | **3.6%** |
-| NNhealpix      | 4.0%        |
-| MCMC (ours)    | 19.3%       |
+At fiducial (r=0.003, τ=0.054). **Bug fixed 2026-06:** CAMB's
+`set_for_lmax()` changes internal accuracy with the requested lmax, which
+made bounds non-monotonic across NSIDE; all spectra are now computed at
+lmax=500 and truncated (`results_v3/fisher_fixed_lmax_verification.json`).
 
-SpectralCNN beats NNhealpix by ~6% on τ estimation. MCMC (paper) remains best,
-but our MCMC baseline is weak because it uses naive template matching rather than
-proper Bayesian inference.
+| NSIDE | f_sky | noise | σ(r) | σ(r)/r | σ(τ) | σ(τ)/τ |
+|-------|-------|-------|----------|--------|---------|--------|
+| 16  | 1.0 | 0 | 0.000346 | 11.5% | 0.00194 | 3.6%  |
+| 16  | 1.0 | 6 | 0.000706 | 23.5% | 0.00205 | 3.8%  |
+| 16  | 0.1 | 0 | 0.001095 | 36.5% | 0.00613 | 11.3% |
+| 16  | 0.1 | 6 | 0.002232 | 74.4% | 0.00648 | 12.0% |
+| 32  | 1.0 | 0 | 0.000259 | 8.6%  | 0.00185 | 3.4%  |
+| 32  | 1.0 | 6 | 0.000589 | 19.6% | 0.00197 | 3.7%  |
+| 32  | 0.1 | 0 | 0.000820 | 27.3% | 0.00586 | 10.9% |
+| 32  | 0.1 | 6 | 0.001863 | 62.1% | 0.00624 | 11.6% |
+| 128 | 1.0 | 0 | 0.000247 | 8.2%  | 0.00110 | 2.0%  |
+| 128 | 1.0 | 6 | 0.000569 | 19.0% | 0.00134 | 2.5%  |
+| 128 | 0.1 | 0 | 0.000781 | 26.0% | 0.00347 | 6.4%  |
+| 128 | 0.1 | 6 | 0.001801 | 60.0% | 0.00422 | 7.8%  |
 
----
+Off-center fiducial bounds (r ∈ {0.001, 0.006}, τ ∈ {0.04, 0.07}) for the
+multi-fiducial evaluation are in `results_v3/fisher_multifid/`.
 
-## Test 4: Joint r/τ estimation for Simons Observatory
+### SpectralCNN range-averaged errors (v3)
 
-**Problem:** Estimate both the tensor-to-scalar ratio r and the optical depth τ
-from CMB polarization Q/U maps, using realistic CAMB power spectra with
-r ∈ [0, 1] and τ ∈ [0.03, 0.08].
+Mean |Δθ/θ| over the test range (r > 0.001 for the r error) — the training
+diagnostic, not directly a fiducial-point σ:
 
-**Setup:** HEALPix N_side=16, CAMB spectra (FITS-cached via astropy),
-other cosmological parameters fixed to Planck best-fit.
-100k train / 10k val / 1k test, batch 32, ReduceLROnPlateau, early stopping.
+| NSIDE | params | f_sky=1.0/n=0 | f_sky=1.0/n=6 | f_sky=0.1/n=0 | f_sky=0.1/n=6 |
+|-------|--------|---------------|---------------|---------------|---------------|
+| 16  | 6.7M  | r 21.9% / τ 15.1% | r 32.7% / τ 20.0% | r 57.6% / τ 26.9% | r 56.3% / τ 28.4% |
+| 32  | 26.5M | r 56.7% / τ 19.6% | r 58.3% / τ 16.3% | r 59.0% / τ 24.6% | r 56.6% / τ 26.6% |
+| 128 (hc=8) | 29.9M | r 59.1% / τ 21.7% | r 58.6% / τ 21.1% | r 58.4% / τ 24.3% | — |
 
-**Targets:** [log(r + 1e-4), τ] with MSE loss.
-**Model:** `SpectralCNN(in_channels=3, out_channels=2, nside=16, num_blocks=3, hidden_channels=32, inpaint=f_sky<1)`
+**The plateau:** at NSIDE≥32 the r error sits at 55–59% in every
+configuration while the Fisher bound tightens to 8–27% — the network does
+not exploit the additional small-scale information.
 
-### Configurations
+### Capacity scaling (NSIDE=32, f_sky=1.0, noise=0)
 
-| Config | f_sky | Noise (μK-arcmin) | Inpaint | Model File |
-|--------|-------|-------------------|---------|------------|
-| T4-a   | 1.0   | 0                 | False   | `test4_fsky1.0_noise0.pt` |
-| T4-b   | 1.0   | 6                 | False   | `test4_fsky1.0_noise6.pt` |
-| T4-c   | 0.1   | 0                 | True    | `test4_fsky0.1_noise0.pt` |
-| T4-d   | 0.1   | 6                 | True    | `test4_fsky0.1_noise6.pt` |
+| hidden ch. | params | r error | τ error | epochs |
+|------------|--------|---------|---------|--------|
+| 32  | 26.5M  | 56.7% | 19.6% | 16 |
+| 64  | 103.5M | 54.8% | 24.4% | 17 |
+| 128 | 409M   | 58.1%* | 32.2%* | 4* (walltime) |
 
-### Results
+\* partial run. A 16× capacity increase does not move the plateau →
+**the bottleneck is not model capacity.** Training loss keeps decreasing
+while validation error stalls, pointing at training-set diversity
+(5000 distinct CAMB spectra reused ~20× each across 100k maps).
 
-#### Primary Result: Fiducial-Point Evaluation (CNN RMSE vs Fisher σ)
+### Systematic r bias — Jensen's inequality
 
-✅ **Fair comparison:** Both CNN and Fisher are evaluated at the same fiducial point
-(r=0.003, τ=0.054). The CNN is tested on 1000 noise realizations at this point; RMSE = √(bias² + σ²)
-is the proper metric to compare against the Fisher Cramér-Rao bound σ.
+All NSIDE≥32 configs show bias(r) ≈ +0.0007 (23–26% of r_fid). The network
+predicts log(r+ε); converting back gives
+E[r̂] = (r+ε)·exp(σ_log²/2) − ε. The observed biases imply a consistent
+σ_log ≈ 0.64–0.67 across configs, confirming the mechanism
+(`results_v3/r_bias_analysis.md`). Post-hoc subtraction improves RMSE by
+7–9%; the budget is variance-dominated.
 
-**CNN on r (variance + bias decomposition at fiducial point):**
+### Fiducial-point evaluation (RMSE vs Fisher) — v3
 
-| Config | f_sky | Noise | σ(r) | bias(r) | RMSE(r) | Fisher σ(r) | RMSE/Fisher |
-|--------|-------|-------|------|---------|---------|-------------|-------------|
-| T4-a   | 1.0   | 0     | 0.000077 | −0.001730 | 0.001732 | 0.001560 | **1.11** |
-| T4-b   | 1.0   | 6     | 0.000108 | −0.001700 | 0.001703 | 0.001610 | **1.06** |
-| T4-c   | 0.1   | 0     | 0.000024 | −0.001950 | 0.001950 | 0.004950 | **0.39** |
-| T4-d   | 0.1   | 6     | 0.000028 | −0.001930 | 0.001930 | 0.005090 | **0.38** |
+1000 signal+noise realizations at (r=0.003, τ=0.054) per config;
+RMSE² = σ² + bias². Produced by `slurm/eval_fiducial_v3_expanse.slurm`
+(NSIDE=16/32/128, hc=32; plus multi-fiducial points at NSIDE=16/32).
 
-**CNN on τ (variance + bias decomposition at fiducial point):**
+*Results pending — table will be filled when the evaluation job completes.*
 
-| Config | f_sky | Noise | σ(τ) | bias(τ) | RMSE(τ) | Fisher σ(τ) | RMSE/Fisher |
-|--------|-------|-------|------|---------|---------|-------------|-------------|
-| T4-a   | 1.0   | 0     | 0.000143 | −0.002990 | 0.002993 | 0.002230 | **1.34** |
-| T4-b   | 1.0   | 6     | 0.000502 | −0.000532 | 0.000731 | 0.002230 | **0.33** |
-| T4-c   | 0.1   | 0     | 0.000200 | −0.007170 | 0.007173 | 0.007040 | **1.02** |
-| T4-d   | 0.1   | 6     | 0.000974 | −0.003820 | 0.003942 | 0.007050 | **0.56** |
+### MCMC baseline — negative result
 
-#### Key Findings
-
-1. **CNN is a near-optimal estimator for r at full sky.** At f_sky=1.0, CNN RMSE(r) is
-   only 1.06–1.11× the Fisher σ(r). The CNN variance is extremely low (σ(r) ≈ 0.00008–0.0001)
-   but there is a systematic bias of −0.0017 on r. Despite this bias, the total RMSE
-   remains close to the Cramér-Rao bound.
-
-2. **CNN beats the Fisher bound on r at f_sky=0.1.** RMSE(r)/Fisher σ(r) = 0.38–0.39.
-   This is possible because the Fisher bound assumes a Gaussian likelihood and linear
-   parameter response, while the CNN can exploit nonlinear features in the data.
-   The CNN achieves very low variance (σ(r) ≈ 0.00002) but has large bias (−0.002 on r),
-   likely because most training samples have small r and the network learns to regress
-   toward the mean.
-
-3. **On τ, results are mixed.** At f_sky=0.1 with noise, CNN RMSE(τ) is 0.56× Fisher —
-   competitive. At f_sky=1.0 without noise, CNN RMSE(τ) is 1.34× Fisher, dominated by
-   a −0.003 bias. The network appears to prioritize r accuracy (trained with log-r loss)
-   at the expense of τ.
-
-4. **The large r bias (~−0.002) at f_sky=0.1** suggests the CNN is systematically
-   underestimating r. This is likely because the training set has most samples with
-   small r (uniform in [0, 0.01]), and the network learns to regress toward the mean.
-   At f_sky=0.1, the limited sky area provides less constraining power, amplifying
-   this regression-to-the-mean effect.
-
-#### Fisher Forecast (theoretical optimal bounds)
-
-Cramér-Rao lower bound computed at fiducial point (r=0.003, τ=0.054).
-
-| Config | f_sky | Noise | σ(r) | σ(τ) | r % error (at fiducial) | τ % error (at fiducial) |
-|--------|-------|-------|------|------|-----------|-----------|
-| T4-a   | 1.0   | 0     | 0.00156 | 0.00223 | 52.1% | 4.1% |
-| T4-b   | 1.0   | 6     | 0.00161 | 0.00223 | 53.6% | 4.1% |
-| T4-c   | 0.1   | 0     | 0.00495 | 0.00704 | 164.9% | 13.0% |
-| T4-d   | 0.1   | 6     | 0.00509 | 0.00705 | 169.6% | 13.1% |
-
-#### SpectralCNN (range-averaged % errors — secondary metric)
-
-These percentage errors are averaged across the full test parameter range (r ∈ [0, 0.01],
-τ ∈ [0.03, 0.08]). They are **not directly comparable** to the Fisher forecast (which is
-at a single fiducial point) and are provided for completeness alongside the primary
-fiducial-point RMSE results above.
-
-| Config | f_sky | Noise | r % error (avg over range) | τ % error (avg over range) | Epochs | Time (s) | GPU Mem |
-|--------|-------|-------|-----------|-----------|--------|----------|---------|
-| T4-a   | 1.0   | 0     | 55.2%     | 24.2%     | 24     | 3003     | 277MB   |
-| T4-b   | 1.0   | 6     | 55.2%     | 24.8%     | 21     | 2854     | 277MB   |
-| T4-c   | 0.1   | 0     | 61.0%     | 24.3%     | 31     | 4830     | 277MB   |
-| T4-d   | 0.1   | 6     | 60.5%     | 24.2%     | 29     | 4665     | 277MB   |
-
-### NSIDE=128 (High-Resolution) Results
-
-**Setup:** HEALPix N_side=128, LMAX=383, 422M-parameter SpectralCNN (hidden_channels=32, num_blocks=3).
-100K train / 10K val / 1K test maps pre-generated as HDF5 on Expanse Lustre (striped across 16 OSTs for ~250 MB/s I/O).
-Training with CosineAnnealingLR (T_max=25, eta_min=1e-7), Huber loss for τ, MSE for log(r), gradient clipping=1.0, batch_size=16.
-
-**Training challenges overcome:**
-1. **Lustre I/O bottleneck** — single-OST striping capped bandwidth at ~80 MB/s; re-striped to 16 OSTs → 250+ MB/s
-2. **ChunkShuffleSampler** — groups DataLoader indices by HDF5 chunk for sequential reads, with chunk-order + within-chunk shuffle
-3. **τ divergence at epoch 11** — MSE loss on τ caused gradient explosion when predictions drifted outside [0.03, 0.08]; fixed with Huber loss (linear gradient far from target, quadratic near target)
-4. **Insufficient LR decay** — ReduceLROnPlateau's 10× step drops and CosineAnnealing with T_max=150 both fail to decay LR within 24h walltime; CosineAnnealing with T_max=25 provides full cosine cycle within walltime
-5. **Walltime checkpointing** — script saves best model to disk on each improvement, surviving TIME_LIMIT kills
-
-#### Fisher Forecast (NSIDE=128, theoretical optimal bounds)
-
-Cramér-Rao lower bound at fiducial point (r=0.003, τ=0.054).
-
-| Config | f_sky | Noise | σ(r) | σ(τ) | r % error | τ % error |
-|--------|-------|-------|------|------|-----------|-----------|
-| T4-a   | 1.0   | 0     | 0.000225 | 0.00110 | 7.5%  | 2.0% |
-| T4-b   | 1.0   | 6     | 0.000230 | 0.00110 | 7.7%  | 2.0% |
-| T4-c   | 0.1   | 0     | 0.000713 | 0.00347 | 23.8% | 6.4% |
-| T4-d   | 0.1   | 6     | 0.000727 | 0.00348 | 24.2% | 6.4% |
-
-#### SpectralCNN NSIDE=128 (fiducial-point evaluation)
-
-Best model checkpoints from Huber τ loss + CosineAnnealingLR (T_max=25) training.
-Evaluated at fiducial point (r=0.003, τ=0.054) with 1000 noise realizations.
-RMSE = √(bias² + σ²).
-
-**CNN on r (variance + bias decomposition at fiducial point):**
-
-| Config | f_sky | Noise | σ(r) | bias(r) | RMSE(r) | Fisher σ(r) | RMSE/Fisher |
-|--------|-------|-------|------|---------|---------|-------------|-------------|
-| T4-a   | 1.0   | 0     | 0.000872 | −0.000784 | 0.001173 | 0.000225 | **5.21** |
-| T4-b   | 1.0   | 6     | 0.000487 | −0.001813 | 0.001877 | 0.000230 | **8.16** |
-| T4-c   | 0.1   | 0     | 0.000458 | −0.001448 | 0.001519 | 0.000713 | **2.13** |
-| T4-d   | 0.1   | 6     | 0.000237 | −0.001720 | 0.001736 | 0.000727 | **2.39** |
-
-**CNN on τ (variance + bias decomposition at fiducial point):**
-
-| Config | f_sky | Noise | σ(τ) | bias(τ) | RMSE(τ) | Fisher σ(τ) | RMSE/Fisher |
-|--------|-------|-------|------|---------|---------|-------------|-------------|
-| T4-a   | 1.0   | 0     | 0.000382 | +0.003168 | 0.003191 | 0.001100 | **2.90** |
-| T4-b   | 1.0   | 6     | 0.000708 | −0.001147 | 0.001348 | 0.001100 | **1.23** |
-| T4-c   | 0.1   | 0     | 0.004671 | −0.003388 | 0.005770 | 0.003470 | **1.66** |
-| T4-d   | 0.1   | 6     | 0.001100 | −0.001484 | 0.001847 | 0.003480 | **0.53** |
-
-**Best epochs** (before τ divergence): T4-a=8, T4-b=6, T4-c=5, T4-d=10.
-
-#### Comparison: NSIDE=16 vs NSIDE=128
-
-| Config | f_sky | Noise | N16 RMSE/Fisher (r) | N128 RMSE/Fisher (r) | N16 RMSE/Fisher (τ) | N128 RMSE/Fisher (τ) |
-|--------|-------|-------|---------------------|----------------------|---------------------|----------------------|
-| T4-a   | 1.0   | 0     | **1.11×**           | 5.21×                | **1.34×**           | 2.90×                |
-| T4-b   | 1.0   | 6     | **1.06×**           | 8.16×                | **0.33×**           | 1.23×                |
-| T4-c   | 0.1   | 0     | **0.39×**           | 2.13×                | **1.02×**           | 1.66×                |
-| T4-d   | 0.1   | 6     | **0.38×**           | 2.39×                | **0.56×**           | **0.53×**            |
-
-**Key findings for NSIDE=128:**
-
-1. **The NSIDE=128 model underperforms NSIDE=16** on r estimation (2–8× Fisher vs 0.4–1.1×).
-   The 422M-parameter model has not converged sufficiently — training hits τ divergence
-   at epoch 11, and best checkpoints are from epochs 5–10. The large r bias (−0.001 to
-   −0.002) dominates the RMSE, indicating the model regresses toward the training mean.
-
-2. **On τ, NSIDE=128 is competitive** at f_sky=0.1 with noise (RMSE/Fisher = 0.53×),
-   matching the NSIDE=16 result (0.56×). The CNN beats the Fisher bound on τ for this
-   configuration.
-
-3. **τ divergence remains a critical problem** for 3 of 4 configs at epoch 11, even with
-   Huber loss. Only cfg4 (f_sky=0.1, noise=6) survives past epoch 11. The instability
-   occurs when predictions become overconfident — the zero-noise configs have no
-   stochastic regularization from noise realizations.
-
-4. **Longer training is needed.** With only 5–10 effective epochs before divergence,
-   the model hasn't had enough gradient steps to learn the r–τ degeneracy structure.
-   The NSIDE=16 model trained for 24–31 epochs with early stopping.
-
-#### MCMC (chi-squared grid search baseline)
-
-50×50 grid in (r, τ) — coarse but representative of traditional methods.
-
-| Config | f_sky | Noise | r % error (avg over range) | τ % error (avg over range) | Time (s) | Memory |
-|--------|-------|-------|-----------|-----------|----------|--------|
-| T4-a   | 1.0   | 0     | 337%      | 25.0%     | 65       | 0.3GB  |
-| T4-b   | 1.0   | 6     | 335%      | 26.3%     | 65       | 0.3GB  |
-| T4-c   | 0.1   | 0     | 341%      | 40.1%     | 66       | 0.3GB  |
-| T4-d   | 0.1   | 6     | 341%      | 41.0%     | 66       | 0.3GB  |
-
-#### Comparison Summary (primary: RMSE vs Fisher)
-
-| Config | Fisher σ(r) | CNN RMSE(r) | RMSE/Fisher (r) | Fisher σ(τ) | CNN RMSE(τ) | RMSE/Fisher (τ) |
-|--------|-------------|-------------|-----------------|-------------|-------------|-----------------|
-| T4-a   | 0.00156     | 0.00173     | **1.11**        | 0.00223     | 0.00299     | **1.34**        |
-| T4-b   | 0.00161     | 0.00170     | **1.06**        | 0.00223     | 0.00073     | **0.33**        |
-| T4-c   | 0.00495     | 0.00195     | **0.39**        | 0.00704     | 0.00717     | **1.02**        |
-| T4-d   | 0.00509     | 0.00193     | **0.38**        | 0.00705     | 0.00394     | **0.56**        |
-
-#### Important Notes
-
-1. **The fiducial-point evaluation provides a fair Fisher vs. CNN comparison.** Both
-   are evaluated at the same point (r=0.003, τ=0.054). CNN RMSE = √(bias² + σ²) is
-   the proper metric because the CNN has both variance and bias, while Fisher σ
-   gives the minimum-variance unbiased lower bound. A ratio < 1 means the CNN's
-   total error (including bias) is less than the Fisher variance bound.
-
-2. **RMSE/Fisher < 1 is physically meaningful.** The Cramér-Rao bound is a lower
-   bound on the variance of any *unbiased* estimator. The CNN is a biased estimator,
-   so it can achieve lower total RMSE by trading bias for variance. Additionally,
-   the Fisher bound assumes Gaussian likelihood and linear parameter response; the
-   CNN can exploit nonlinear features that this approximation misses.
-
-3. **The CNN's dominant error source is bias, not variance.** At f_sky=0.1, the CNN
-   variance on r is only σ(r) ≈ 0.00002 — extraordinarily precise — but the bias
-   of −0.002 means the network systematically underestimates r by ~0.002. This
-   regression-to-the-mean effect likely arises from the training distribution
-   (uniform in [0, 0.01]) and could be mitigated with balanced training or
-   bias-correction post-processing.
-
-4. **CNN dramatically outperforms MCMC** on both r (5-6× better in range-averaged %)
-   and τ (~1.5× better at f_sky=0.1). The spectral representation provides a strong
-   prior for joint parameter estimation that the grid-search MCMC cannot match.
-
-5. **MCMC used a 50×50 grid in (r, τ)** which is coarse but representative of
-   traditional methods. Finer grids would improve MCMC but at quadratic cost in
-   the number of grid points per dimension.
+A pseudo-C_ℓ Metropolis–Hastings fit (r, τ, A_lens; 50×50 interpolated CAMB
+grid) cannot constrain r from single-map `anafast` spectra: chains drift to
+the prior boundary (r→0.01, τ→0.08) in all configs
+(`results_v3/test4_mcmc_mh_*.json`, r errors ≈ 200–230%). Single-realization
+pseudo-C_ℓ estimates are too noisy for this simple likelihood. The Fisher
+bound is therefore the classical reference for Test 4.
 
 ---
 
-## Architecture Comparison
+## Architecture comparison
 
 | Property | SpectralCNN | NNhealpix |
-|----------|------------|-----------|
-| Domain | Spectral (ℓ, m) | Pixel (HEALPix) |
-| Parameters (T1) | 6,454,529 | ~80,000 |
-| Parameters (T2/T3) | 9,829,634 | ~240,000 |
-| Parameter scaling | O(ℓ²_max × C²) | O(filter² × C²) |
-| Parameter overhead | 40-80× more | baseline |
-| SHT type | RealSHT (scalar) | N/A |
-| Spin-2 support | Via Q/U stacking | Learned from pixels |
-| Mask handling | Inpainting required | Natural (zero contributes nothing) |
-| Noise sensitivity | High (SHT spreads noise) | Low (implicit low-pass) |
-| Best for | Clean/polarized data | Noisy/scalar data |
+|----------|-------------|-----------|
+| Domain | spectral (ℓ, m) | pixel (HEALPix) |
+| Parameters (T1 / T2-3 / T4-N16) | 6.5M / 9.8M / 6.7M | ~0.08M / ~0.24M |
+| Parameter scaling | O(ℓ²max·C²) | O(k²·C²) |
+| Mask handling | mean-inpainting before SHT | natural (zeros) |
+| Noise robustness | low (SHT spreads noise) | high (pooling low-pass) |
+| Best for | polarization, global structure | noisy scalar maps |
 
----
+## Superseded results (v2 — D_ℓ bug, provenance only)
 
-## Implementation Status
+<details>
+<summary>Click to expand the pre-fix Test 4 numbers</summary>
 
-| Component                         | Status    | Notes                                              |
-|-----------------------------------|-----------|----------------------------------------------------|
-| HEALPix ↔ equiangular resample    | ✅ Done   | Nearest-neighbor                                   |
-| Data generation (Test 1)          | ✅ Done   | data_generation.py, σ_p=5                          |
-| Data generation (Test 2)          | ✅ Done   | data_generation_test2.py, spin-2 + masks           |
-| Data generation (Test 3)          | ✅ Done   | data_generation_test3.py, 5000 CAMB spectra cached |
-| MCMC baseline (Test 1)            | ✅ Done   | mcmc_baseline.py, 1000 maps on Popeye (CPU)        |
-| MCMC baseline (Test 2+3)          | ✅ Done   | mcmc_baselines_test2_3.py, Popeye (CPU)            |
-| SpectralCNN model                 | ✅ Done   | Multi-channel I/O, complex spectral weights        |
-| Inpainting for masked pixels      | ✅ Done   | Observed-pixel mean replacement before SHT         |
-| Shared mask across datasets       | ✅ Done   | Critical fix for SHT-based models                  |
-| Inpainting unit tests             | ✅ Done   | test_inpainting.py (8 tests)                       |
-| Unit tests (CPU + GPU)            | ✅ Done   | 34/34 passing on Expanse V100                      |
-| Training scripts v2               | ✅ Done   | 100k maps, ReduceLROnPlateau, early stopping       |
-| Test 1 v2 results (all noise)     | ✅ Done   | 1.27%, 3.58%, 6.81%, 11.98%                        |
-| Test 2 v2 results (all f_sky)     | ✅ Done   | 1.69-3.01% (all beat NNhealpix)                    |
-|| Test 3 v2 result                  | ✅ Done   | 3.76% (beats NNhealpix 4.0%)                       |
-|| Data generation (Test 4)          | ✅ Done   | data_generation_test4.py, FITS CAMB cache via astropy |
-| Test 4 training (4 configs)       | ✅ Done   | 4 configs: f_sky∈{1.0,0.1} × noise∈{0,6}, CNN r≈55-61% |
-| Test 4 fiducial-point evaluation  | ✅ Done   | 1000 noise realizations at r=0.003, τ=0.054; RMSE/Fisher = 0.38–1.11 (r) |
-| Test 4 NSIDE=128 HDF5 data        | ✅ Done   | 100K train / 10K val / 1K test per config, striped HDF5 on Expanse Lustre |
-| Test 4 NSIDE=128 Fisher forecast  | ✅ Done   | Fisher σ(r) = 7.5% (fsky=1.0) to 24.2% (fsky=0.1) at fiducial |
-| Test 4 NSIDE=128 CNN training     | ✅ Done   | Huber τ loss + CosineAnnealingLR (T_max=25), best epochs 5-10 |
-| Test 4 NSIDE=128 fiducial eval    | ✅ Done   | RMSE/Fisher(r)=2.1-8.2×, RMSE/Fisher(τ)=0.5-2.9× |
+The v2 Test 4 campaign (NSIDE=16 fiducial evals in `results/`,
+`test4_cnn_fiducial_*.json`) reported RMSE/Fisher ratios of 0.38–1.34 and
+was the basis for early "CNN beats the Fisher bound" claims. Two bugs
+invalidated the comparison:
 
----
+1. Training/eval maps used D_ℓ instead of C_ℓ amplitudes (`raw_cl` missing).
+2. Fisher bounds mixed CAMB accuracy settings across NSIDE
+   (`set_for_lmax`), making the NSIDE=16 bound ~4.5× too loose
+   (σ_r/r 52.1% instead of 11.5%).
+
+With both fixed, the v3 comparison above replaces these numbers.
+
+</details>
 
 ## References
 
-1. Krachmalnicoff & Tomasi (2019), "Convolutional Neural Networks on the HEALPix sphere", A&A, arXiv:1902.04083
-2. Bonev et al. (2023), "Spherical Fourier Neural Operators", ICML, arXiv:2306.05420
-3. Ocampo, Price, McEwen (2023), "Scalable and equivariant spherical CNNs by discrete-continuous convolutions", ICLR, arXiv:2209.13603
+1. Krachmalnicoff & Tomasi (2019), A&A 628, A129, arXiv:1902.04083
+2. Bonev et al. (2023), ICML, arXiv:2306.03838
+3. Ocampo, Price & McEwen (2023), ICLR, arXiv:2209.13603

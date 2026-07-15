@@ -163,10 +163,12 @@ global context is overwhelmingly beneficial for partial-sky polarization.
 | Method | τ % error |
 |--------|----------|
 | MCMC (paper) | **2.8%** |
-| SpectralCNN | **3.76%** |
+| SpectralCNN (v2, superseded) | 3.76% |
 | NNhealpix | 4.0% |
 
-SpectralCNN beats NNhealpix by ~6%.
+> The v2 SpectralCNN number predates the C_ℓ fix (`raw_cl=True`) and is not
+> comparable to the published baselines; the v3 retrain
+> (`slurm/train_test3_v3_expanse.slurm`) provides the publication value.
 
 ### Test 4: Joint r/τ estimation (Simons Observatory)
 
@@ -174,18 +176,25 @@ SpectralCNN beats NNhealpix by ~6%.
 
 - **Input:** Q/U/mask stacked [3, 3072]
 - **Targets:** [log(r + 1e-4), τ] — tensor-to-scalar ratio r and optical depth τ
-- **Loss:** MSE on both targets jointly
+- **Loss:** MSE for log(r), Huber loss (delta=0.01) for τ. The Huber loss prevents
+  τ divergence at epoch 11 that occurs with MSE due to explosive gradients when
+  predictions drift outside the [0.03, 0.08] training range.
 - **num_blocks=3** (differs from Tests 2/3 which use `num_blocks=4`)
 - **4 configurations:** f_sky ∈ {1.0, 0.1} × noise ∈ {0, 6} μK-arcmin
 
+Range-averaged test errors, **v3 pipeline** (NSIDE=16, 6.7M params):
+
 | f_sky | Noise (μK-arcmin) | Inpaint | r % error | τ % error |
 |-------|-------------------|---------|-----------|-----------|
-| 1.0   | 0                 | False   | TBD       | TBD       |
-| 1.0   | 6                 | False   | TBD       | TBD       |
-| 0.1   | 0                 | True    | TBD       | TBD       |
-| 0.1   | 6                 | True    | TBD       | TBD       |
+| 1.0   | 0                 | False   | 21.9%     | 15.1%     |
+| 1.0   | 6                 | False   | 32.7%     | 20.0%     |
+| 0.1   | 0                 | True    | 57.6%     | 26.9%     |
+| 0.1   | 6                 | True    | 56.3%     | 28.4%     |
 
-Results pending — training in progress.
+Higher resolutions (NSIDE=32: 26.5M params; NSIDE=128: 422M params at hc=32)
+plateau at 55–59% r error regardless of capacity — see
+[BENCHMARKS.md](BENCHMARKS.md) for the capacity-scaling study, corrected
+Fisher bounds, and fiducial-point RMSE comparisons.
 
 ### Key Observations
 
