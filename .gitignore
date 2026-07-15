@@ -28,3 +28,7 @@ venv/
 
 # OS
 .DS_Store
+
+# Operational monitoring logs (kept locally, not tracked)
+results_v3/*.log
+results/*.log
