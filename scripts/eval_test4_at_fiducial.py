@@ -199,6 +199,11 @@ def main():
                         help="HDF5 path pattern with {label} placeholder; if set, "
                              "load the shared mask from the file's /mask dataset "
                              "(required for HDF5-trained models, e.g. NSIDE=128)")
+    parser.add_argument("--mask_seed", type=int, default=0,
+                        help="Seed for reconstructing the shared mask when no "
+                             "HDF5 is available (0 = on-the-fly training mask; "
+                             "42 = generate_test4_hdf5.py mask, verified "
+                             "identical to the HDF5 /mask dataset)")
     parser.add_argument("--out_prefix", type=str, default=None,
                         help="Output JSON prefix (default: test4_cnn_fiducial_"
                              "nside{nside}_hc{hc}[_r{r_fid}_tau{tau_fid}])")
@@ -260,6 +265,11 @@ def main():
             with h5py.File(h5path, "r") as h5:
                 mask = h5["mask"][:].astype(np.float32)
             print(f"  Loaded shared mask from {h5path} (f_sky={mask.mean():.3f})")
+        elif args.mask_seed != 0:
+            mask_rng = np.random.default_rng(args.mask_seed)
+            mask = create_sky_mask(cfg["f_sky"], args.nside, mask_rng).astype(np.float32)
+            print(f"  Reconstructed mask with seed {args.mask_seed} "
+                  f"(f_sky={mask.mean():.3f})")
 
         print(f"\n=== Config: {label} (model: {os.path.basename(model_path)}) ===")
         result = eval_at_fiducial(
