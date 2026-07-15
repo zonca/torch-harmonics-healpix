@@ -10,6 +10,13 @@ tags:
 library_name: pytorch
 ---
 
+> **⚠️ Pipeline notice (2026-07):** the Test 3 and Test 4 weights below were
+> trained with the v2 pipeline, which generated maps from CAMB D_ℓ instead of
+> C_ℓ amplitudes (missing `raw_cl=True`). They reproduce the superseded v2
+> numbers only and should not be compared against published baselines.
+> Corrected v3 checkpoints will replace them once the v3 campaign is
+> finalized. Test 1 and Test 2 weights do not use CAMB and are unaffected.
+
 # torch-harmonics-healpix
 
 Spectral CNN models for CMB parameter estimation on the HEALPix sphere, bridging [torch-harmonics](https://github.com/Philippe7427/torch-harmonics) with HEALPix maps.
