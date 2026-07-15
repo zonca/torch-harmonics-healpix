@@ -64,19 +64,21 @@ accuracy (`lmax_calc=500`):
 
 SpectralCNN (range-averaged r error over the test range, v3):
 
-- **NSIDE=16 (6.7M params):** 21.9–57.6% depending on config — within
-  0.8–1.9× of the Fisher bound.
-- **NSIDE=32/128 (26.5M–422M params):** plateaus at **55–59% r error in every
-  configuration**, regardless of resolution and of a 16× capacity increase
-  (26.5M → 409M params). The bottleneck is training-set diversity (5000
-  distinct CAMB spectra reused ~20× each), not model capacity.
-- **Systematic r bias ≈ +0.0007** (23–26% of the fiducial r) in all
-  high-resolution configs, quantitatively explained by Jensen's inequality on
-  the log-r output parameterization (implied σ_log ≈ 0.65 across configs).
+- **NSIDE=16 (6.7M params): a calibrated estimator.** Fiducial-point RMSE is
+  0.74–2.06× the Fisher bound on r, and the multi-fiducial response
+  ⟨r̂⟩ vs r_true is linear with slope 1.02.
+- **NSIDE≥32 (26.5M–422M params): the r channel collapses.** The network
+  outputs r̂ ≈ 0.0011 *independently of the input* (σ ≈ 8×10⁻⁵ at
+  r_true = 0.001/0.003/0.006). The apparent "55–59% error plateau" and the
+  consistent +0.0007 near-zero-r bias are artifacts of that constant.
+  A 16× capacity increase (26.5M → 409M params) does not fix it; the
+  suspected bottleneck is training-set diversity (5000 distinct CAMB
+  spectra reused ~20× each) and the scalar MSE-on-log-r objective.
+- **τ keeps a real but shrunk response** at both resolutions
+  (slope ≈ 0.3–0.4 across τ ∈ [0.04, 0.07]).
 
-Fiducial-point RMSE vs Fisher comparisons (1000 noise realizations per
-config) are produced by `slurm/eval_fiducial_v3_expanse.slurm`; see
-[BENCHMARKS.md](BENCHMARKS.md) for the full tables.
+Full fiducial-point RMSE vs Fisher tables and the multi-fiducial response
+data are in [BENCHMARKS.md](BENCHMARKS.md).
 
 **Main finding:** spectral convolution is the right inductive bias for CMB
 polarization (Tests 2–4 at low resolution), while noisy scalar maps favor
