@@ -151,8 +151,9 @@ while validation error stalls, pointing at training-set diversity
 ### Fiducial-point evaluation (RMSE vs Fisher) — v3
 
 1000 signal+noise realizations at (r=0.003, τ=0.054) per config;
-RMSE² = σ² + bias². Produced on Popeye CPU (job 2450946, torch 2.12 CPU) —
-NSIDE=128 on Expanse GPU pending.
+RMSE² = σ² + bias². Produced on Popeye CPU (jobs 2450946 N16/N32,
+2451069 N128; torch 2.12 CPU). Expanse GPU job 52109433 left queued as an
+optional GPU/HDF5-mask cross-check.
 
 | NSIDE | f_sky | noise | σ(r) | bias(r) | RMSE(r) | RMSE/Fisher (r) | RMSE/Fisher (τ) |
 |-------|-------|-------|------|---------|---------|-----------------|-----------------|
