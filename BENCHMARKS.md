@@ -163,9 +163,20 @@ NSIDE=128 on Expanse GPU pending.
 | 32 | 1.0 | 6 | 0.000015 | −0.001948 | 0.001948 | 3.31× | 2.76× |
 | 32 | 0.1 | 0 | 0.000007 | −0.001976 | 0.001976 | 2.41× | **0.29×** |
 | 32 | 0.1 | 6 | 0.000074 | −0.001961 | 0.001963 | 1.05× | 1.03× |
+| 128 | 1.0 | 0 | 0.000003 | −0.001947 | 0.001947 | 7.89× | 5.26× |
+| 128 | 1.0 | 6 | 0.000000 | −0.001681 | 0.001681 | 2.95× | 6.51× |
+| 128 | 0.1 | 0 | 0.000000 | −0.001744 | 0.001744 | 2.23× | 4.18× |
+| 128 | 0.1 | 6 | 0.000000 | −0.001891 | 0.001891 | 1.05× | **0.20×** |
 
-Sub-unity ratios are bias-dominated shrinkage (N16 fsky=0.1/noise=6:
-|bias| ≈ 9σ), **not** super-efficiency — see the multi-fiducial test below.
+At NSIDE=128 (422M params, 2–5 effective training epochs) the collapse is
+total: σ(r) ≤ 3×10⁻⁶ and σ(τ) numerically zero in 3 of 4 configs — the
+network is a deterministic constant. The **0.20× τ ratio is a pure
+coincidence** (collapsed τ̂ = 0.0548 lands on the fiducial 0.054), the
+starkest illustration of why sub-Fisher ratios need a response measurement.
+
+Sub-unity ratios are bias-dominated shrinkage or constant-coincidence
+(N16 fsky=0.1/noise=6: |bias| ≈ 9σ), **not** super-efficiency — see the
+multi-fiducial test below.
 
 ### Multi-fiducial response — N16 calibrated, N32 collapsed
 
