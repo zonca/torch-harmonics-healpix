@@ -33,10 +33,13 @@ These models reproduce and improve upon the benchmarks from [Krachmalnicoff & To
 | SpectralCNN T2 | `models/test2_v2_fix_fsky1.0.pt` | ℓ_Ep / ℓ_Bp estimation | Q, U, mask | [ℓ_Ep, ℓ_Bp] | 1.69% / 1.53% | 9.8M |
 | **SpectralCNN T3 (v3)** | `models/test3_v3.pt` | τ estimation | Q, U, mask | τ | **2.18%** | 9.8M |
 | SpectralCNN T3 (v2, superseded) | `models/test3_v2_fix.pt` | τ estimation | Q, U, mask | τ | 3.76% (D_ℓ bug) | 9.8M |
-| SpectralCNN T4 | `models/test4_fsky1.0_noise0.pt` | r/τ estimation (f_sky=1.0, σ=0) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
-| SpectralCNN T4 | `models/test4_fsky1.0_noise6.pt` | r/τ estimation (f_sky=1.0, σ=6) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
-| SpectralCNN T4 | `models/test4_fsky0.1_noise0.pt` | r/τ estimation (f_sky=0.1, σ=0) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
-| SpectralCNN T4 | `models/test4_fsky0.1_noise6.pt` | r/τ estimation (f_sky=0.1, σ=6) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
+| **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky1.0_noise0.pt` | r/τ (f_sky=1.0, no noise) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=2.06× Fisher | 6.7M |
+| **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky1.0_noise6.pt` | r/τ (f_sky=1.0, 6 μK-arcmin) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=1.78× Fisher | 6.7M |
+| **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky0.1_noise0.pt` | r/τ (f_sky=0.1, no noise) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=1.27× Fisher | 6.7M |
+| **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky0.1_noise6.pt` | r/τ (f_sky=0.1, 6 μK-arcmin) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=0.74× Fisher¹ | 6.7M |
+| SpectralCNN T4 (v2, superseded) | `models/test4_fsky*.pt` | r/τ estimation | Q, U, mask | [log(r+1e-4), τ] | D_ℓ bug | 9.8M |
+
+¹ The sub-unity ratio reflects prior-informed shrinkage of a biased estimator, not super-efficiency; see the paper's Fisher-caveats discussion. T4 v3 models use `hidden_channels=32, num_blocks=3, nside=16` and `inpaint=True` for f_sky<1. The multi-fiducial response of these NSIDE=16 models is linear with unit slope (calibrated); higher-resolution v3 models are intentionally not published because their r output collapses to an input-independent constant.
 
 ## Architecture
 
