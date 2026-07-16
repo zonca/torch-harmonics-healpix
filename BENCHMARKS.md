@@ -76,15 +76,16 @@ CAMB EE spectra, τ ∈ [0.03, 0.08], full sky, noiseless.
 
 | Method | τ error | Pipeline |
 |--------|---------|----------|
+| **SpectralCNN** | **2.18%** | v3 (77 epochs, NRP GPU, 2026-07-16) |
 | MCMC (KT19) | 2.8% | — |
-| SpectralCNN | *v3 retraining in progress* | v3 |
 | NNhealpix (KT19) | 4.0% | — |
 | SpectralCNN (superseded) | 3.76% | v2 (D_ℓ bug — not comparable) |
 
-The v2 number was internally consistent but trained/tested on maps with
-D_ℓ amplitudes; the v3 retrain (`slurm/train_test3_v3_expanse.slurm`,
-corrected cache from `scripts/precompute_test3_camb.py`) provides the
-publication number.
+The corrected pipeline nearly halves the CNN error relative to v2 and puts
+the map-based spectral network ahead of the published spectrum fit
+(single run; read as parity-or-better). Retrained on NRP
+(`nrp/examples/train-test3-v3.yaml`) with the corrected CAMB cache
+(`results_v3/camb_cache_test3_v3.fits`).
 
 ---
 

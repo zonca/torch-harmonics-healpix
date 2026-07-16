@@ -45,11 +45,17 @@ aggressive masking far better than pixel-space convolution.
 The global SHT spreads local noise across all modes; pixel-space pooling
 filters it.
 
-### Test 3 (τ estimation) — v3 retraining in progress
+### Test 3 (τ estimation) — SpectralCNN best overall (v3)
 
-The v2 result (3.76% vs NNhealpix 4.0%, MCMC 2.8%) predates the C_ℓ fix and
-is not comparable to the published baselines. Retraining with the corrected
-pipeline: `slurm/train_test3_v3_expanse.slurm`.
+| Method | τ error |
+|--------|---------|
+| **SpectralCNN (v3)** | **2.18%** |
+| MCMC (KT19) | 2.8% |
+| NNhealpix (KT19) | 4.0% |
+
+With the corrected C_ℓ pipeline the SpectralCNN beats both the pixel-space
+network and the published spectrum-based fit (single training run; the
+superseded v2 number was 3.76% due to the D_ℓ bug).
 
 ### Test 4 (Joint r/τ, Simons Observatory) — v3 corrected
 
