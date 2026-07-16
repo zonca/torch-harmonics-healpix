@@ -208,6 +208,26 @@ input*. Consequences:
 Off-center CNN evals: `results_v3/test4_cnn_fiducial_nside*_r*.json`;
 matching Fisher bounds: `results_v3/fisher_multifid/`.
 
+### Controlled experiments (2026-07-16, NRP)
+
+**Seed replicas** — Test 3 retrained with 3 independent inits:
+2.18 / 2.20 / 2.30% → **2.23 ± 0.06%**, robustly below the KT19 MCMC (2.8%).
+
+**Training-diversity experiment** — two N32 hc32 fsky=1.0/noise=0 runs
+identical except the spectral library (on-the-fly, seed-matched protocol):
+
+| Arm | Spectra | r %err | near-zero-r bias | epochs |
+|-----|---------|--------|------------------|--------|
+| control | 5000 (seed 142) | 58.7% | +0.0009 | 16 |
+| treatment | 20000 (seed 777) | 62.3% | +0.0007 | 16 |
+
+**NULL result**: 4× spectral diversity does not restore the r response —
+the collapse is unchanged. Together with the capacity null, this
+eliminates the two resource explanations; the scalar log-r point-estimate
+objective is the leading suspect. JSONs:
+`results_v3/test4_nside32_div{5k,20k}_fsky1.0_noise0.json`; response
+measurements in `results_v3/test4_cnn_fiducial_div*` (Popeye eval).
+
 ### MCMC baseline — negative result
 
 A pseudo-C_ℓ Metropolis–Hastings fit (r, τ, A_lens; 50×50 interpolated CAMB
