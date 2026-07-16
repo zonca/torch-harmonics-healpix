@@ -1,0 +1,21 @@
+{
+  "version": "v2_paper_matching",
+  "noise_std": 0.0,
+  "f_sky": 1.0,
+  "n_train": 100000,
+  "n_val": 10000,
+  "n_test": 1000,
+  "epochs_reached": 77,
+  "best_val_error": 2.078599616243213,
+  "batch_size": 32,
+  "lr_schedule": "ReduceLROnPlateau",
+  "lr_patience": 5,
+  "lr_factor": 0.1,
+  "early_stopping_patience": 20,
+  "tau_pct_error": 2.183217928338563,
+  "n_params": 9829569,
+  "inpaint": false,
+  "pipeline": "v3 (raw_cl C_l fix)",
+  "camb_cache": "results_v3/camb_cache_test3_v3.fits",
+  "trained_on": "NRP Nautilus GPU, job train-test3-v3, 2026-07-16"
+}
