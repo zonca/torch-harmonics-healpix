@@ -10,18 +10,18 @@ tags:
 library_name: pytorch
 ---
 
-> **⚠️ Pipeline notice (2026-07):** the Test 3 and Test 4 weights below were
-> trained with the v2 pipeline, which generated maps from CAMB D_ℓ instead of
-> C_ℓ amplitudes (missing `raw_cl=True`). They reproduce the superseded v2
-> numbers only and should not be compared against published baselines.
-> Corrected v3 checkpoints will replace them once the v3 campaign is
-> finalized. Test 1 and Test 2 weights do not use CAMB and are unaffected.
+> **⚠️ Pipeline notice (2026-07):** the **Test 4** weights below were trained
+> with the v2 pipeline, which generated maps from CAMB D_ℓ instead of C_ℓ
+> amplitudes (missing `raw_cl=True`); they reproduce the superseded v2 numbers
+> only. **Test 3 now has a corrected v3 checkpoint** (`models/test3_v3.pt`,
+> τ error 2.18%); `models/test3_v2_fix.pt` is kept for provenance only.
+> Test 1 and Test 2 weights do not use CAMB and are unaffected.
 
 # torch-harmonics-healpix
 
-Spectral CNN models for CMB parameter estimation on the HEALPix sphere, bridging [torch-harmonics](https://github.com/Philippe7427/torch-harmonics) with HEALPix maps.
+Spectral CNN models for CMB parameter estimation on the HEALPix sphere, bridging [torch-harmonics](https://github.com/NVIDIA/torch-harmonics) with HEALPix maps.
 
-These models reproduce and improve upon the benchmarks from [Krachmalnicoff & Tomasi (2019)](https://arxiv.org/abs/1902.04083), which originally used the pixel-space [NNhealpix](https://github.com/NToulis/nnhealpix) architecture.
+These models reproduce and improve upon the benchmarks from [Krachmalnicoff & Tomasi (2019)](https://arxiv.org/abs/1902.04083), which originally used the pixel-space [NNhealpix](https://github.com/ai4cmb/NNhealpix) architecture.
 
 **Source code:** `https://github.com/zonca/torch-harmonics-healpix`
 
@@ -31,7 +31,8 @@ These models reproduce and improve upon the benchmarks from [Krachmalnicoff & To
 |-------|------|------|-------|--------|-------|--------|
 | SpectralCNN T1 | `models/test1_v2_fix_noise0.pt` | ℓ_peak estimation | T map | ℓ_peak | 1.27% | 6.4M |
 | SpectralCNN T2 | `models/test2_v2_fix_fsky1.0.pt` | ℓ_Ep / ℓ_Bp estimation | Q, U, mask | [ℓ_Ep, ℓ_Bp] | 1.69% / 1.53% | 9.8M |
-|| SpectralCNN T3 | `models/test3_v2_fix.pt` | τ estimation | Q, U, mask | τ | 3.76% | 9.8M |
+| **SpectralCNN T3 (v3)** | `models/test3_v3.pt` | τ estimation | Q, U, mask | τ | **2.18%** | 9.8M |
+| SpectralCNN T3 (v2, superseded) | `models/test3_v2_fix.pt` | τ estimation | Q, U, mask | τ | 3.76% (D_ℓ bug) | 9.8M |
 | SpectralCNN T4 | `models/test4_fsky1.0_noise0.pt` | r/τ estimation (f_sky=1.0, σ=0) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
 | SpectralCNN T4 | `models/test4_fsky1.0_noise6.pt` | r/τ estimation (f_sky=1.0, σ=6) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |
 | SpectralCNN T4 | `models/test4_fsky0.1_noise0.pt` | r/τ estimation (f_sky=0.1, σ=0) | Q, U, mask | [log(r+1e-4), τ] | TBD | 9.8M |

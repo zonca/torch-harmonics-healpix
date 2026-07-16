@@ -101,11 +101,12 @@ for the manuscript.
 Trained model weights are on Hugging Face:
 <https://huggingface.co/zonca/torch-harmonics-healpix>
 
-> **Warning:** the Test 3/4 weights currently on Hugging Face were trained
-> before the C_ℓ fix (v2 pipeline) and should only be used to reproduce the
-> superseded v2 numbers. v3 checkpoints live on the compute clusters
-> (`results_v3/*.pt`) and will replace the HF weights once the v3 campaign is
-> complete. Test 1/2 weights are unaffected.
+> **Warning:** the **Test 4** weights on Hugging Face were trained before the
+> C_ℓ fix (v2 pipeline) and should only be used to reproduce the superseded
+> v2 numbers. **Test 3 has a corrected v3 checkpoint on HF**
+> (`models/test3_v3.pt`, τ error 2.18%); `models/test3_v2_fix.pt` is kept
+> for provenance. Test 1/2 weights are unaffected. v3 Test 4 checkpoints
+> live on the compute clusters (`results_v3/*.pt`).
 
 **Loading example** (Test 2, full sky):
 
