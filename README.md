@@ -54,8 +54,9 @@ filters it.
 | NNhealpix (KT19) | 4.0% |
 
 With the corrected C_ℓ pipeline the SpectralCNN beats both the pixel-space
-network and the published spectrum-based fit (single training run; the
-superseded v2 number was 3.76% due to the D_ℓ bug).
+network and the published spectrum-based fit — seed-robust at
+2.23 ± 0.06% over three independent trainings (the superseded v2 number
+was 3.76% due to the D_ℓ bug).
 
 ### Test 4 (Joint r/τ, Simons Observatory) — v3 corrected
 
@@ -77,9 +78,13 @@ SpectralCNN (range-averaged r error over the test range, v3):
   outputs r̂ ≈ 0.0011 *independently of the input* (σ ≈ 8×10⁻⁵ at
   r_true = 0.001/0.003/0.006). The apparent "55–59% error plateau" and the
   consistent +0.0007 near-zero-r bias are artifacts of that constant.
-  A 16× capacity increase (26.5M → 409M params) does not fix it; the
-  suspected bottleneck is training-set diversity (5000 distinct CAMB
-  spectra reused ~20× each) and the scalar MSE-on-log-r objective.
+  Controlled experiments eliminate all three simple explanations: a 16×
+  capacity increase (26.5M → 409M params), a 4× spectral-library increase,
+  and a linear-head ablation all leave the collapse unchanged — the linear
+  head collapses to exactly E[r] of the training prior, proving the learned
+  representation carries no r information. Side finding: τ error improves
+  3× (16–23% → 6.1%) when the log-r loss term is removed (shared-trunk
+  gradient interference).
 - **τ keeps a real but shrunk response** at both resolutions
   (slope ≈ 0.3–0.4 across τ ∈ [0.04, 0.07]).
 
@@ -104,12 +109,13 @@ for the manuscript.
 Trained model weights are on Hugging Face:
 <https://huggingface.co/zonca/torch-harmonics-healpix>
 
-> **Warning:** the **Test 4** weights on Hugging Face were trained before the
-> C_ℓ fix (v2 pipeline) and should only be used to reproduce the superseded
-> v2 numbers. **Test 3 has a corrected v3 checkpoint on HF**
-> (`models/test3_v3.pt`, τ error 2.18%); `models/test3_v2_fix.pt` is kept
-> for provenance. Test 1/2 weights are unaffected. v3 Test 4 checkpoints
-> live on the compute clusters (`results_v3/*.pt`).
+> **v3 checkpoints on HF:** `models/test3_v3.pt` (τ 2.18%) and the four
+> calibrated NSIDE=16 Test 4 models `models/test4_v3_nside16_*.pt`
+> (hidden_channels=32, num_blocks=3). The old v2 Test 3/4 weights
+> (`test3_v2_fix.pt`, `test4_fsky*.pt`) predate the C_ℓ fix and are kept
+> only to reproduce the superseded v2 numbers. Higher-resolution v3 models
+> are deliberately not published (collapsed r response — see BENCHMARKS).
+> Test 1/2 weights are unaffected by the fix.
 
 **Loading example** (Test 2, full sky):
 
