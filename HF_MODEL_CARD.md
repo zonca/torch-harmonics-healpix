@@ -37,7 +37,7 @@ These models reproduce and improve upon the benchmarks from [Krachmalnicoff & To
 | **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky1.0_noise6.pt` | r/τ (f_sky=1.0, 6 μK-arcmin) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=1.78× Fisher | 6.7M |
 | **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky0.1_noise0.pt` | r/τ (f_sky=0.1, no noise) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=1.27× Fisher | 6.7M |
 | **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky0.1_noise6.pt` | r/τ (f_sky=0.1, 6 μK-arcmin) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=0.74× Fisher¹ | 6.7M |
-| SpectralCNN T4 (v2, superseded) | `models/test4_fsky*.pt` | r/τ estimation | Q, U, mask | [log(r+1e-4), τ] | D_ℓ bug | 9.8M |
+| SpectralCNN T4 (v2, superseded) | *(not on HF; in the code repo `results/test4_fsky*.pt`)* | r/τ estimation | Q, U, mask | [log(r+1e-4), τ] | D_ℓ bug | 9.8M |
 
 ¹ The sub-unity ratio reflects prior-informed shrinkage of a biased estimator, not super-efficiency; see the paper's Fisher-caveats discussion. T4 v3 models use `hidden_channels=32, num_blocks=3, nside=16` and `inpaint=True` for f_sky<1. The multi-fiducial response of these NSIDE=16 models is linear with unit slope (calibrated); higher-resolution v3 models are intentionally not published because their r output collapses to an input-independent constant.
 

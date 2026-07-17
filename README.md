@@ -111,9 +111,10 @@ Trained model weights are on Hugging Face:
 
 > **v3 checkpoints on HF:** `models/test3_v3.pt` (τ 2.18%) and the four
 > calibrated NSIDE=16 Test 4 models `models/test4_v3_nside16_*.pt`
-> (hidden_channels=32, num_blocks=3). The old v2 Test 3/4 weights
-> (`test3_v2_fix.pt`, `test4_fsky*.pt`) predate the C_ℓ fix and are kept
-> only to reproduce the superseded v2 numbers. Higher-resolution v3 models
+> (hidden_channels=32, num_blocks=3). The old v2 Test 3 weight
+> (`test3_v2_fix.pt` on HF) and v2 Test 4 weights (in this repo's
+> `results/test4_fsky*.pt`) predate the C_ℓ fix and are kept only to
+> reproduce the superseded v2 numbers. Higher-resolution v3 models
 > are deliberately not published (collapsed r response — see BENCHMARKS).
 > Test 1/2 weights are unaffected by the fix.
 
