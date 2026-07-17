@@ -42,7 +42,7 @@ class RTauDataset(Dataset):
 
     def __init__(self, n_maps, nside=16, lmax=47,
                  noise_std=0.0, f_sky=1.0, seed=42, mask=None,
-                 camb_spectra=None):
+                 camb_spectra=None, r_param="log"):
         """Initialize the RTauDataset.
 
         Args:
@@ -76,8 +76,15 @@ class RTauDataset(Dataset):
         self.r_values = r_values[self.spectrum_indices]
         self.tau_values = tau_values[self.spectrum_indices]
 
-        # Log-transform r for boundary handling
-        self.r_target = np.log(self.r_values + R_LOG_EPSILON).astype(np.float32)
+        # r head parameterisation:
+        # - "log":    r_target = log(r + eps)  (default, v3 pipeline)
+        # - "linear": r_target = r / R_MAX in [0, 1]  (direct-r ablation:
+        #   tests whether the log-space point-estimate objective causes
+        #   the high-resolution response collapse)
+        if r_param == "linear":
+            self.r_target = (self.r_values / R_MAX).astype(np.float32)
+        else:
+            self.r_target = np.log(self.r_values + R_LOG_EPSILON).astype(np.float32)
         self.tau_target = self.tau_values.astype(np.float32)
 
         # Use provided mask or generate one (shared mask critical for SpectralCNN)
@@ -330,7 +337,7 @@ def train_one_epoch(model, dataloader, optimizer, device, grad_clip=0):
 
 
 @torch.no_grad()
-def evaluate(model, dataloader, device):
+def evaluate(model, dataloader, device, r_param="log"):
     """Evaluate joint r/τ estimation. Returns dict with r_pct_error, tau_pct_error, r_bias.
 
     Args:
@@ -353,13 +360,17 @@ def evaluate(model, dataloader, device):
         batch_x = batch_x.to(device)
         pred = model(batch_x).cpu()
 
-        # batch_y: [batch, 2] with [r_log, tau]
-        r_log_true = batch_y[:, 0]
+        # batch_y: [batch, 2] with [r_target, tau]
+        r_target_true = batch_y[:, 0]
         tau_true = batch_y[:, 1]
 
-        # Convert r_log back to r
-        r_pred = torch.exp(pred[:, 0]) - R_LOG_EPSILON
-        r_true = torch.exp(r_log_true) - R_LOG_EPSILON
+        # Convert the r head back to physical r
+        if r_param == "linear":
+            r_pred = pred[:, 0] * R_MAX
+            r_true = r_target_true * R_MAX
+        else:
+            r_pred = torch.exp(pred[:, 0]) - R_LOG_EPSILON
+            r_true = torch.exp(r_target_true) - R_LOG_EPSILON
         tau_pred = pred[:, 1]
         tau_true_f = tau_true
 
@@ -429,6 +440,10 @@ def main():
                              "The HDF5 file must contain train/val/test splits as created by "
                              "scripts/generate_test4_hdf5.py. Ignores --n_train/--n_val/--n_test "
                              "(sizes come from the HDF5 file).")
+    parser.add_argument("--r_param", choices=["log", "linear"], default="log",
+                        help="r head parameterisation: log(r+eps) (default) or "
+                             "linear r/R_MAX (direct-r ablation). Linear requires "
+                             "on-the-fly data (HDF5 targets are log-space).")
     parser.add_argument("--num_workers", type=int, default=0,
                         help="DataLoader num_workers. 0 = main thread (safe on gpu-shared). "
                              "2-4 recommended with HDF5 on nodes with multiple CPU cores.")
@@ -488,6 +503,7 @@ def main():
                   f"noise_std={f.attrs.get('noise_std')}")
             print(f"  train: {f['train/maps'].shape}, val: {f['val/maps'].shape}, "
                   f"test: {f['test/maps'].shape}")
+        assert args.r_param == "log", "--r_param linear requires on-the-fly data"
         train_dataset = HDF5RTauDataset(args.hdf5_path, split='train',
                                         cache_chunk_size=args.cache_chunk_size)
         val_dataset = HDF5RTauDataset(args.hdf5_path, split='val',
@@ -541,16 +557,19 @@ def main():
             args.n_train, args.nside, args.lmax,
             noise_uK, args.f_sky, seed=42,
             mask=shared_mask, camb_spectra=shared_camb,
+            r_param=args.r_param,
         )
         val_dataset = RTauDataset(
             args.n_val, args.nside, args.lmax,
             noise_uK, args.f_sky, seed=1234,
             mask=shared_mask, camb_spectra=shared_camb,
+            r_param=args.r_param,
         )
         test_dataset = RTauDataset(
             args.n_test, args.nside, args.lmax,
             noise_uK, args.f_sky, seed=9999,
             mask=shared_mask, camb_spectra=shared_camb,
+            r_param=args.r_param,
         )
         # On-the-fly must use num_workers=0 on gpu-shared (1 CPU core)
         num_workers = 0
@@ -665,7 +684,7 @@ def main():
         train_loss = train_one_epoch(model, train_loader, optimizer, device, grad_clip=args.grad_clip)
         epoch_time = time.time() - t0
 
-        val_results = evaluate(model, val_loader, device)
+        val_results = evaluate(model, val_loader, device, r_param=args.r_param)
         val_loss = val_results["r_pct_error"] + val_results["tau_pct_error"]  # Combined validation metric for early stopping (equal weight to both parameters)
 
         if use_plateau:
@@ -710,7 +729,7 @@ def main():
     # Load best model and evaluate on test set
     model.load_state_dict(best_state)
     print(f"\n=== Evaluation on {args.n_test} test maps ===")
-    results = evaluate(model, test_loader, device)
+    results = evaluate(model, test_loader, device, r_param=args.r_param)
 
     print(f"\nCNN r mean % error: {results['r_pct_error']:.1f}%")
     print(f"CNN τ mean % error: {results['tau_pct_error']:.1f}%")
@@ -733,6 +752,7 @@ def main():
     with open(args.output, "w") as f:
         json.dump({
             "test": "test4_joint_r_tau",
+            "r_param": args.r_param,
             "data_mode": "hdf5" if args.hdf5_path else "on-the-fly",
             "hdf5_path": args.hdf5_path,
             "r_pct_error": float(results["r_pct_error"]),

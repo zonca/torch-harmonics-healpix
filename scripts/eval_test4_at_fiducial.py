@@ -39,7 +39,8 @@ def noise_arcmin_to_uK(noise_arcmin, nside):
 def eval_at_fiducial(model_path, r_fid=0.003, tau_fid=0.054,
                      f_sky=1.0, noise_arcmin=0, n_realizations=1000,
                      nside=16, lmax=47, seed=42,
-                     num_blocks=3, hidden_channels=32, mask=None):
+                     num_blocks=3, hidden_channels=32, mask=None,
+                     r_param="log"):
     """Evaluate a trained SpectralCNN at a single fiducial (r, τ) point.
 
     Generates n_realizations maps with different noise seeds at the same
@@ -111,11 +112,13 @@ def eval_at_fiducial(model_path, r_fid=0.003, tau_fid=0.054,
         with torch.no_grad():
             pred = model(inp_tensor)
 
-        r_pred_log = pred[0, 0].item()
         tau_pred = pred[0, 1].item()
 
-        # Convert log-r back to r
-        r_pred = np.exp(r_pred_log) - R_LOG_EPSILON
+        # Convert the r head back to physical r
+        if r_param == "linear":
+            r_pred = pred[0, 0].item() * R_MAX
+        else:
+            r_pred = np.exp(pred[0, 0].item()) - R_LOG_EPSILON
 
         r_predictions.append(r_pred)
         tau_predictions.append(tau_pred)
@@ -199,6 +202,8 @@ def main():
                         help="HDF5 path pattern with {label} placeholder; if set, "
                              "load the shared mask from the file's /mask dataset "
                              "(required for HDF5-trained models, e.g. NSIDE=128)")
+    parser.add_argument("--r_param", choices=["log", "linear"], default="log",
+                        help="r head parameterisation of the checkpoint")
     parser.add_argument("--mask_seed", type=int, default=0,
                         help="Seed for reconstructing the shared mask when no "
                              "HDF5 is available (0 = on-the-fly training mask; "
@@ -284,6 +289,7 @@ def main():
             num_blocks=args.num_blocks,
             hidden_channels=args.hidden_channels,
             mask=mask,
+            r_param=args.r_param,
         )
 
         outpath = os.path.join(results_dir, f"{out_prefix}_{label}.json")
