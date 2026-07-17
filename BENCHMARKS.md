@@ -152,8 +152,14 @@ the scalar log-r point-estimate objective is the leading suspect.
 
 1000 signal+noise realizations at (r=0.003, τ=0.054) per config;
 RMSE² = σ² + bias². Produced on Popeye CPU (jobs 2450946 N16/N32,
-2451069 N128; torch 2.12 CPU). Expanse GPU job 52109433 left queued as an
-optional GPU/HDF5-mask cross-check.
+2451069 N128; torch 2.12 CPU). **Independently reproduced on Expanse
+V100** (job 52109433, torch 2.6, masks read from the HDF5 files instead
+of seed-reconstruction): all 44 overlapping fiducial/multi-fiducial
+evaluations agree within Δσ(r) < 5×10⁻⁵ and Δbias(r) < 10⁻⁴ —
+validating both the CPU pipeline and the seed-42 mask reconstruction.
+The GPU run adds N32 hc=64 fiducial evals
+(`test4_cnn_fiducial_nside32_hc64_*.json`): the 4× capacity model shows
+the same collapse (r̂ = 0.00117, σ = 5×10⁻⁵).
 
 | NSIDE | f_sky | noise | σ(r) | bias(r) | RMSE(r) | RMSE/Fisher (r) | RMSE/Fisher (τ) |
 |-------|-------|-------|------|---------|---------|-----------------|-----------------|
