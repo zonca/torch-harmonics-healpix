@@ -20,6 +20,7 @@
 || T4 NSIDE=128 (Huber T25) | 4 | 96.0 | Jobs 49918615-8, 24h walltime, Huber τ loss + CosineAnnealingLR |
 || v3 campaign (2026-06): N16+N32 retrains, capacity study hc64/hc128, N128 hc32 + resumes | ~15 | ~250 (approx) | Corrected C_ℓ pipeline; Expanse V100 + some NRP A40 |
 || v3 eval campaign (2026-07-15/16) | 0 GPU | 0 | Fiducial + multi-fiducial evals ran on **Popeye CPU** (jobs 2450923/24/46, 2451069); Test 3 v3 retrain on **NRP GPU** (~3.7 h); Expanse jobs 52109433/52109690 never left the queue |
+|| Publishability experiments (2026-07-16/17, NRP GPU) | 7 | ~24 (NRP) | Test 3 seed replicas ×2, Test 4 N16 replicas ×2 (evicted ~ep53, checkpoint-evaluated), diversity arms 5k/20k, direct-r ablation (10.4 h); response evals on Popeye CPU |
 || **TOTAL** | **~68** | **~560+** | |
 
 ### Note on Test 4 GPU Time

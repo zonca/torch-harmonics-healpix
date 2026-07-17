@@ -89,7 +89,10 @@ data are in [BENCHMARKS.md](BENCHMARKS.md).
 **Main finding:** spectral convolution is the right inductive bias for CMB
 polarization (Tests 2–4 at low resolution), while noisy scalar maps favor
 pixel-space convolution (Test 1). Scaling map-based r/τ inference to high
-resolution is currently limited by simulation diversity, not architecture.
+resolution fails at the representation level under scalar point-estimate
+regression — not for lack of capacity, data diversity, or a better output
+transform; distributional objectives and harmonic-space readouts are the
+indicated remedies.
 
 See [BENCHMARKS.md](BENCHMARKS.md) for all numbers,
 [ARCHITECTURE.md](ARCHITECTURE.md) for architecture details, and the paper
