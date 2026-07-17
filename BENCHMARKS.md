@@ -76,7 +76,7 @@ CAMB EE spectra, τ ∈ [0.03, 0.08], full sky, noiseless.
 
 | Method | τ error | Pipeline |
 |--------|---------|----------|
-| **SpectralCNN** | **2.18%** | v3 (77 epochs, NRP GPU, 2026-07-16) |
+| **SpectralCNN** | **2.18%** (2.23 ± 0.06% over 3 seeds) | v3 (NRP GPU, 2026-07-16) |
 | MCMC (KT19) | 2.8% | — |
 | NNhealpix (KT19) | 4.0% | — |
 | SpectralCNN (superseded) | 3.76% | v2 (D_ℓ bug — not comparable) |
@@ -144,9 +144,9 @@ not exploit the additional small-scale information.
 | 128 | 409M   | 58.1%* | 32.2%* | 4* (walltime) |
 
 \* partial run. A 16× capacity increase does not move the plateau →
-**the bottleneck is not model capacity.** Training loss keeps decreasing
-while validation error stalls, pointing at training-set diversity
-(5000 distinct CAMB spectra reused ~20× each across 100k maps).
+**the bottleneck is not model capacity.** The diversity experiment below
+also rules out the spectral-library size (4× more spectra, no change) —
+the scalar log-r point-estimate objective is the leading suspect.
 
 ### Fiducial-point evaluation (RMSE vs Fisher) — v3
 
