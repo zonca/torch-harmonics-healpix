@@ -222,11 +222,28 @@ identical except the spectral library (on-the-fly, seed-matched protocol):
 | treatment | 20000 (seed 777) | 62.3% | +0.0007 | 16 |
 
 **NULL result**: 4× spectral diversity does not restore the r response —
-the collapse is unchanged. Together with the capacity null, this
-eliminates the two resource explanations; the scalar log-r point-estimate
-objective is the leading suspect. JSONs:
-`results_v3/test4_nside32_div{5k,20k}_fsky1.0_noise0.json`; response
-measurements in `results_v3/test4_cnn_fiducial_div*` (Popeye eval).
+the collapse is unchanged (response measurement: div5k outputs r̂=0.00114,
+div20k r̂=0.00099, flat across r_true).
+
+**Direct-r ablation (2026-07-17)** — third matched N32 run with a linear
+r/R_MAX head instead of log(r+ε):
+
+| Arm | r head | r %err | response ⟨r̂⟩ (flat) | τ %err |
+|-----|--------|--------|----------------------|--------|
+| div5k control | log(r+ε) | 58.7% | 0.00114 | 16.4% |
+| div20k | log(r+ε) | 62.3% | 0.00099 | 23.3% |
+| directr | linear r/R_MAX | 49.1% | **0.00214 = E[r] of the prior** | **6.1%** |
+
+The linear head also collapses — to exactly the MSE-optimal constant
+(training-prior mean E[r]=0.00207) — proving the **representation carries
+no r information**: the failure is upstream of the output head. All three
+hypotheses (capacity ×16, diversity ×4, parameterisation) are now
+experimentally eliminated in their simple forms. Side finding: **τ error
+improves 3× (16–23% → 6.1%)** with the linear r target — the log-r loss
+gradients were degrading τ through the shared trunk.
+
+JSONs: `results_v3/test4_nside32_{div5k,div20k,directr}_fsky1.0_noise0.json`;
+response measurements: `results_v3/test4_cnn_fiducial_{div*,directr}_r*.json`.
 
 ### MCMC baseline — negative result
 
