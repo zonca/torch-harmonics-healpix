@@ -191,10 +191,14 @@ Range-averaged test errors, **v3 pipeline** (NSIDE=16, 6.7M params):
 | 0.1   | 0                 | True    | 57.6%     | 26.9%     |
 | 0.1   | 6                 | True    | 56.3%     | 28.4%     |
 
-Higher resolutions (NSIDE=32: 26.5M params; NSIDE=128: 422M params at hc=32)
-plateau at 55–59% r error regardless of capacity — see
-[BENCHMARKS.md](BENCHMARKS.md) for the capacity-scaling study, corrected
-Fisher bounds, and fiducial-point RMSE comparisons.
+At higher resolutions (NSIDE=32: 26.5M params; NSIDE=128: 422M params at
+hc=32) the r output collapses to an input-independent constant; the
+apparent 55–59% "plateau" is the error of that constant. Controlled
+experiments rule out capacity (×16), spectral-library size (×4), and the
+log-r output parameterisation (a linear head collapses to the training
+library's mean r) — see [BENCHMARKS.md](BENCHMARKS.md) for the full
+experiment set, corrected Fisher bounds, and fiducial-point RMSE
+comparisons.
 
 ### Key Observations
 
