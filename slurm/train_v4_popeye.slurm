@@ -53,6 +53,7 @@ for NOISE in 0 5 10 15; do
         --noise_std $NOISE \
         --n_train 20000 --n_val 2000 --n_test 1000 \
         --max_epochs 150 --patience 20 --batch_size 32 \
+        --skip_mcmc \
         --output results_v4/test1_v4_noise$NOISE.json
 done
 

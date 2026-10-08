@@ -127,6 +127,10 @@ def main():
     parser.add_argument("--lr_factor", type=float, default=0.1)
     parser.add_argument("--hidden_channels", type=int, default=32)
     parser.add_argument("--num_blocks", type=int, default=4)
+    parser.add_argument("--skip_mcmc", action="store_true",
+                        help="Skip the MCMC baseline eval (run it in the "
+                             "dedicated CPU job instead; see "
+                             "slurm/run_mcmc_v4_popeye.slurm)")
     parser.add_argument("--output", type=str, default="results/test1_v3.json")
     args = parser.parse_args()
 
@@ -207,22 +211,28 @@ def main():
     cnn_pct = evaluate(model, test_loader, device)
     print(f"\nCNN  mean % error: {cnn_pct:.1f}%")
 
-    # Also run MCMC baseline on test set
-    print(f"\nRunning MCMC baseline on {args.n_test} test maps...")
-    mcmc_errors = []
-    t0 = time.time()
-    for i in range(args.n_test):
-        ell_p_true = test_dataset.ell_p_true[i]
-        m = test_dataset[i][0].numpy()
-        ell_p_est = mcmc_estimate_ell_p(
-            m, sigma_p=SIGMA_P, lmax=LMAX, noise_std=args.noise_std, nside=NSIDE
-        )
-        mcmc_errors.append(abs(ell_p_est - ell_p_true) / ell_p_true * 100)
-    mcmc_time = (time.time() - t0) / args.n_test
-    mcmc_pct = np.mean(mcmc_errors)
+    # Also run MCMC baseline on test set (unless skipped — CPU work belongs
+    # in the dedicated gen-partition job, never on a GPU allocation)
+    mcmc_pct, mcmc_time = None, None
+    if not args.skip_mcmc:
+        print(f"\nRunning MCMC baseline on {args.n_test} test maps...")
+        mcmc_errors = []
+        t0 = time.time()
+        for i in range(args.n_test):
+            ell_p_true = test_dataset.ell_p_true[i]
+            m = test_dataset[i][0].numpy()
+            ell_p_est = mcmc_estimate_ell_p(
+                m, sigma_p=SIGMA_P, lmax=LMAX, noise_std=args.noise_std, nside=NSIDE
+            )
+            mcmc_errors.append(abs(ell_p_est - ell_p_true) / ell_p_true * 100)
+        mcmc_time = (time.time() - t0) / args.n_test
+        mcmc_pct = np.mean(mcmc_errors)
 
-    print(f"MCMC mean % error: {mcmc_pct:.1f}%")
-    print(f"MCMC mean time:    {mcmc_time:.3f}s per map")
+    if mcmc_pct is not None:
+        print(f"MCMC mean % error: {mcmc_pct:.1f}%")
+        print(f"MCMC mean time:    {mcmc_time:.3f}s per map")
+    else:
+        print("MCMC baseline skipped (--skip_mcmc)")
 
     # Paper baselines
     print(f"\nPaper baselines (Krachmalnicoff & Tomasi 2019, Table 1):")
@@ -244,8 +254,8 @@ def main():
             "batch_size": args.batch_size,
             "lr_schedule": "ReduceLROnPlateau",
             "cnn_pct_error": float(cnn_pct),
-            "mcmc_pct_error": float(mcmc_pct),
-            "mcmc_time_per_map": float(mcmc_time),
+            "mcmc_pct_error": float(mcmc_pct) if mcmc_pct is not None else None,
+            "mcmc_time_per_map": float(mcmc_time) if mcmc_time is not None else None,
             "n_params": int(n_params),
         }, f, indent=2)
     print(f"\nResults saved to {args.output}")
