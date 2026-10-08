@@ -4,8 +4,13 @@
 Reproduces the maximum-likelihood baseline from Krachmalnicoff & Tomasi (2019)
 Table 1. Generates maps at each noise level, estimates ℓ_p via MCMC,
 and reports mean percentage error.
+
+v4 (2026-10): optionally writes results to JSON (--output), matching the
+layout of the Test 2/3 baselines for BENCHMARKS.md aggregation.
 """
 
+import argparse
+import json
 import numpy as np
 import sys
 import time
@@ -19,22 +24,24 @@ from torch_harmonics_healpix.data_generation import (
 from torch_harmonics_healpix.mcmc_baseline import mcmc_estimate_ell_p
 
 
-N_TEST = 50  # Small test set for quick run; use 1000 for full benchmark
 NOISE_LEVELS = [0, 5, 10, 15]
 
 
-def run_benchmark(n_test=N_TEST, seed=42):
+def run_benchmark(n_test=50, seed=42, output=None):
     """Run MCMC baseline for all noise levels.
 
     Args:
         n_test (int): Number of test maps per noise level.
         seed (int): Random seed for reproducibility.
+        output (str): Optional path to write JSON results.
     """
     rng = np.random.default_rng(seed)
 
     print(f"MCMC Baseline Benchmark (n_test={n_test})")
     print(f"{'Noise σ_n':>10} | {'MCMC % error':>12} | {'Time (s)':>10}")
     print("-" * 40)
+
+    results = {"version": "v4_exact_lik", "n_test": n_test, "seed": seed, "levels": []}
 
     for noise_std in NOISE_LEVELS:
         # Generate random ℓ_p values
@@ -59,9 +66,16 @@ def run_benchmark(n_test=N_TEST, seed=42):
             errors.append(pct_error)
 
         elapsed = time.time() - t0
-        mean_error = np.mean(errors)
+        mean_error = float(np.mean(errors))
+        median_error = float(np.median(errors))
 
-        print(f"{noise_std:>10} | {mean_error:>11.1f}% | {elapsed:>9.1f}")
+        print(f"{noise_std:>10} | {mean_error:>11.2f}% | {elapsed:>9.1f}")
+        results["levels"].append({
+            "noise_std": noise_std,
+            "mean_pct_error": mean_error,
+            "median_pct_error": median_error,
+            "time_per_map_s": elapsed / n_test,
+        })
 
     # Paper baselines for reference
     print("\nPaper baselines (Krachmalnicoff & Tomasi 2019, Table 1):")
@@ -71,7 +85,16 @@ def run_benchmark(n_test=N_TEST, seed=42):
                               (10, "5.2%", "4.8%"), (15, "8.4%", "7.8%")]:
         print(f"{noise:>10} | {nnh:>10} | {mcmc:>10}")
 
+    if output:
+        with open(output, "w") as f:
+            json.dump(results, f, indent=2)
+        print(f"\nResults written to {output}")
+
 
 if __name__ == "__main__":
-    n_test = int(sys.argv[1]) if len(sys.argv) > 1 else N_TEST
-    run_benchmark(n_test=n_test)
+    p = argparse.ArgumentParser()
+    p.add_argument("n_test", type=int, nargs="?", default=50)
+    p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--output", type=str, default=None)
+    args = p.parse_args()
+    run_benchmark(n_test=args.n_test, seed=args.seed, output=args.output)

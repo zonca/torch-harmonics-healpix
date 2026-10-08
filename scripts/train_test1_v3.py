@@ -198,8 +198,12 @@ def main():
 
     # Load best model and evaluate
     model.load_state_dict(best_state)
+    # Save best weights alongside the results JSON (paper checkpoint)
+    model_path = args.output.replace(".json", ".pt")
+    os.makedirs(os.path.dirname(model_path) or ".", exist_ok=True)
+    torch.save(best_state, model_path)
+    print(f"Model saved to {model_path}")
     print(f"\n=== Evaluation on {args.n_test} test maps (noise σ_n={args.noise_std}) ===")
-
     cnn_pct = evaluate(model, test_loader, device)
     print(f"\nCNN  mean % error: {cnn_pct:.1f}%")
 
@@ -210,7 +214,9 @@ def main():
     for i in range(args.n_test):
         ell_p_true = test_dataset.ell_p_true[i]
         m = test_dataset[i][0].numpy()
-        ell_p_est = mcmc_estimate_ell_p(m, args.noise_std, NSIDE, LMAX)
+        ell_p_est = mcmc_estimate_ell_p(
+            m, sigma_p=SIGMA_P, lmax=LMAX, noise_std=args.noise_std, nside=NSIDE
+        )
         mcmc_errors.append(abs(ell_p_est - ell_p_true) / ell_p_true * 100)
     mcmc_time = (time.time() - t0) / args.n_test
     mcmc_pct = np.mean(mcmc_errors)
