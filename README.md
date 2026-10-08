@@ -9,67 +9,68 @@ and adds a fourth benchmark: joint tensor-to-scalar ratio r / optical depth τ
 estimation relevant to the Simons Observatory, benchmarked against Fisher
 (Cramér–Rao) forecasts.
 
-> **Pipeline versions.** Results labeled **v4** use the current pipeline:
-> the healpy `synfast` spectra-ordering fix (`new=True`) for all
-> polarization maps plus exact-likelihood MCMC baselines. **All
-> polarization results (Tests 2–4) from v1–v3 are invalid** — the
-> generators passed spectra in diagonal order while healpy's default
-> expects row order, putting the EE spectrum in the TE slot (see the
-> integrity notice in [BENCHMARKS.md](BENCHMARKS.md)); v4 retrains are in
-> flight. Test 1 (scalar) is unaffected. v3 also fixed the CAMB
-> `raw_cl=True` C_ℓ unit bug and τ-divergence (Huber loss); v1/v2
-> Test 3/4 numbers predate those fixes and are provenance only.
+> **Pipeline versions.** Results labeled **v4** are current: healpy
+> `synfast` spectra-ordering fix (`new=True`) for all polarization maps +
+> exact-likelihood MCMC baselines, run on the v4 stack (torch 2.11+cu130,
+> torch-harmonics 0.9.2, healpy 1.20.1). **All polarization results
+> (Tests 2–4) from v1–v3 are invalid** — the generators passed spectra in
+> diagonal order while healpy's default expects row order, putting the EE
+> spectrum in the TE slot (integrity notice in
+> [BENCHMARKS.md](BENCHMARKS.md)). Test 1 (scalar) is unaffected. v3
+> fixed the CAMB `raw_cl=True` C_ℓ unit bug and τ-divergence (Huber
+> loss); v1/v2 Test 3/4 numbers predate those fixes and are provenance
+> only.
 
 ## Key Results
 
-> **Status (2026-10):** the tables below for Tests 2–3 come from maps
-> generated **before** the synfast ordering fix and must not be quoted
-> until the v4 retrains (`slurm/train_v4_popeye.slurm`) replace them.
-> The v4 MCMC baselines are final: Test 1 0.65/2.41/4.58/7.67% at
-> σ_n=0/5/10/15 (matches KT19's 0.7/2.5/4.8/7.8 to ≤0.2pp), Test 2
-> full-sky 0.71%/0.68% (KT19 ~0.7%), Test 3 τ 2.7% median (KT19 2.8%).
+> **Status (2026-10-08): v4 results are FINAL.** All numbers below now come
+> from the corrected pipeline (`results_v4/`, Popeye A100 + CPU). Summary:
+> Test 1 CNN 1.78/3.46/6.62/10.98% (MCMC 0.66/2.43/4.41/7.20% — MCMC
+> dominates); Test 2 CNN parity at full sky (2.61/2.56% vs NNhealpix 2.7%)
+> and −23…−31% better at partial sky, where the naive MCMC collapses
+> (13–25% medians); Test 3 CNN 3.73% vs MCMC 3.07% and NNhealpix 4.0%.
 > See [BENCHMARKS.md](BENCHMARKS.md).
 
-### Test 2 (Polarization peaks) — ⚠ superseded (synfast bug), v4 retrain in flight
+### Test 2 (Polarization peaks) — v4 final: parity at full sky, clear win at partial sky
 
-Mean error on (ℓ_Ep, ℓ_Bp) from Q/U maps, NSIDE=16 — **generated from
-distorted maps, provenance only**:
+Mean error on (ℓ_Ep, ℓ_Bp) from Q/U maps, NSIDE=16, corrected data:
 
-| f_sky | SpectralCNN (ℓ_Ep / ℓ_Bp) | NNhealpix | Δ vs NNhealpix |
+| f_sky | SpectralCNN v4 (ℓ_Ep / ℓ_Bp) | NNhealpix | Δ vs NNhealpix |
 |-------|---------------------------|-----------|----------------|
-| 1.0   | **1.69% / 1.53%**         | 2.7%      | −40%           |
-| 0.5   | **1.95% / 1.91%**         | 3.9%      | −51%           |
-| 0.2   | **2.15% / 2.17%**         | 5.3%      | −59%           |
-| 0.1   | **2.56% / 2.70%**         | 6.4%      | −59%           |
-| 0.05  | **3.01% / 3.11%**         | 8.4%      | −64%           |
+| 1.0   | 2.61% / 2.56%             | 2.7%      | −4% (parity)   |
+| 0.5   | **2.92% / 2.90%**         | 3.9%      | −25%           |
+| 0.2   | **4.07% / 3.90%**         | 5.3%      | −25%           |
+| 0.1   | **5.02% / 4.78%**         | 6.4%      | −23%           |
+| 0.05  | **5.83% / 5.63%**         | 8.4%      | −31%           |
 
-The advantage *grows* as the sky fraction shrinks — the spectral prior handles
-aggressive masking far better than pixel-space convolution.
+The advantage at partial sky is real and grows as the sky fraction
+shrinks; at full sky the two architectures are at parity. The old
+"−40% at full sky" claim was an artifact of the synfast bug.
 
-### Test 1 (Scalar maps) — NNhealpix better at high noise
+### Test 1 (Scalar maps) — v4 final
 
-| σ_n (μK) | SpectralCNN | NNhealpix | Winner      |
-|-----|-------------|-----------|-------------|
-| 0   | **1.27%**   | 1.3%      | SpectralCNN |
-| 5   | 3.58%       | **2.9%**  | NNhealpix   |
-| 10  | 6.81%       | **5.2%**  | NNhealpix   |
-| 15  | 11.98%      | **8.4%**  | NNhealpix   |
+| σ_n (μK) | SpectralCNN v4 | NNhealpix | MCMC v4 |
+|-----|-------------|-----------|---------|
+| 0   | 1.78%       | **1.3%**  | **0.66%** |
+| 5   | 3.46%       | **2.9%**  | **2.43%** |
+| 10  | 6.62%       | **5.2%**  | **4.41%** |
+| 15  | 10.98%      | **8.4%**  | **7.20%** |
 
 The global SHT spreads local noise across all modes; pixel-space pooling
-filters it.
+filters it. The exact-likelihood MCMC dominates everywhere.
 
-### Test 3 (τ estimation) — ⚠ superseded (synfast bug), v4 retrain in flight
+### Test 3 (τ estimation) — v4 final
 
 | Method | τ error |
 |--------|---------|
-| MCMC v4 (validated, 500-template grid) | **2.7% median** |
+| **MCMC v4** | **3.07% mean / 2.61% median** |
 | MCMC (KT19) | 2.8% |
+| SpectralCNN v4 | 3.73% |
 | NNhealpix (KT19) | 4.0% |
-| SpectralCNN (v3, superseded) | 2.18% — invalid data, provenance only |
 
-The v3 "SpectralCNN beats MCMC" reading does not survive the v4 data fix
-(those maps had E-power injected through the TE slot). The v4 retrain
-settles the comparison on corrected data.
+With honest data the CNN sits between the spectrum-fit MCMC and
+NNhealpix; the earlier "CNN beats the MCMC" number (2.18%, v3) was an
+artifact of the synfast ordering bug.
 
 ### Test 4 (Joint r/τ, Simons Observatory) — v3 corrected
 

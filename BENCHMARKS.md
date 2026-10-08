@@ -88,20 +88,21 @@ deconvolving biases the fit badly, 0.65%→6.5%); the fit range stops at
 2·N_side because the 2·N_side < ℓ ≤ 3·N_side−1 band of the pseudo-C_ℓ is
 aliasing-dominated.
 
-### SpectralCNN vs baselines (v4 retrain, 20k maps, in flight)
+### SpectralCNN vs baselines (v4, FINAL — 20k maps, corrected data, new stack)
 
-| σ_n (μK) | SpectralCNN v4 | NNhealpix (KT19) | MCMC v4 |
-|----------|----------------|------------------|---------|
-| 0        | 1.78%          | 1.3%             | **0.66%** |
-| 5        | 3.46%          | 2.9%             | **2.43%** |
-| 10       | (training)     | 5.2%             | **4.41%** |
-| 15       | (training)     | 8.4%             | **7.20%** |
+| σ_n (μK) | SpectralCNN v4 | SpectralCNN v2 (100k) | NNhealpix (KT19) | MCMC v4 |
+|----------|----------------|------------------------|------------------|---------|
+| 0        | 1.78%          | 1.27%                  | **1.3%**         | **0.66%** |
+| 5        | 3.46%          | 3.58%                  | **2.9%**         | **2.43%** |
+| 10       | 6.62%          | 6.81%                  | **5.2%**         | **4.41%** |
+| 15       | 10.98%         | 11.98%                 | **8.4%**         | **7.20%** |
 
-v4 CNN trains on 20k maps (vs v2's 100k): 1.78%/3.46% at σ_n=0/5 vs v2's
-1.27%/3.58%. The v2 CNN numbers remain valid for Test 1 (scalar maps,
-unaffected by the polarization bug) — v4 re-establishes them on the new
-stack. The SHT spreads white noise into every (ℓ, m) mode; pixel-space
-pooling low-passes it. Parity without noise, growing deficit with noise.
+Test 1 is scalar (unaffected by the polarization bug): the v4 retrain on
+20k maps with the new stack (torch 2.11/torch-harmonics 0.9.2) matches or
+beats the 100k-map v2 numbers at every noisy level. The MCMC baseline
+dominates everywhere; NNhealpix beats the CNN at all σ_n>0. The SHT
+spreads white noise into every (ℓ, m) mode; pixel-space pooling
+low-passes it — parity without noise, growing deficit with noise.
 
 ## Test 2: ℓ_Ep/ℓ_Bp from Q/U maps — NSIDE=16
 
@@ -138,6 +139,29 @@ number; the strong degradation of the naive estimator at f_sky≤0.5 is
 itself the paper's motivation for pixel-space methods, and is exactly
 where a CNN operating on pixels should be compared.
 
+### v4 SpectralCNN results (FINAL — corrected data, 20k maps, new stack)
+
+Popeye job 2483915, `results_v4/test2_v4_fsky*.json`. First
+polarization-CNN results on data with the correct E/B content:
+
+| f_sky | SpectralCNN v4 (ℓ_Ep / ℓ_Bp) | NNhealpix (KT19) | Δ mean vs KT19 |
+|-------|------------------------------|------------------|----------------|
+| 1.0   | 2.61% / 2.56%                | 2.7%             | −4% (parity)   |
+| 0.5   | **2.92% / 2.90%**            | 3.9%             | −25%           |
+| 0.2   | **4.07% / 3.90%**            | 5.3%             | −25%           |
+| 0.1   | **5.02% / 4.78%**            | 6.4%             | −23%           |
+| 0.05  | **5.83% / 5.63%**            | 8.4%             | −31%           |
+
+**The corrected story**: full-sky parity with the pixel-space network
+(the old −40% was an artifact of the synfast bug — E-power arriving
+through the TE slot made the task easier), but a **genuine, growing
+advantage at partial sky: −23…−31%**, and the naive spectrum-fit MCMC
+collapses there (medians 13–25%, means 30–46%) because of uncorrected
+E/B leakage. Pixel-space inpainting + the CNN's spectral prior is the
+right combination for masked polarization — exactly the regime KT19
+motivate their pixel-based method for, and where the map-based CNN now
+beats both published baselines.
+
 ### Superseded: v2 SpectralCNN vs KT19 (invalid data — provenance only)
 
 | f_sky | SpectralCNN (ℓ_Ep/ℓ_Bp) | NNhealpix (KT19) | Δ mean vs KT19 |
@@ -171,7 +195,13 @@ Popeye job 2483914, `results_v4/mcmc_test3_v4.json`):
 |--------|---------|------|
 | **MCMC v4** | **3.07% mean / 2.61% median** | 5000-template grid, ~4 ms/map |
 | MCMC (KT19) | 2.8% | paper value |
+| SpectralCNN v4 | 3.73% | corrected data, 20k maps, 34 epochs |
 | NNhealpix (KT19) | 4.0% | paper value |
+
+**v4 verdict**: with honest data the CNN no longer beats the spectrum-fit
+MCMC (3.73% vs 3.07%); it sits between the MCMC and NNhealpix. The v3
+"CNN wins" number (2.18%) was measured on maps whose E-power arrived
+through the TE slot — an easier, physically wrong problem.
 
 ### Superseded: v2/v3 SpectralCNN (invalid data — provenance only)
 
