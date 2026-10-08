@@ -1,0 +1,31 @@
+{
+  "version": "v4_exact_lik",
+  "n_test": 1000,
+  "seed": 42,
+  "levels": [
+    {
+      "noise_std": 0,
+      "mean_pct_error": 0.6602587989863792,
+      "median_pct_error": 0.5438727299352253,
+      "time_per_map_s": 0.0019793853759765626
+    },
+    {
+      "noise_std": 5,
+      "mean_pct_error": 2.4287648317022206,
+      "median_pct_error": 1.6205353465550902,
+      "time_per_map_s": 0.001945056438446045
+    },
+    {
+      "noise_std": 10,
+      "mean_pct_error": 4.41212777454013,
+      "median_pct_error": 3.1291628810145387,
+      "time_per_map_s": 0.0019615218639373777
+    },
+    {
+      "noise_std": 15,
+      "mean_pct_error": 7.199027445021322,
+      "median_pct_error": 5.06590573264938,
+      "time_per_map_s": 0.001966952323913574
+    }
+  ]
+}

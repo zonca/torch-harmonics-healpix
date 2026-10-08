@@ -1,0 +1,9 @@
+{
+  "version": "v4_exact_lik",
+  "n_maps": 1000,
+  "seed": 42,
+  "tau_pct_error": 3.0738296508789062,
+  "tau_median_pct_error": 2.607487678527832,
+  "time_per_map": 0.004397355079650879,
+  "wall_time_s": 1003.0723674297333
+}
