@@ -197,6 +197,9 @@ def generate_r_tau_map(
     cl_eb = np.zeros(lmax + 1)
     cl_tb = np.zeros(lmax + 1)
 
+    # healpy synfast/synalm ordering (new=True, diagonal order):
+    # [TT, EE, BB, TE, EB, TB]. See data_generation_test2.py for why
+    # new=True is CRITICAL (default row order would put EE in the TE slot).
     cl_full = np.array([cl_tt, cl_ee, cl_bb, cl_te, cl_eb, cl_tb])
 
     # Reproducibility via numpy random state
@@ -205,7 +208,7 @@ def generate_r_tau_map(
         seed = int(rng.integers(0, 2**31))
         np.random.seed(seed)  # healpy synfast doesn't accept numpy Generator objects, so we extract a seed and use legacy np.random.seed
 
-    maps = hp.synfast(cl_full, nside=nside, lmax=lmax)
+    maps = hp.synfast(cl_full, nside=nside, lmax=lmax, new=True)
 
     if rng is not None:
         np.random.set_state(rand_state)

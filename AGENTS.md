@@ -1,5 +1,10 @@
 # AGENTS — torch-harmonics-healpix
 
+## Time Tracking
+
+- **Timeportal**: always use project **PSM** and include **#thh** in the description
+  (keep the hash — used for tagging/filtering entries).
+
 ## Remote Compute
 
 - **Expanse** (`ssh expanse`): GPU jobs only. Use Slurm with `sbatch`. Partition `gpu-shared`, account `sds166` (as of 2026-07, `sds275` no longer appears in `expanse-client user`; sds166 has GPU QOS and available SUs). **NEVER submit CPU-only jobs on Expanse — that wastes GPU allocation.** CPU work goes on Popeye. Job repo clone: `/expanse/lustre/scratch/zonca/temp_project/torch-harmonics-healpix/repo_latest` (venv: `../venv`).

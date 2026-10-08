@@ -76,7 +76,13 @@ def generate_polarization_map(
     cl_te = np.zeros(lmax + 1)
     cl_tb = np.zeros(lmax + 1)
 
-    # synfast expects array of shape (6, lmax+1): TT, EE, BB, TE, EB, TB
+    # healpy synfast/synalm ordering (new=True, diagonal order):
+    # [TT, EE, BB, TE, EB, TB]
+    # CRITICAL: with the default new=False healpy interprets 6 spectra in
+    # ROW order [TT, TE, TB, EE, EB, BB]; passing the diagonal order without
+    # new=True silently puts EE into the TE slot and BB into TB (the spectra
+    # are then Cholesky-clipped, yielding maps with observed C_EE ~ C_EE^2/C_TT
+    # instead of independent E/B fields). Always pass new=True here.
     cl_full = np.array([cl_tt, cl_ee, cl_bb, cl_te, cl_eb, cl_tb])
 
     # Reproducibility via numpy random state
@@ -85,7 +91,7 @@ def generate_polarization_map(
         seed = int(rng.integers(0, 2**31))
         np.random.seed(seed)
 
-    maps = hp.synfast(cl_full, nside=nside, lmax=lmax)
+    maps = hp.synfast(cl_full, nside=nside, lmax=lmax, new=True)
 
     if rng is not None:
         np.random.set_state(rand_state)
