@@ -70,37 +70,38 @@ numbers remain current. The MCMC baseline was rebuilt in v4.
 ### v4 MCMC baseline (exact Gaussian likelihood)
 
 The v4 baseline replaces the χ² fit with the exact Wishart likelihood over
-ℓ ≤ 2·N_side (design validated at 200–300 maps per level; production
-1000-map run in flight, `results_v4/mcmc_test1_v4.json`):
+ℓ ≤ 2·N_side. **Production numbers** (1000 maps per config, seed 42,
+Popeye job 2483914, `results_v4/mcmc_test1_v4.json`):
 
-| σ_n (μK) | MCMC v4 (validated) | MCMC (KT19) | χ² fit (v2, superseded) |
-|----------|---------------------|-------------|--------------------------|
-| 0        | **0.65%**           | 0.7%        | 2.22%                    |
-| 5        | **2.41%**           | 2.5%        | 2.87%                    |
-| 10       | **4.58%**           | 4.8%        | 5.18%                    |
-| 15       | **7.67%**           | 7.8%        | 8.24%                    |
+| σ_n (μK) | MCMC v4 | MCMC (KT19) | χ² fit (v2, superseded) |
+|----------|---------|-------------|--------------------------|
+| 0        | **0.66%** | 0.7%      | 2.22%                    |
+| 5        | **2.43%** | 2.5%      | 2.87%                    |
+| 10       | **4.41%** | 4.8%      | 5.18%                    |
+| 15       | **7.20%** | 7.8%      | 8.24%                    |
 
-The v4 baseline reproduces KT19's MCMC to within 0.05–0.2pp at every noise
-level (the residual is slightly *better* than KT19's own reported value at
-σ_n=0, which equals the Fisher bound 0.70%). Design notes: **no pixel
-window in the model** — healpy ≥1.15 `synfast` defaults to `pixwin=False`
-(verified by a flat-floor test; convolving or deconvolving biases the fit
-badly, 0.65%→6.5%); the fit range stops at 2·N_side because the
-2·N_side < ℓ ≤ 3·N_side−1 band of the pseudo-C_ℓ is aliasing-dominated.
+The v4 baseline reproduces — or slightly beats — KT19's MCMC at every
+noise level (medians are lower still: 0.54/1.62/3.13/5.07%). Design
+notes: **no pixel window in the model** — healpy ≥1.15 `synfast` defaults
+to `pixwin=False` (verified by a flat-floor test; convolving or
+deconvolving biases the fit badly, 0.65%→6.5%); the fit range stops at
+2·N_side because the 2·N_side < ℓ ≤ 3·N_side−1 band of the pseudo-C_ℓ is
+aliasing-dominated.
 
-### SpectralCNN vs baselines (v2 CNN, still current)
+### SpectralCNN vs baselines (v4 retrain, 20k maps, in flight)
 
-| σ_n (μK) | SpectralCNN | NNhealpix (KT19) | MCMC (KT19) | MCMC v4 |
-|----------|-------------|------------------|-------------|---------|
-| 0        | 1.27%       | 1.3%             | 0.7%        | **0.65%** |
-| 5        | 3.58%       | 2.9%             | 2.5%        | **2.41%** |
-| 10       | 6.81%       | 5.2%             | 4.8%        | **4.58%** |
-| 15       | 11.98%      | 8.4%             | 7.8%        | **7.67%** |
+| σ_n (μK) | SpectralCNN v4 | NNhealpix (KT19) | MCMC v4 |
+|----------|----------------|------------------|---------|
+| 0        | 1.78%          | 1.3%             | **0.66%** |
+| 5        | 3.46%          | 2.9%             | **2.43%** |
+| 10       | (training)     | 5.2%             | **4.41%** |
+| 15       | (training)     | 8.4%             | **7.20%** |
 
-The SHT spreads white noise into every (ℓ, m) mode; pixel-space pooling
-low-passes it. Parity without noise, growing deficit with noise. A v4 CNN
-retrain with the new stack (torch 2.11 / torch-harmonics 0.9.2) is in
-flight to check the stack migration doesn't move these numbers.
+v4 CNN trains on 20k maps (vs v2's 100k): 1.78%/3.46% at σ_n=0/5 vs v2's
+1.27%/3.58%. The v2 CNN numbers remain valid for Test 1 (scalar maps,
+unaffected by the polarization bug) — v4 re-establishes them on the new
+stack. The SHT spreads white noise into every (ℓ, m) mode; pixel-space
+pooling low-passes it. Parity without noise, growing deficit with noise.
 
 ## Test 2: ℓ_Ep/ℓ_Bp from Q/U maps — NSIDE=16
 
@@ -115,14 +116,17 @@ MCMC baseline is trustworthy; the v4 CNN retrain is in flight.
 
 ### v4 MCMC baseline (exact Gaussian likelihood, corrected data)
 
-Full sky, validated at n=100 (production 1000-map run in flight,
-`results_v4/mcmc_test2_v4.json`):
+**Production numbers** (1000 maps per f_sky, seed 42, Popeye job 2483914,
+`results_v4/mcmc_test2_v4.json`). Means are heavy-tailed at partial sky —
+medians shown alongside:
 
-| f_sky | ℓ_Ep err | ℓ_Bp err | note |
-|-------|----------|----------|------|
-| 1.0   | **0.71%** | **0.68%** | matches KT19 full-sky MCMC ~0.7% |
-| 0.5   | ~30%      | ~30%     | E/B leakage from the mask, uncorrected |
-| 0.2   | ~37%      | ~36%     | same |
+| f_sky | ℓ_Ep mean | ℓ_Bp mean | ℓ_Ep med | ℓ_Bp med | note |
+|-------|-----------|-----------|----------|----------|------|
+| 1.0   | **0.64%** | **0.65%** | 0.49%    | 0.55%    | matches KT19 full-sky MCMC ~0.7% |
+| 0.5   | 31.9%     | 29.9%     | 13.3%    | 13.1%    | E/B leakage from the mask, uncorrected |
+| 0.2   | 38.4%     | 36.4%     | 18.7%    | 18.9%    | same |
+| 0.1   | 42.3%     | 40.0%     | 21.7%    | 22.3%    | same |
+| 0.05  | 45.8%     | 43.5%     | 25.4%    | 24.8%    | same |
 
 Design notes: polarization fits run over ℓ ∈ [2, 2·N_side] — `anafast`
 returns exact zeros for E/B at ℓ=0,1 (a log(0) hazard for the exact
@@ -160,9 +164,12 @@ disk-cached + process-parallel (`~/.cache/thh_camb`, `THH_CAMB_CACHE_DIR`).
 
 ### v4 MCMC baseline (exact Gaussian likelihood, corrected labels)
 
+**Production numbers** (1000 maps, full 5000-template grid, seed 42,
+Popeye job 2483914, `results_v4/mcmc_test3_v4.json`):
+
 | Method | τ error | note |
 |--------|---------|------|
-| **MCMC v4** | **3.2% mean / 2.7% median** | validated n=100, 500-template grid; production 5000-grid run in flight |
+| **MCMC v4** | **3.07% mean / 2.61% median** | 5000-template grid, ~4 ms/map |
 | MCMC (KT19) | 2.8% | paper value |
 | NNhealpix (KT19) | 4.0% | paper value |
 
