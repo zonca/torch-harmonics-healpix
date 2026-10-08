@@ -82,7 +82,10 @@ Input: HEALPix map (N_side=16, 3072 pixels)
 - Rotation equivariance (no data augmentation needed)
 - Native E/B mode separation for spin-2 fields (Q/U maps) — when VectorSHT is fast enough
 - Grid-independent (could work with any sampling that supports SHT)
-- **Dominates for polarization estimation** (Tests 2 & 3) — +37-64% better than NNhealpix
+- ~~Dominates for polarization estimation~~ (Tests 2 & 3) — **the pre-v4
+  "+37–64% better than NNhealpix" numbers were measured on maps
+  invalidated by the synfast ordering bug (v4); see BENCHMARKS.md. v4
+  retrains are in flight.**
 - Matches NNhealpix at zero noise (Test 1, σ=0)
 
 ### Weaknesses
@@ -145,7 +148,7 @@ SpectralCNN matches at σ=0 but degrades with noise. The SHT spreads noise
 across all spectral modes, while pixel-space convolution provides implicit
 low-pass filtering.
 
-### Test 2: ℓ_Ep/ℓ_Bp from Q/U maps — SpectralCNN DOMINATES
+### Test 2: ℓ_Ep/ℓ_Bp from Q/U maps — ⚠ SUPERSEDED (synfast bug; v4 retrain in flight)
 
 | f_sky | SpectralCNN | NNhealpix | Δ |
 |-------|------------|-----------|---|
@@ -155,20 +158,19 @@ low-pass filtering.
 | 0.1   | **2.56%/2.70%** | 6.4%/6.4% | -60%/-58% |
 | 0.05  | **3.01%/3.11%** | 8.4%/8.4% | -64%/-63% |
 
-The advantage **increases** with smaller f_sky. The spectral representation's
-global context is overwhelmingly beneficial for partial-sky polarization.
+> Measured on maps generated before the v4 synfast fix (`new=True`) —
+> the Q/U maps had E-power injected through the TE slot, so these numbers
+> describe a different (and likely easier) statistical problem. Do not
+> quote; v4 retrains replace this table.
 
 ### Test 3: τ estimation
 
 | Method | τ % error |
 |--------|----------|
-| MCMC (paper) | **2.8%** |
-| SpectralCNN (v2, superseded) | 3.76% |
+| MCMC v4 (validated) | **2.7% median** |
+| MCMC (paper) | 2.8% |
 | NNhealpix | 4.0% |
-
-> The v2 SpectralCNN number predates the C_ℓ fix (`raw_cl=True`) and is not
-> comparable to the published baselines; the v3 retrain
-> (`slurm/train_test3_v3_expanse.slurm`) provides the publication value.
+| SpectralCNN (v3, superseded — invalid data) | 2.18% |
 
 ### Test 4: Joint r/τ estimation (Simons Observatory)
 
@@ -270,9 +272,11 @@ This naturally separates E-mode and B-mode power:
 
 **However**, in torch-harmonics 0.8.0, the Vector SHT implementation is
 extremely slow. Our current implementation uses scalar SHT with Q/U stacked
-as independent channels, which does NOT separate E/B modes. Despite this,
-SpectralCNN still outperforms NNhealpix on polarization tasks — suggesting
-that even scalar SHT provides a useful global spectral prior for Q/U data.
+as independent channels, which does NOT separate E/B modes. Whether the
+scalar-SHT spectral prior still beats pixel-space convolution on
+polarization is **being re-established by the v4 retrains** — the earlier
+"SpectralCNN outperforms NNhealpix on polarization" claim was measured on
+maps invalidated by the synfast ordering bug (see BENCHMARKS.md).
 
 ---
 

@@ -9,18 +9,31 @@ and adds a fourth benchmark: joint tensor-to-scalar ratio r / optical depth τ
 estimation relevant to the Simons Observatory, benchmarked against Fisher
 (Cramér–Rao) forecasts.
 
-> **Pipeline versions.** Results labeled **v3** use the corrected pipeline
-> (CAMB `raw_cl=True` C_ℓ fix + Huber τ loss + fixed-accuracy Fisher bounds,
-> `lmax_calc=500`). Earlier v1/v2 Test 3/4 results were generated with D_ℓ
-> amplitudes (unit bug) and are kept only for provenance in
-> [BENCHMARKS.md](BENCHMARKS.md). Tests 1–2 do not use CAMB and are
-> unaffected.
+> **Pipeline versions.** Results labeled **v4** use the current pipeline:
+> the healpy `synfast` spectra-ordering fix (`new=True`) for all
+> polarization maps plus exact-likelihood MCMC baselines. **All
+> polarization results (Tests 2–4) from v1–v3 are invalid** — the
+> generators passed spectra in diagonal order while healpy's default
+> expects row order, putting the EE spectrum in the TE slot (see the
+> integrity notice in [BENCHMARKS.md](BENCHMARKS.md)); v4 retrains are in
+> flight. Test 1 (scalar) is unaffected. v3 also fixed the CAMB
+> `raw_cl=True` C_ℓ unit bug and τ-divergence (Huber loss); v1/v2
+> Test 3/4 numbers predate those fixes and are provenance only.
 
 ## Key Results
 
-### Test 2 (Polarization peaks) — SpectralCNN dominates
+> **Status (2026-10):** the tables below for Tests 2–3 come from maps
+> generated **before** the synfast ordering fix and must not be quoted
+> until the v4 retrains (`slurm/train_v4_popeye.slurm`) replace them.
+> The v4 MCMC baselines are final: Test 1 0.65/2.41/4.58/7.67% at
+> σ_n=0/5/10/15 (matches KT19's 0.7/2.5/4.8/7.8 to ≤0.2pp), Test 2
+> full-sky 0.71%/0.68% (KT19 ~0.7%), Test 3 τ 2.7% median (KT19 2.8%).
+> See [BENCHMARKS.md](BENCHMARKS.md).
 
-Mean error on (ℓ_Ep, ℓ_Bp) from Q/U maps, NSIDE=16:
+### Test 2 (Polarization peaks) — ⚠ superseded (synfast bug), v4 retrain in flight
+
+Mean error on (ℓ_Ep, ℓ_Bp) from Q/U maps, NSIDE=16 — **generated from
+distorted maps, provenance only**:
 
 | f_sky | SpectralCNN (ℓ_Ep / ℓ_Bp) | NNhealpix | Δ vs NNhealpix |
 |-------|---------------------------|-----------|----------------|
@@ -45,18 +58,18 @@ aggressive masking far better than pixel-space convolution.
 The global SHT spreads local noise across all modes; pixel-space pooling
 filters it.
 
-### Test 3 (τ estimation) — SpectralCNN best overall (v3)
+### Test 3 (τ estimation) — ⚠ superseded (synfast bug), v4 retrain in flight
 
 | Method | τ error |
 |--------|---------|
-| **SpectralCNN (v3)** | **2.18%** |
+| MCMC v4 (validated, 500-template grid) | **2.7% median** |
 | MCMC (KT19) | 2.8% |
 | NNhealpix (KT19) | 4.0% |
+| SpectralCNN (v3, superseded) | 2.18% — invalid data, provenance only |
 
-With the corrected C_ℓ pipeline the SpectralCNN beats both the pixel-space
-network and the published spectrum-based fit — seed-robust at
-2.23 ± 0.06% over three independent trainings (the superseded v2 number
-was 3.76% due to the D_ℓ bug).
+The v3 "SpectralCNN beats MCMC" reading does not survive the v4 data fix
+(those maps had E-power injected through the TE slot). The v4 retrain
+settles the comparison on corrected data.
 
 ### Test 4 (Joint r/τ, Simons Observatory) — v3 corrected
 
@@ -153,14 +166,16 @@ Test 4 → (log(r + 1e-4), τ).
 uv venv .venv --python 3.11
 source .venv/bin/activate
 
-uv pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
-uv pip install torch-harmonics==0.8.0 --no-deps   # >=0.9.0 has a C++ ABI issue on V100
-uv pip install healpy astropy scipy h5py
+# v4 stack (torch-harmonics 0.9.2 requires torch >=2.11)
+uv pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cu130
+uv pip install torch-harmonics==0.9.2
+uv pip install healpy astropy scipy h5py numpy camb pytest
 uv pip install -e .
-
-# Tests 3/4 (CAMB spectra):
-uv pip install camb
 ```
+
+> The old `torch-harmonics==0.8.0 --no-deps` pin (V100 ABI issue) is
+> obsolete on the v4 stack; 0.9.2 is installed normally. cu130 wheels
+> require sm_80+ (A100) — for V100 use the cu124 build with 0.8.0.
 
 ## Project Structure
 
@@ -172,8 +187,8 @@ torch-harmonics-healpix/
 │   ├── data_generation_test2.py     # Test 2: polarization Q/U maps + masks
 │   ├── data_generation_test3.py     # Test 3: CAMB τ spectra (raw_cl=True)
 │   ├── data_generation_test4.py     # Test 4: CAMB r/τ spectra (raw_cl=True)
-│   ├── mcmc_baseline.py             # χ² spectrum-fit baseline (Test 1)
-│   ├── mcmc_baselines_test2_3.py    # baselines for Tests 2 & 3
+│   ├── mcmc_baseline.py             # exact-likelihood spectrum fit (Test 1)
+│   ├── mcmc_baselines_test2_3.py    # baselines for Tests 2 & 3 (exact likelihood)
 │   └── models/
 │       ├── spectral_cnn.py          # SpectralCNN (fixed ℓ_max)
 │       └── multires_spectral_cnn.py # MultiResSpectralCNN (ablation)
@@ -191,7 +206,8 @@ torch-harmonics-healpix/
 ├── slurm/                           # Slurm jobs (Expanse GPU + Popeye CPU)
 │   └── archive/                     # superseded v1/v2 jobs
 ├── results/                         # v1/v2 JSONs + model weights (provenance)
-├── results_v3/                      # v3 (corrected) results — current
+├── results_v3/                      # v3 results (superseded for Tests 2-4)
+├── results_v4/                      # v4 (synfast fix + exact-likelihood) — current
 ├── tests/                           # unit tests (CPU + GPU)
 ├── BENCHMARKS.md                    # all benchmark tables
 ├── ARCHITECTURE.md                  # architecture notes and comparisons
@@ -228,10 +244,14 @@ python scripts/eval_test4_at_fiducial.py --nside 32 --hidden_channels 32 \
 
 ## Running on Clusters
 
-- **Expanse (GPU, Slurm):** training and fiducial evaluation.
+- **Popeye (Slurm, account `soap`):** CPU jobs on `gen` (MCMC baselines,
+  Fisher, CAMB caches); GPU jobs on `gpupreempt` (A100-40GB on
+  `pcn-16-06`; preemptible — the v4 scripts checkpoint every epoch).
+  v4 jobs: `sbatch slurm/run_mcmc_v4_popeye.slurm`,
+  `sbatch slurm/train_v4_popeye.slurm`. Venv:
+  `~/torch-hh-v4-venv` (build with `scripts/setup_popeye_venv_v4.sh`).
+- **Expanse (GPU, Slurm):** legacy v2/v3 training jobs.
   `sbatch slurm/eval_fiducial_v3_expanse.slurm`, `sbatch slurm/train_test3_v3_expanse.slurm`, ...
-- **Popeye (CPU, Slurm):** CAMB caches, Fisher forecasts, MCMC baselines.
-  `sbatch slurm/fisher_multifid_popeye.slurm`, `sbatch slurm/precompute_test3_camb_popeye.slurm`, ...
 
 Workflow: `git commit && git push` locally, `git pull` on the cluster, submit
 from the repo clone. See [AGENTS.md](AGENTS.md) for accounts, environments,
