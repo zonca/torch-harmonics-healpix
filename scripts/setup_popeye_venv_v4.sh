@@ -17,6 +17,8 @@ python3 -m pip install torch==2.11.0 --index-url https://download.pytorch.org/wh
 # torch-harmonics 0.9.2 requires torch>=2.11,<2.12 (the old ABI pin is obsolete)
 python3 -m pip install torch-harmonics==0.9.2
 python3 -m pip install healpy==1.20.1 numpy scipy camb pytest astropy
+# The repo package itself (data generators, models, MCMC baselines)
+python3 -m pip install -e .
 
 echo "=== installed ==="
 python3 -c "

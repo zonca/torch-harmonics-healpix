@@ -7,7 +7,8 @@
 #SBATCH --time=24:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --gpus=1
+#SBATCH --gpus=a100-pcie-40gb:1
+#SBATCH --gres=gpu:a100-pcie-40gb:1
 
 # v4 GPU retrains: Tests 1-3 SpectralCNN on the FIXED polarization data
 # (healpy synfast new=True) with the new stack (torch 2.11 + cu130,
