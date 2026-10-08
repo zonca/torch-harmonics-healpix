@@ -29,7 +29,7 @@ print('numpy:', numpy.__version__)
 print('scipy:', scipy.__version__)
 print('camb:', camb.__version__)
 import torch_harmonics as th
-l = th.Legendre()
-print('SHT import OK')
+sht = th.RealSHT(16, 32)
+print('SHT construct OK')
 "
 echo "VENV READY: $VENV"

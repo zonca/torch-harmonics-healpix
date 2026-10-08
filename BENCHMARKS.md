@@ -9,30 +9,54 @@ compared against Fisher (Cramér–Rao) bounds.
 
 | Version | Status | Notes |
 |---------|--------|-------|
-| v3      | **current** | CAMB `raw_cl=True` (C_ℓ fix), Huber τ loss, Fisher at fixed `lmax_calc=500` |
+| v4      | **current** | synfast `new=True` spectra-ordering fix (Tests 2–4 data regenerated), exact-likelihood MCMC baselines matching KT19 |
+| v3      | superseded (Tests 2–4) | CAMB `raw_cl=True` (C_ℓ fix), Huber τ loss, Fisher at fixed `lmax_calc=500` — **polarization maps still carried the synfast ordering bug** |
 | v2      | superseded | Test 3/4 maps generated with D_ℓ amplitudes (unit bug); Tests 1–2 unaffected and still current |
 | v1      | superseded | early runs, per-split masks bug |
 
 All v1/v2 JSONs remain in `results/` for provenance; v3 results are in
-`results_v3/`.
+`results_v3/`; v4 results land in `results_v4/`.
+
+**⚠ v4 data-integrity notice (2026-10).** Every polarization map generated
+before v4 (Tests 2, 3, 4 — CNN training *and* MCMC evaluation) is
+statistically wrong: `hp.synfast` was called with 6 spectra in diagonal
+order `[TT,EE,BB,TE,EB,TB]` but healpy's default (`new=False`) expects row
+order `[TT,TE,TB,EE,EB,BB]`, so the EE spectrum landed in the TE slot (BB in
+TB) and the clipped Cholesky produced maps with observed C_EE ≈ C_EE²/C_TT
+and Q/U as rescaled copies of a single T realization instead of independent
+E/B fields. **All pre-v4 SpectralCNN results for Tests 2–4 are not
+comparable to KT19** (the old Test 2/3 tables are kept below for provenance
+only). Test 1 (scalar) is unaffected. Fixed in commit 6331690; v4 retrains
+on the corrected data are in flight (`slurm/train_v4_popeye.slurm`).
 
 ---
 
 ## Hardware & Runtime
 
-### Expanse (GPU — SDSC, allocation sds166)
+### Popeye (SDSC/Flatiron — CPU + GPU)
+
+- CPU: Intel Xeon Platinum 8168, 48 cores; partition `gen`, account `soap`.
+  Fisher forecast: seconds per config. v4 MCMC baselines: ~0.05–0.06 s/map
+  (1000 maps ≈ 1 min per config).
+- GPU: partition `gpupreempt` (preemptible), account `soap` —
+  `pcn-16-06` 6× A100-PCIE-40GB, `pcn-16-01/03/04/05` V100S-32GB.
+  **torch 2.11+cu130 runs on the A100s only** (sm_80; V100 sm_70 unsupported
+  by cu130).
+- v4 stack: Python 3.11 (module), torch 2.11.0+cu130, torch-harmonics
+  0.9.2 (the ≥0.9 ABI break does not affect A100/sm_80), healpy 1.20.1,
+  numpy/scipy current, camb. Venv: `~/torch-hh-v4-venv`
+  (`scripts/setup_popeye_venv_v4.sh`).
+- CAMB spectral grids: cached at
+  `/mnt/sdceph/users/zonca/torch-harmonics-healpix/camb_cache`
+  (`THH_CAMB_CACHE_DIR`), shared between CPU and GPU jobs.
+
+### Expanse (GPU — superseded for v4)
 
 - NVIDIA Tesla V100-SXM2-32GB, CUDA 12.0; Python 3.11, PyTorch 2.6.0+cu124,
-  torch-harmonics 0.8.0, healpy 1.19.0
+  torch-harmonics 0.8.0 (V100 ABI pin), healpy 1.19.0
 - Test 1–3 training (100k maps): ~70 min/config
 - Test 4 NSIDE=32 training: ~1–2 h/config; NSIDE=128 (422M params, HDF5 on
   striped Lustre): ~60 min/epoch (I/O-dominated)
-
-### Popeye (CPU — SDSC/Flatiron)
-
-- Intel Xeon Platinum 8168, 48 cores; Python 3.11 via module + `~/torch-hh-venv`
-- Fisher forecast: seconds per config; 5000-spectra CAMB cache: minutes
-  (48-way parallel, `scripts/precompute_test3_camb.py`)
 
 ---
 
@@ -40,23 +64,77 @@ All v1/v2 JSONs remain in `results/` for provenance; v3 results are in
 
 Estimate the peak multipole of C_ℓ = exp(−(ℓ−ℓ_p)²/2σ_p²)+10⁻⁵, σ_p=5,
 ℓ_p ∈ [5, 20]. 100k train / 10k val / 1k test, four noise levels.
-No CAMB → v2 results current.
+No CAMB, scalar maps → **unaffected by the v4 polarization fix**; v2 CNN
+numbers remain current. The MCMC baseline was rebuilt in v4.
 
-| σ_n (μK) | SpectralCNN | NNhealpix (KT19) | MCMC (KT19) | χ² fit (ours) |
-|----------|-------------|------------------|-------------|---------------|
-| 0        | **1.27%**   | 1.3%             | 0.7%        | 2.22%         |
-| 5        | 3.58%       | **2.9%**         | 2.5%        | 2.87%         |
-| 10       | 6.81%       | **5.2%**         | 4.8%        | 5.18%         |
-| 15       | 11.98%      | **8.4%**         | 7.8%        | 8.24%         |
+### v4 MCMC baseline (exact Gaussian likelihood)
+
+The v4 baseline replaces the χ² fit with the exact Wishart likelihood over
+ℓ ≤ 2·N_side (design validated at 200–300 maps per level; production
+1000-map run in flight, `results_v4/mcmc_test1_v4.json`):
+
+| σ_n (μK) | MCMC v4 (validated) | MCMC (KT19) | χ² fit (v2, superseded) |
+|----------|---------------------|-------------|--------------------------|
+| 0        | **0.65%**           | 0.7%        | 2.22%                    |
+| 5        | **2.41%**           | 2.5%        | 2.87%                    |
+| 10       | **4.58%**           | 4.8%        | 5.18%                    |
+| 15       | **7.67%**           | 7.8%        | 8.24%                    |
+
+The v4 baseline reproduces KT19's MCMC to within 0.05–0.2pp at every noise
+level (the residual is slightly *better* than KT19's own reported value at
+σ_n=0, which equals the Fisher bound 0.70%). Design notes: **no pixel
+window in the model** — healpy ≥1.15 `synfast` defaults to `pixwin=False`
+(verified by a flat-floor test; convolving or deconvolving biases the fit
+badly, 0.65%→6.5%); the fit range stops at 2·N_side because the
+2·N_side < ℓ ≤ 3·N_side−1 band of the pseudo-C_ℓ is aliasing-dominated.
+
+### SpectralCNN vs baselines (v2 CNN, still current)
+
+| σ_n (μK) | SpectralCNN | NNhealpix (KT19) | MCMC (KT19) | MCMC v4 |
+|----------|-------------|------------------|-------------|---------|
+| 0        | 1.27%       | 1.3%             | 0.7%        | **0.65%** |
+| 5        | 3.58%       | 2.9%             | 2.5%        | **2.41%** |
+| 10       | 6.81%       | 5.2%             | 4.8%        | **4.58%** |
+| 15       | 11.98%      | 8.4%             | 7.8%        | **7.67%** |
 
 The SHT spreads white noise into every (ℓ, m) mode; pixel-space pooling
-low-passes it. Parity without noise, growing deficit with noise.
+low-passes it. Parity without noise, growing deficit with noise. A v4 CNN
+retrain with the new stack (torch 2.11 / torch-harmonics 0.9.2) is in
+flight to check the stack migration doesn't move these numbers.
 
 ## Test 2: ℓ_Ep/ℓ_Bp from Q/U maps — NSIDE=16
 
 3 input channels (Q, U, mask), 2 outputs. **Shared mask** across splits
-(mandatory — see ARCHITECTURE.md), mean-inpainting for f_sky<1.
-No CAMB → v2 results current.
+(mandatory — see ARCHITECTURE.md), zeros masking outside the cap
+(KT19 methodology).
+
+**⚠ v4: all pre-v4 CNN numbers below are INVALID** — the maps were
+generated with the synfast ordering bug (EE in the TE slot), so the old
+"SpectralCNN beats KT19 by 40–64%" tables are provenance only. The v4
+MCMC baseline is trustworthy; the v4 CNN retrain is in flight.
+
+### v4 MCMC baseline (exact Gaussian likelihood, corrected data)
+
+Full sky, validated at n=100 (production 1000-map run in flight,
+`results_v4/mcmc_test2_v4.json`):
+
+| f_sky | ℓ_Ep err | ℓ_Bp err | note |
+|-------|----------|----------|------|
+| 1.0   | **0.71%** | **0.68%** | matches KT19 full-sky MCMC ~0.7% |
+| 0.5   | ~30%      | ~30%     | E/B leakage from the mask, uncorrected |
+| 0.2   | ~37%      | ~36%     | same |
+
+Design notes: polarization fits run over ℓ ∈ [2, 2·N_side] — `anafast`
+returns exact zeros for E/B at ℓ=0,1 (a log(0) hazard for the exact
+likelihood) and the ℓ>2·N_side band is aliasing noise. For partial sky the
+f_sky pseudo-C_ℓ correction (C_obs/f_sky, modes (2ℓ+1)·f_sky) is applied
+but **E/B mixing from the mask is NOT undone** — that needs a full
+pseudo-C_ℓ framework (e.g. NaMaster). KT19 report no partial-sky MCMC
+number; the strong degradation of the naive estimator at f_sky≤0.5 is
+itself the paper's motivation for pixel-space methods, and is exactly
+where a CNN operating on pixels should be compared.
+
+### Superseded: v2 SpectralCNN vs KT19 (invalid data — provenance only)
 
 | f_sky | SpectralCNN (ℓ_Ep/ℓ_Bp) | NNhealpix (KT19) | Δ mean vs KT19 |
 |-------|--------------------------|------------------|----------------|
@@ -66,26 +144,39 @@ No CAMB → v2 results current.
 | 0.1   | **2.56% / 2.70%**        | 6.4%             | −59%           |
 | 0.05  | **3.01% / 3.11%**        | 8.4%             | −64%           |
 
-KT19's accuracy scales as f_sky^−0.36; the SpectralCNN degrades much more
-slowly (1.6% → 3.1% over the same range). KT19's full-sky MCMC reference:
-0.7%.
+KT19's accuracy scales as f_sky^−0.36. (Numbers generated from distorted
+maps — see the v4 integrity notice above.)
 
 ## Test 3: τ from Q/U maps — NSIDE=16
 
 CAMB EE spectra, τ ∈ [0.03, 0.08], full sky, noiseless.
 
+**⚠ v4: pre-v4 CNN numbers are INVALID** (synfast ordering bug — see the
+integrity notice). The v2/v3 CNN rows below are provenance only. Two
+additional v4 fixes affect this test: the MCMC's τ labels now come from
+the same grid spectrum that generated each map (previously drawn
+independently — pure label noise), and the 5000-spectrum CAMB grid is
+disk-cached + process-parallel (`~/.cache/thh_camb`, `THH_CAMB_CACHE_DIR`).
+
+### v4 MCMC baseline (exact Gaussian likelihood, corrected labels)
+
+| Method | τ error | note |
+|--------|---------|------|
+| **MCMC v4** | **3.2% mean / 2.7% median** | validated n=100, 500-template grid; production 5000-grid run in flight |
+| MCMC (KT19) | 2.8% | paper value |
+| NNhealpix (KT19) | 4.0% | paper value |
+
+### Superseded: v2/v3 SpectralCNN (invalid data — provenance only)
+
 | Method | τ error | Pipeline |
 |--------|---------|----------|
-| **SpectralCNN** | **2.18%** (2.23 ± 0.06% over 3 seeds) | v3 (NRP GPU, 2026-07-16) |
-| MCMC (KT19) | 2.8% | — |
-| NNhealpix (KT19) | 4.0% | — |
-| SpectralCNN (superseded) | 3.76% | v2 (D_ℓ bug — not comparable) |
+| SpectralCNN (superseded) | 2.18% (2.23 ± 0.06% over 3 seeds) | v3 (NRP GPU, 2026-07-16) |
+| SpectralCNN (superseded) | 3.76% | v2 (D_ℓ bug) |
 
-The corrected pipeline nearly halves the CNN error relative to v2 and puts
-the map-based spectral network ahead of the published spectrum fit
-(single run; read as parity-or-better). Retrained on NRP
-(`nrp/examples/train-test3-v3.yaml`) with the corrected CAMB cache
-(`results_v3/camb_cache_test3_v3.fits`).
+The v3 "CNN beats the MCMC" reading does not survive the v4 data fix: those
+maps had E-power injected through the TE slot, a different (and likely
+easier) statistical problem. The v4 retrain
+(`slurm/train_v4_popeye.slurm`) settles the comparison on corrected data.
 
 ---
 
