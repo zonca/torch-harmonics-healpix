@@ -2,8 +2,8 @@
 
 Reproduction of the three CMB benchmarks of
 [Krachmalnicoff & Tomasi 2019, A&A 628, A129](https://arxiv.org/abs/1902.04083)
-(KT19) with spectral CNNs, plus the new joint r/τ benchmark (Test 4)
-compared against Fisher (Cramér–Rao) bounds.
+(KT19) with spectral CNNs, benchmarked against exact-likelihood MCMC
+baselines and KT19's published NNhealpix numbers.
 
 **Pipeline versions**
 
@@ -24,10 +24,12 @@ order `[TT,EE,BB,TE,EB,TB]` but healpy's default (`new=False`) expects row
 order `[TT,TE,TB,EE,EB,BB]`, so the EE spectrum landed in the TE slot (BB in
 TB) and the clipped Cholesky produced maps with observed C_EE ≈ C_EE²/C_TT
 and Q/U as rescaled copies of a single T realization instead of independent
-E/B fields. **All pre-v4 SpectralCNN results for Tests 2–4 are not
+E/B fields. **All pre-v4 SpectralCNN results for Tests 2–3 are not
 comparable to KT19** (the old Test 2/3 tables are kept below for provenance
-only). Test 1 (scalar) is unaffected. Fixed in commit 6331690; v4 retrains
-on the corrected data are in flight (`slurm/train_v4_popeye.slurm`).
+only). Test 1 (scalar) is unaffected. Fixed in commit 6331690. The **v4b
+campaign** (100k maps = KT19 budget, 3 seeds per config, A100) is re-running
+every config on the corrected data (`slurm/train_v4b_popeye.slurm`); the
+20k-map v4 numbers below are interim.
 
 ---
 
@@ -217,208 +219,35 @@ easier) statistical problem. The v4 retrain
 
 ---
 
-## Test 4: joint r/τ (Simons Observatory challenge) — v3
+## Test 4 (joint r/τ) — REMOVED from the suite (2026-10-10)
 
-r ∈ [0, 0.01], τ ∈ [0.03, 0.08]; targets [log(r+10⁻⁴), τ];
-loss MSE(log r) + Huber(τ, δ=0.01). Four configs:
-f_sky ∈ {1.0, 0.1} × noise ∈ {0, 6} μK-arcmin.
+Test 4 was an exploratory extension (joint r/τ estimation from Q/U maps
+at NSIDE 16/32/128, benchmarked against Fisher Cramér–Rao bounds). It is
+**out of scope for this project's benchmark suite**: its v1–v3 results
+were produced with the pre-v4 synfast spectra-ordering bug (like all
+polarization data before 2026-10), and regenerating it was deliberately
+deferred. The code, result JSONs, and analysis remain in the repository
+for provenance:
 
-### Fisher (Cramér–Rao) bounds — fixed lmax_calc=500
-
-At fiducial (r=0.003, τ=0.054). **Bug fixed 2026-06:** CAMB's
-`set_for_lmax()` changes internal accuracy with the requested lmax, which
-made bounds non-monotonic across NSIDE; all spectra are now computed at
-lmax=500 and truncated (`results_v3/fisher_fixed_lmax_verification.json`).
-
-| NSIDE | f_sky | noise | σ(r) | σ(r)/r | σ(τ) | σ(τ)/τ |
-|-------|-------|-------|----------|--------|---------|--------|
-| 16  | 1.0 | 0 | 0.000346 | 11.5% | 0.00194 | 3.6%  |
-| 16  | 1.0 | 6 | 0.000706 | 23.5% | 0.00205 | 3.8%  |
-| 16  | 0.1 | 0 | 0.001095 | 36.5% | 0.00613 | 11.3% |
-| 16  | 0.1 | 6 | 0.002232 | 74.4% | 0.00648 | 12.0% |
-| 32  | 1.0 | 0 | 0.000259 | 8.6%  | 0.00185 | 3.4%  |
-| 32  | 1.0 | 6 | 0.000589 | 19.6% | 0.00197 | 3.7%  |
-| 32  | 0.1 | 0 | 0.000820 | 27.3% | 0.00586 | 10.9% |
-| 32  | 0.1 | 6 | 0.001863 | 62.1% | 0.00624 | 11.6% |
-| 128 | 1.0 | 0 | 0.000247 | 8.2%  | 0.00110 | 2.0%  |
-| 128 | 1.0 | 6 | 0.000569 | 19.0% | 0.00134 | 2.5%  |
-| 128 | 0.1 | 0 | 0.000781 | 26.0% | 0.00347 | 6.4%  |
-| 128 | 0.1 | 6 | 0.001801 | 60.0% | 0.00422 | 7.8%  |
-
-Off-center fiducial bounds (r ∈ {0.001, 0.006}, τ ∈ {0.04, 0.07}) for the
-multi-fiducial evaluation are in `results_v3/fisher_multifid/`.
-
-### SpectralCNN range-averaged errors (v3)
-
-Mean |Δθ/θ| over the test range (r > 0.001 for the r error) — the training
-diagnostic, not directly a fiducial-point σ:
-
-| NSIDE | params | f_sky=1.0/n=0 | f_sky=1.0/n=6 | f_sky=0.1/n=0 | f_sky=0.1/n=6 |
-|-------|--------|---------------|---------------|---------------|---------------|
-| 16  | 6.7M  | r 21.9% / τ 15.1% | r 32.7% / τ 20.0% | r 57.6% / τ 26.9% | r 56.3% / τ 28.4% |
-| 32  | 26.5M | r 56.7% / τ 19.6% | r 58.3% / τ 16.3% | r 59.0% / τ 24.6% | r 56.6% / τ 26.6% |
-| 128 (hc=8) | 29.9M | r 59.1% / τ 21.7% | r 58.6% / τ 21.1% | r 58.4% / τ 24.3% | — |
-
-**The plateau:** at NSIDE≥32 the r error sits at 55–59% in every
-configuration while the Fisher bound tightens to 8–27% — the network does
-not exploit the additional small-scale information.
-
-### Capacity scaling (NSIDE=32, f_sky=1.0, noise=0)
-
-| hidden ch. | params | r error | τ error | epochs |
-|------------|--------|---------|---------|--------|
-| 32  | 26.5M  | 56.7% | 19.6% | 16 |
-| 64  | 103.5M | 54.8% | 24.4% | 17 |
-| 128 | 409M   | 58.1%* | 32.2%* | 4* (walltime) |
-
-\* partial run. A 16× capacity increase does not move the plateau →
-**the bottleneck is not model capacity.** The diversity experiment below
-also rules out the spectral-library size (4× more spectra, no change) —
-the scalar log-r point-estimate objective is the leading suspect.
-
-### Fiducial-point evaluation (RMSE vs Fisher) — v3
-
-1000 signal+noise realizations at (r=0.003, τ=0.054) per config;
-RMSE² = σ² + bias². Produced on Popeye CPU (jobs 2450946 N16/N32,
-2451069 N128; torch 2.12 CPU). **Independently reproduced on Expanse
-V100** (job 52109433, torch 2.6, masks read from the HDF5 files instead
-of seed-reconstruction): all 44 overlapping fiducial/multi-fiducial
-evaluations agree within Δσ(r) < 5×10⁻⁵ and Δbias(r) < 10⁻⁴ —
-validating both the CPU pipeline and the seed-42 mask reconstruction.
-The GPU run adds N32 hc=64 fiducial evals
-(`test4_cnn_fiducial_nside32_hc64_*.json`): the 4× capacity model shows
-the same collapse (r̂ = 0.00117, σ = 5×10⁻⁵).
-
-| NSIDE | f_sky | noise | σ(r) | bias(r) | RMSE(r) | RMSE/Fisher (r) | RMSE/Fisher (τ) |
-|-------|-------|-------|------|---------|---------|-----------------|-----------------|
-| 16 | 1.0 | 0 | 0.000708 | −0.000090 | 0.000713 | 2.06× | 2.24× |
-| 16 | 1.0 | 6 | 0.000995 | −0.000771 | 0.001259 | 1.78× | 3.25× |
-| 16 | 0.1 | 0 | 0.000130 | −0.001386 | 0.001392 | 1.27× | 1.12× |
-| 16 | 0.1 | 6 | 0.000180 | −0.001636 | 0.001646 | **0.74×** | 3.30× |
-| 32 | 1.0 | 0 | 0.000076 | −0.001898 | 0.001899 | 7.33× | 1.88× |
-| 32 | 1.0 | 6 | 0.000015 | −0.001948 | 0.001948 | 3.31× | 2.76× |
-| 32 | 0.1 | 0 | 0.000007 | −0.001976 | 0.001976 | 2.41× | **0.29×** |
-| 32 | 0.1 | 6 | 0.000074 | −0.001961 | 0.001963 | 1.05× | 1.03× |
-| 128 | 1.0 | 0 | 0.000003 | −0.001947 | 0.001947 | 7.89× | 5.26× |
-| 128 | 1.0 | 6 | 0.000000 | −0.001681 | 0.001681 | 2.95× | 6.51× |
-| 128 | 0.1 | 0 | 0.000000 | −0.001744 | 0.001744 | 2.23× | 4.18× |
-| 128 | 0.1 | 6 | 0.000000 | −0.001891 | 0.001891 | 1.05× | **0.20×** |
-
-At NSIDE=128 (422M params, 2–5 effective training epochs) the collapse is
-total: σ(r) ≤ 3×10⁻⁶ and σ(τ) numerically zero in 3 of 4 configs — the
-network is a deterministic constant. The **0.20× τ ratio is a pure
-coincidence** (collapsed τ̂ = 0.0548 lands on the fiducial 0.054), the
-starkest illustration of why sub-Fisher ratios need a response measurement.
-
-Sub-unity ratios are bias-dominated shrinkage or constant-coincidence
-(N16 fsky=0.1/noise=6: |bias| ≈ 9σ), **not** super-efficiency — see the
-multi-fiducial test below.
-
-### Multi-fiducial response — N16 calibrated, N32 collapsed
-
-Recovered ⟨r̂⟩ at three true r values (f_sky=1.0, noise=0, 1000
-realizations each):
-
-| NSIDE | r_true=0.001 | r_true=0.003 | r_true=0.006 | response |
-|-------|--------------|--------------|--------------|----------|
-| 16 | 0.00085 | 0.00291 | 0.00597 | **linear, slope 1.02 — calibrated** |
-| 32 | 0.00110 | 0.00110 | 0.00110 | **constant — r channel collapsed** |
-
-The N32 network outputs r̂ ≈ 0.0011 with σ ≈ 8×10⁻⁵ *independently of the
-input*. Consequences:
-
-- The "55–59% r error plateau" at NSIDE≥32 is the error of a near-constant
-  predictor, and the consistent near-zero-r bias of +0.0007 is that constant
-  evaluated at r_true < 0.001. This **supersedes the Jensen's-inequality
-  interpretation** in `results_v3/r_bias_analysis.md` (the Jensen mechanism
-  fits the bias magnitude but predicts a prediction spread the multi-fiducial
-  data rule out).
-- A constant predictor "beats Fisher" (0.67×) at r_true=0.001 where the
-  constant happens to land close — the textbook reason sub-Fisher ratios
-  need a response measurement before being believed.
-- τ keeps a real but shrunk response at both resolutions (slope ≈ 0.37 at
-  N16, ≈ 0.29 at N32 between τ=0.04 and 0.07).
-
-Off-center CNN evals: `results_v3/test4_cnn_fiducial_nside*_r*.json`;
-matching Fisher bounds: `results_v3/fisher_multifid/`.
-
-### Controlled experiments (2026-07-16, NRP)
-
-**Seed replicas** — Test 3 retrained with 3 independent inits:
-2.18 / 2.20 / 2.30% → **2.23 ± 0.06%**, robustly below the KT19 MCMC (2.8%).
-
-**Training-diversity experiment** — two N32 hc32 fsky=1.0/noise=0 runs
-identical except the spectral library (on-the-fly, seed-matched protocol):
-
-| Arm | Spectra | r %err | near-zero-r bias | epochs |
-|-----|---------|--------|------------------|--------|
-| control | 5000 (seed 142) | 58.7% | +0.0009 | 16 |
-| treatment | 20000 (seed 777) | 62.3% | +0.0007 | 16 |
-
-**NULL result**: 4× spectral diversity does not restore the r response —
-the collapse is unchanged (response measurement: div5k outputs r̂=0.00114,
-div20k r̂=0.00099, flat across r_true).
-
-**Direct-r ablation (2026-07-17)** — third matched N32 run with a linear
-r/R_MAX head instead of log(r+ε):
-
-| Arm | r head | r %err | response ⟨r̂⟩ (flat) | τ %err |
-|-----|--------|--------|----------------------|--------|
-| div5k control | log(r+ε) | 58.7% | 0.00114 | 16.4% |
-| div20k | log(r+ε) | 62.3% | 0.00099 | 23.3% |
-| directr | linear r/R_MAX | 49.1% | **0.00214 = E[r] of the prior** | **6.1%** |
-
-The linear head also collapses — to exactly the MSE-optimal constant
-(training-prior mean E[r]=0.00207) — proving the **representation carries
-no r information**: the failure is upstream of the output head. All three
-hypotheses (capacity ×16, diversity ×4, parameterisation) are now
-experimentally eliminated in their simple forms. Side finding: **τ error
-improves 3× (16–23% → 6.1%)** with the linear r target — the log-r loss
-gradients were degrading τ through the shared trunk.
-
-JSONs: `results_v3/test4_nside32_{div5k,div20k,directr}_fsky1.0_noise0.json`;
-response measurements: `results_v3/test4_cnn_fiducial_{div*,directr}_r*.json`.
-
-### MCMC baseline — negative result
-
-A pseudo-C_ℓ Metropolis–Hastings fit (r, τ, A_lens; 50×50 interpolated CAMB
-grid) cannot constrain r from single-map `anafast` spectra: chains drift to
-the prior boundary (r→0.01, τ→0.08) in all configs
-(`results_v3/test4_mcmc_mh_*.json`, r errors ≈ 200–230%). Single-realization
-pseudo-C_ℓ estimates are too noisy for this simple likelihood. The Fisher
-bound is therefore the classical reference for Test 4.
-
----
+- Data/models: `src/torch_harmonics_healpix/data_generation_test4.py`,
+  `scripts/train_test4.py`, `scripts/run_fisher_mcmc_test4.py`
+- Results: `results/` (v2), `results_v3/` (v3, incl. the multi-fiducial
+  collapse analysis), Fisher bounds `results_v3/fisher_multifid/`
+- Historical note: the NSIDE≥32 r-channel collapse (r̂ constant ≈ 0.0011
+  independent of input, robust to 16× capacity, 4× spectral diversity,
+  and head parameterisation) remains an instructive negative result; see
+  git history of this file for the full tables.
 
 ## Architecture comparison
 
 | Property | SpectralCNN | NNhealpix |
 |----------|-------------|-----------|
 | Domain | spectral (ℓ, m) | pixel (HEALPix) |
-| Parameters (T1 / T2-3 / T4-N16) | 6.5M / 9.8M / 6.7M | ~0.08M / ~0.24M |
+| Parameters (T1 / T2-3) | 6.5M / 9.8M | ~0.08M / ~0.24M |
 | Parameter scaling | O(ℓ²max·C²) | O(k²·C²) |
 | Mask handling | mean-inpainting before SHT | natural (zeros) |
 | Noise robustness | low (SHT spreads noise) | high (pooling low-pass) |
 | Best for | polarization, global structure | noisy scalar maps |
-
-## Superseded results (v2 — D_ℓ bug, provenance only)
-
-<details>
-<summary>Click to expand the pre-fix Test 4 numbers</summary>
-
-The v2 Test 4 campaign (NSIDE=16 fiducial evals in `results/`,
-`test4_cnn_fiducial_*.json`) reported RMSE/Fisher ratios of 0.38–1.34 and
-was the basis for early "CNN beats the Fisher bound" claims. Two bugs
-invalidated the comparison:
-
-1. Training/eval maps used D_ℓ instead of C_ℓ amplitudes (`raw_cl` missing).
-2. Fisher bounds mixed CAMB accuracy settings across NSIDE
-   (`set_for_lmax`), making the NSIDE=16 bound ~4.5× too loose
-   (σ_r/r 52.1% instead of 11.5%).
-
-With both fixed, the v3 comparison above replaces these numbers.
-
-</details>
 
 ## References
 

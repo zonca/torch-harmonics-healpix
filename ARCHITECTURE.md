@@ -172,35 +172,14 @@ low-pass filtering.
 | NNhealpix | 4.0% |
 | SpectralCNN (v3, superseded — invalid data) | 2.18% |
 
-### Test 4: Joint r/τ estimation (Simons Observatory)
+### Test 4: Joint r/τ estimation — REMOVED from the suite
 
-**Configuration:** `SpectralCNN(in_channels=3, out_channels=2, nside=16, num_blocks=3, hidden_channels=32, inpaint=f_sky<1)`
-
-- **Input:** Q/U/mask stacked [3, 3072]
-- **Targets:** [log(r + 1e-4), τ] — tensor-to-scalar ratio r and optical depth τ
-- **Loss:** MSE for log(r), Huber loss (delta=0.01) for τ. The Huber loss prevents
-  τ divergence at epoch 11 that occurs with MSE due to explosive gradients when
-  predictions drift outside the [0.03, 0.08] training range.
-- **num_blocks=3** (differs from Tests 2/3 which use `num_blocks=4`)
-- **4 configurations:** f_sky ∈ {1.0, 0.1} × noise ∈ {0, 6} μK-arcmin
-
-Range-averaged test errors, **v3 pipeline** (NSIDE=16, 6.7M params):
-
-| f_sky | Noise (μK-arcmin) | Inpaint | r % error | τ % error |
-|-------|-------------------|---------|-----------|-----------|
-| 1.0   | 0                 | False   | 21.9%     | 15.1%     |
-| 1.0   | 6                 | False   | 32.7%     | 20.0%     |
-| 0.1   | 0                 | True    | 57.6%     | 26.9%     |
-| 0.1   | 6                 | True    | 56.3%     | 28.4%     |
-
-At higher resolutions (NSIDE=32: 26.5M params; NSIDE=128: 422M params at
-hc=32) the r output collapses to an input-independent constant; the
-apparent 55–59% "plateau" is the error of that constant. Controlled
-experiments rule out capacity (×16), spectral-library size (×4), and the
-log-r output parameterisation (a linear head collapses to the training
-library's mean r) — see [BENCHMARKS.md](BENCHMARKS.md) for the full
-experiment set, corrected Fisher bounds, and fiducial-point RMSE
-comparisons.
+Test 4 (joint r/τ from Q/U maps, num_blocks=3, targets
+[log(r+1e-4), τ], Huber τ loss) was an exploratory extension whose
+results predate the synfast spectra-ordering fix. It is out of scope for
+the benchmark suite; code and historical results (including the
+NSIDE≥32 r-channel collapse analysis) remain in the repo for provenance.
+See BENCHMARKS.md and git history for the full tables.
 
 ### Key Observations
 

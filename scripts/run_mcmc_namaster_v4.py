@@ -70,7 +70,10 @@ def namaster_estimate_ell_ep_bp(
     f2 = nmt.NmtField(mask_apo, [q_map.astype(np.float64),
                                  u_map.astype(np.float64)],
                       purify_b=True)
-    cl = nmt.compute_full_master(f2, f2, workspace)  # [EE, EB, BE, BB]
+    # pymaster 3.x: compute_full_master's 3rd positional arg is `bins`,
+    # not workspace — use the explicit coupled->decoupled path instead.
+    cl_coupled = nmt.compute_coupled_cell(f2, f2)  # [EE, EB, BE, BB]
+    cl = workspace.decouple_cell(cl_coupled)
     cl_ee, cl_bb = cl[0], cl[3]
 
     lmax_fit = min(2 * nside, lmax)

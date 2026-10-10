@@ -72,46 +72,20 @@ With honest data the CNN sits between the spectrum-fit MCMC and
 NNhealpix; the earlier "CNN beats the MCMC" number (2.18%, v3) was an
 artifact of the synfast ordering bug.
 
-### Test 4 (Joint r/τ, Simons Observatory) — v3 corrected
+### Test 4 (Joint r/τ) — removed from the suite
 
-Fisher (Cramér–Rao) bounds at fiducial (r=0.003, τ=0.054), fixed CAMB
-accuracy (`lmax_calc=500`):
+Test 4 (joint r/τ estimation from Q/U maps, Fisher-benchmarked) was an
+exploratory extension. Its results predate the synfast spectra-ordering
+fix, and it is **out of scope for the benchmark suite**: regenerating it
+is deliberately deferred. Code and historical results stay in the repo
+for provenance (`data_generation_test4.py`, `scripts/train_test4.py`,
+`results_v3/` — including the instructive NSIDE≥32 r-channel collapse,
+see git history). The paper covers Tests 1–3 only.
 
-| NSIDE | lmax | σ(r)/r, fsky=1.0/noise=0 | fsky=1.0/noise=6 | fsky=0.1/noise=0 | fsky=0.1/noise=6 |
-|-------|------|--------------------------|------------------|------------------|------------------|
-| 16    | 47   | 11.5%                    | 23.5%            | 36.5%            | 74.4%            |
-| 32    | 95   | 8.6%                     | 19.6%            | 27.3%            | 62.1%            |
-| 128   | 383  | 8.2%                     | 19.0%            | 26.0%            | 60.0%            |
-
-SpectralCNN (range-averaged r error over the test range, v3):
-
-- **NSIDE=16 (6.7M params): a calibrated estimator.** Fiducial-point RMSE is
-  0.74–2.06× the Fisher bound on r, and the multi-fiducial response
-  ⟨r̂⟩ vs r_true is linear with slope 1.02.
-- **NSIDE≥32 (26.5M–422M params): the r channel collapses.** The network
-  outputs r̂ ≈ 0.0011 *independently of the input* (σ ≈ 8×10⁻⁵ at
-  r_true = 0.001/0.003/0.006). The apparent "55–59% error plateau" and the
-  consistent +0.0007 near-zero-r bias are artifacts of that constant.
-  Controlled experiments eliminate all three simple explanations: a 16×
-  capacity increase (26.5M → 409M params), a 4× spectral-library increase,
-  and a linear-head ablation all leave the collapse unchanged — the linear
-  head collapses to exactly E[r] of the training prior, proving the learned
-  representation carries no r information. Side finding: τ error improves
-  3× (16–23% → 6.1%) when the log-r loss term is removed (shared-trunk
-  gradient interference).
-- **τ keeps a real but shrunk response** at both resolutions
-  (slope ≈ 0.3–0.4 across τ ∈ [0.04, 0.07]).
-
-Full fiducial-point RMSE vs Fisher tables and the multi-fiducial response
-data are in [BENCHMARKS.md](BENCHMARKS.md).
-
-**Main finding:** spectral convolution is the right inductive bias for CMB
-polarization (Tests 2–4 at low resolution), while noisy scalar maps favor
-pixel-space convolution (Test 1). Scaling map-based r/τ inference to high
-resolution fails at the representation level under scalar point-estimate
-regression — not for lack of capacity, data diversity, or a better output
-transform; distributional objectives and harmonic-space readouts are the
-indicated remedies.
+**Main finding:** spectral convolution is the right inductive bias for
+CMB polarization on masked skies (Test 2), while noisy scalar maps favor
+pixel-space convolution (Test 1) and the exact-likelihood MCMC remains
+the reference at full sky (Test 3).
 
 See [BENCHMARKS.md](BENCHMARKS.md) for all numbers,
 [ARCHITECTURE.md](ARCHITECTURE.md) for architecture details, and the paper
@@ -123,14 +97,12 @@ for the manuscript.
 Trained model weights are on Hugging Face:
 <https://huggingface.co/zonca/torch-harmonics-healpix>
 
-> **v3 checkpoints on HF:** `models/test3_v3.pt` (τ 2.18%) and the four
-> calibrated NSIDE=16 Test 4 models `models/test4_v3_nside16_*.pt`
-> (hidden_channels=32, num_blocks=3). The old v2 Test 3 weight
-> (`test3_v2_fix.pt` on HF) and v2 Test 4 weights (in this repo's
-> `results/test4_fsky*.pt`) predate the C_ℓ fix and are kept only to
-> reproduce the superseded v2 numbers. Higher-resolution v3 models
-> are deliberately not published (collapsed r response — see BENCHMARKS).
-> Test 1/2 weights are unaffected by the fix.
+> **v4 checkpoints (current):** `models/test2_v4_fsky*.pt`,
+> `models/test3_v4.pt`, `models/test1_v4_noise*.pt` — trained on the
+> corrected data (20k maps). The v4b campaign (100k maps, 3 seeds) will
+> supersede these. Pre-v4 weights on HF (`models/test3_v3.pt`,
+> `models/test4_v3_nside16_*.pt`) predate the synfast spectra-ordering
+> fix and are kept for provenance only; Test 1 weights are unaffected.
 
 **Loading example** (Test 2, full sky):
 
@@ -187,7 +159,7 @@ torch-harmonics-healpix/
 │   ├── data_generation.py           # Test 1: scalar power-spectrum maps
 │   ├── data_generation_test2.py     # Test 2: polarization Q/U maps + masks
 │   ├── data_generation_test3.py     # Test 3: CAMB τ spectra (raw_cl=True)
-│   ├── data_generation_test4.py     # Test 4: CAMB r/τ spectra (raw_cl=True)
+│   ├── data_generation_test4.py     # (archived) Test 4 r/τ spectra — out of suite scope
 │   ├── mcmc_baseline.py             # exact-likelihood spectrum fit (Test 1)
 │   ├── mcmc_baselines_test2_3.py    # baselines for Tests 2 & 3 (exact likelihood)
 │   └── models/
@@ -195,11 +167,11 @@ torch-harmonics-healpix/
 │       └── multires_spectral_cnn.py # MultiResSpectralCNN (ablation)
 ├── scripts/
 │   ├── train_test{1,2,3}_v2.py      # Tests 1–3 training
-│   ├── train_test4.py               # Test 4 training (on-the-fly or HDF5)
+│   ├── train_test4.py               # (archived) Test 4 training — out of suite scope
 │   ├── generate_test4_hdf5.py       # pre-generate NSIDE=128 datasets
 │   ├── precompute_test3_camb.py     # parallel CAMB cache (CPU cluster)
 │   ├── fisher_forecast.py           # Fisher bounds (fixed lmax_calc=500)
-│   ├── run_fisher_mcmc_test4.py     # Fisher + MH-MCMC baseline
+│   ├── run_fisher_mcmc_test4.py     # (archived) Test 4 Fisher + MH-MCMC
 │   ├── eval_test4_at_fiducial.py    # fiducial-point RMSE evaluation
 │   ├── compare_cnn_fisher.py        # CNN vs Fisher summary tables
 │   ├── monitoring/                  # cron/agent training monitors
@@ -222,7 +194,7 @@ Each training script writes a JSON with metrics and a `.pt` checkpoint:
 
 ```bash
 # Test 1 (per noise level)
-python scripts/train_test1_v2.py --noise_std 0 --output results/test1_noise0.json
+python scripts/train_test1_v3.py --noise_std 0 --n_train 100000 --skip_mcmc --output results_v4b/test1_noise0.json
 
 # Test 2 (per sky fraction)
 python scripts/train_test2_v2.py --f_sky 0.5 --output results/test2_fsky0.5.json
@@ -232,15 +204,9 @@ python scripts/precompute_test3_camb.py --output camb_cache_test3_v3.fits
 python scripts/train_test3_v2.py --camb_cache camb_cache_test3_v3.fits \
     --output results_v3/test3_v3.json
 
-# Test 4 (per config)
-python scripts/train_test4.py --nside 32 --f_sky 0.1 --noise_std 6 \
-    --output results_v3/test4_nside32_fsky0.1_noise6.json
-
-# Fisher bounds + fiducial-point evaluation
-python scripts/fisher_forecast.py --nside 32 --f_sky 0.1 --noise_std 6 \
-    --output results_v3/test4_fisher_nside32_fsky0.1_noise6.json
-python scripts/eval_test4_at_fiducial.py --nside 32 --hidden_channels 32 \
-    --results_dir results_v3
+# Multi-seed resumable training (v4b campaign pattern)
+python scripts/train_test2_v2.py --f_sky 0.5 --n_train 100000 \
+    --seed 42 --resume --checkpoint ckpt.pt --output results_v4b/test2_fsky0.5_seed42.json
 ```
 
 ## Running on Clusters

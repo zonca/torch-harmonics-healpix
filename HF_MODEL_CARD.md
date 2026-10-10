@@ -10,12 +10,12 @@ tags:
 library_name: pytorch
 ---
 
-> **⚠️ Pipeline notice (2026-07):** the **Test 4** weights below were trained
-> with the v2 pipeline, which generated maps from CAMB D_ℓ instead of C_ℓ
-> amplitudes (missing `raw_cl=True`); they reproduce the superseded v2 numbers
-> only. **Test 3 now has a corrected v3 checkpoint** (`models/test3_v3.pt`,
-> τ error 2.18%); `models/test3_v2_fix.pt` is kept for provenance only.
-> Test 1 and Test 2 weights do not use CAMB and are unaffected.
+> **⚠️ Pipeline notice (2026-10, v4):** all polarization weights trained
+> before October 2026 (Tests 2, 3, 4) used healpy `synfast` with 6 spectra
+> in the wrong order (EE in the TE slot) and are **invalid** — kept for
+> provenance only. Current weights: `models/test{1,2,3}_v4_*.pt`
+> (trained on corrected data; the v4b 100k/3-seed campaign supersedes
+> them when finished). Test 1 (scalar) weights are unaffected.
 
 # torch-harmonics-healpix
 
@@ -27,19 +27,18 @@ These models reproduce and improve upon the benchmarks from [Krachmalnicoff & To
 
 ## Model Summary
 
-| Model | File | Task | Input | Output | Error | Params |
-|-------|------|------|-------|--------|-------|--------|
-| SpectralCNN T1 | `models/test1_v2_fix_noise0.pt` | ℓ_peak estimation | T map | ℓ_peak | 1.27% | 6.4M |
-| SpectralCNN T2 | `models/test2_v2_fix_fsky1.0.pt` | ℓ_Ep / ℓ_Bp estimation | Q, U, mask | [ℓ_Ep, ℓ_Bp] | 1.69% / 1.53% | 9.8M |
-| **SpectralCNN T3 (v3)** | `models/test3_v3.pt` | τ estimation | Q, U, mask | τ | **2.18%** | 9.8M |
-| SpectralCNN T3 (v2, superseded) | `models/test3_v2_fix.pt` | τ estimation | Q, U, mask | τ | 3.76% (D_ℓ bug) | 9.8M |
-| **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky1.0_noise0.pt` | r/τ (f_sky=1.0, no noise) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=2.06× Fisher | 6.7M |
-| **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky1.0_noise6.pt` | r/τ (f_sky=1.0, 6 μK-arcmin) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=1.78× Fisher | 6.7M |
-| **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky0.1_noise0.pt` | r/τ (f_sky=0.1, no noise) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=1.27× Fisher | 6.7M |
-| **SpectralCNN T4 (v3)** | `models/test4_v3_nside16_fsky0.1_noise6.pt` | r/τ (f_sky=0.1, 6 μK-arcmin) | Q, U, mask | [log(r+1e-4), τ] | RMSE(r)=0.74× Fisher¹ | 6.7M |
-| SpectralCNN T4 (v2, superseded) | *(not on HF; in the code repo `results/test4_fsky*.pt`)* | r/τ estimation | Q, U, mask | [log(r+1e-4), τ] | D_ℓ bug | 9.8M |
+| Model | File | Task | Input | Output | Status |
+|-------|------|------|-------|--------|--------|
+| SpectralCNN T1 | `models/test1_v2_fix_noise0.pt` | ℓ_peak estimation | T map | ℓ_peak | valid (scalar, unaffected) |
+| SpectralCNN T2 (v4) | `models/test2_v4_fsky*.pt` | ℓ_Ep / ℓ_Bp estimation | Q, U, mask | [ℓ_Ep, ℓ_Bp] | **current** (corrected data) |
+| SpectralCNN T3 (v4) | `models/test3_v4.pt` | τ estimation | Q, U, mask | τ | **current** (corrected data) |
+| SpectralCNN T2/T3 (pre-v4) | `models/test2_v2_fix_*.pt`, `models/test3_v3.pt` | — | — | — | superseded (synfast ordering bug) |
+| SpectralCNN T4 | *(archived in the code repo)* | r/τ estimation | — | — | removed from suite (pre-v4 data) |
 
-¹ The sub-unity ratio reflects prior-informed shrinkage of a biased estimator, not super-efficiency; see the paper's Fisher-caveats discussion. T4 v3 models use `hidden_channels=32, num_blocks=3, nside=16` and `inpaint=True` for f_sky<1. The multi-fiducial response of these NSIDE=16 models is linear with unit slope (calibrated); higher-resolution v3 models are intentionally not published because their r output collapses to an input-independent constant.
+**v4 status:** the v4 checkpoints (20k maps, torch 2.11/torch-harmonics
+0.9.2, A100) are being replaced by the v4b campaign (100k maps = KT19
+budget, 3 seeds per config). Error numbers for the current models are in
+the code repo's [BENCHMARKS.md](https://github.com/zonca/torch-harmonics-healpix/blob/main/BENCHMARKS.md).
 
 ## Architecture
 
@@ -148,43 +147,12 @@ with torch.no_grad():
 print(f"Predicted parameter: {prediction[0, 0].item():.4f}")
 ```
 
-### Test 4 — Joint r/τ estimation
+### Test 4 — REMOVED
 
-```python
-# Test 4: Joint r/τ estimation (Simons Observatory)
-model = SpectralCNN(
-    in_channels=3,       # Q, U, mask
-    out_channels=2,      # [log(r + 1e-4), τ]
-    nside=16,
-    hidden_channels=32,
-    num_blocks=3,        # Note: 3 blocks (not 4 like Tests 2/3)
-    inpaint=True,        # True for f_sky < 1.0
-)
-
-model_path = hf_hub_download(
-    repo_id="zonca/torch-harmonics-healpix",
-    filename="models/test4_fsky0.1_noise6.pt",
-)
-state_dict = torch.load(model_path, map_location="cpu")
-model.load_state_dict(state_dict)
-model.eval()
-
-# Run inference
-with torch.no_grad():
-    prediction = model(input_tensor)  # shape: [1, 2]
-
-import numpy as np
-log_r = prediction[0, 0].item()
-tau = prediction[0, 1].item()
-r_estimate = np.exp(log_r) - 1e-4
-print(f"Predicted r: {r_estimate:.6f}, τ: {tau:.4f}")
-```
-
-## Training
-
-To retrain from scratch (e.g., for different noise levels or f_sky values):
-
-```bash
+Test 4 (joint r/τ) weights are deprecated: they were trained before the
+healpy `synfast` spectra-ordering fix (v4) and are retained for
+provenance only. Test 4 is out of scope for the benchmark suite.
+bash
 # Test 1: ℓ_peak from T maps
 python scripts/train_test1_v2.py --noise_std 0 --output results/test1_noise0.json
 
