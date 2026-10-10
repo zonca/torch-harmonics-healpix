@@ -16,6 +16,11 @@
 set -e
 export PYTHONUNBUFFERED=1
 
+# pymaster 3.0.1 was pip-installed into the venv with the system cfitsio
+# module loaded at build time; load it at runtime too for the shared lib.
+source /etc/profile.d/modules.sh
+module load cfitsio/4.5.0
+
 cd /mnt/home/azonca/torch-harmonics-healpix
 mkdir -p results_v4b
 
