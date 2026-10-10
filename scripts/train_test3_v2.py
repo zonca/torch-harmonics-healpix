@@ -151,9 +151,18 @@ def main():
     parser.add_argument("--output", type=str, default="results/test3_v2.json")
     parser.add_argument("--camb_cache", type=str, default=None,
                         help="FITS file to cache/load CAMB spectra (saves ~2h on repeat runs)")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Seed for model init + train-set draw "
+                             "(val/test seeds stay fixed for comparability)")
+    parser.add_argument("--checkpoint", type=str, default=None,
+                        help="Resumable checkpoint path; saved after every "
+                             "epoch. Defaults to <output>_ckpt.pt")
+    parser.add_argument("--resume", action="store_true",
+                        help="Resume training from --checkpoint if it exists")
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    torch.manual_seed(args.seed)
     print(f"Device: {device}")
     print(f"Noise σ_n = {args.noise_std} μK, f_sky = {args.f_sky}")
     print(f"τ range: [{TAU_MIN}, {TAU_MAX}]")
@@ -195,7 +204,7 @@ def main():
 
     train_dataset = TauDataset(
         args.n_train, args.nside, LMAX,
-        args.noise_std, args.f_sky, seed=42,
+        args.noise_std, args.f_sky, seed=args.seed,
         mask=shared_mask, camb_spectra=shared_camb,
     )
     val_dataset = TauDataset(
@@ -238,11 +247,26 @@ def main():
     best_state = None
     epochs_no_improve = 0
     epoch_reached = 0
+    start_epoch = 1
+
+    # Resumable checkpoint (gpupreempt preemption / walltime restarts)
+    ckpt_path = args.checkpoint or (args.output + "_ckpt.pt")
+    if args.resume and os.path.exists(ckpt_path):
+        ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
+        model.load_state_dict(ckpt["model"])
+        optimizer.load_state_dict(ckpt["optimizer"])
+        scheduler.load_state_dict(ckpt["scheduler"])
+        best_val_error = ckpt["best_val_loss"]
+        best_state = ckpt["best_state"]
+        epochs_no_improve = ckpt["epochs_no_improve"]
+        start_epoch = ckpt["epoch"] + 1
+        print(f"\n*** Resumed from {ckpt_path} (epoch {ckpt['epoch']}, "
+              f"best val {best_val_error:.4f}) ***")
 
     print(f"\n{'Epoch':>5} | {'Train Loss':>10} | {'Val τ %err':>10} | {'LR':>10} | {'No Imp':>6}")
     print("-" * 60)
 
-    for epoch in range(1, args.max_epochs + 1):
+    for epoch in range(start_epoch, args.max_epochs + 1):
         t0 = time.time()
         train_loss = train_one_epoch(model, train_loader, optimizer, device)
         epoch_time = time.time() - t0
@@ -258,6 +282,15 @@ def main():
             epochs_no_improve = 0
         else:
             epochs_no_improve += 1
+
+        # Save resumable checkpoint after every epoch (gpupreempt)
+        torch.save({
+            "epoch": epoch, "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "scheduler": scheduler.state_dict(),
+            "best_val_loss": best_val_error, "best_state": best_state,
+            "epochs_no_improve": epochs_no_improve,
+        }, ckpt_path)
 
         lr = optimizer.param_groups[0]["lr"]
         epoch_reached = epoch
@@ -296,6 +329,7 @@ def main():
             "lr_patience": args.lr_patience,
             "lr_factor": args.lr_factor,
             "early_stopping_patience": args.patience,
+            "seed": int(args.seed),
             "tau_pct_error": float(results["tau_pct_error"]),
             "n_params": int(n_params),
             "inpaint": bool(args.f_sky < 1.0),
