@@ -4,7 +4,7 @@
 #SBATCH --account=soap
 #SBATCH --qos=gpupreempt
 #SBATCH --output=/mnt/home/azonca/torch-harmonics-healpix/results_v4b/train_%j.out
-#SBATCH --time=24:00:00
+#SBATCH --time=3-00:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus=a100-pcie-40gb:1
