@@ -1,0 +1,42 @@
+{
+  "version": "v4b_namaster",
+  "method": "pseudo-C_l (NaMaster): purify_b=True, C1 apodization 5deg, nlb=2 binning, Efstathiou bandpower chi^2 on band-averaged model",
+  "n_maps": 1000,
+  "seed": 42,
+  "apo_size_deg": 5.0,
+  "nlb": 2,
+  "fsky": {
+    "0.5": {
+      "ep_pct_error": 23.055292707917356,
+      "bp_pct_error": 21.209606567355234,
+      "ep_median_pct_error": 14.38368527494893,
+      "bp_median_pct_error": 17.152132873190098,
+      "time_per_map": 0.01617541003227234,
+      "f_sky_eff": 0.49427820611726686
+    },
+    "0.2": {
+      "ep_pct_error": 32.190870999912335,
+      "bp_pct_error": 25.841871887294708,
+      "ep_median_pct_error": 23.642818978338582,
+      "bp_median_pct_error": 22.29951254978775,
+      "time_per_map": 0.015162336587905884,
+      "f_sky_eff": 0.19505672409835673
+    },
+    "0.1": {
+      "ep_pct_error": 38.566122059644,
+      "bp_pct_error": 32.45762166254862,
+      "ep_median_pct_error": 27.46217820485336,
+      "bp_median_pct_error": 30.9876990370061,
+      "time_per_map": 0.015206435918807984,
+      "f_sky_eff": 0.09568563248657275
+    },
+    "0.05": {
+      "ep_pct_error": 43.629802263569246,
+      "bp_pct_error": 43.84332930434039,
+      "ep_median_pct_error": 25.0483012047829,
+      "bp_median_pct_error": 48.48382713441124,
+      "time_per_map": 0.015586832761764527,
+      "f_sky_eff": 0.047455088769867
+    }
+  }
+}
