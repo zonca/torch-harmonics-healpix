@@ -1,0 +1,19 @@
+{
+  "version": "v2_paper_matching",
+  "noise_std": 0.0,
+  "f_sky": 1.0,
+  "n_train": 100000,
+  "n_val": 10000,
+  "n_test": 1000,
+  "epochs_reached": 71,
+  "best_val_error": 3.321413964746197,
+  "batch_size": 32,
+  "lr_schedule": "ReduceLROnPlateau",
+  "lr_patience": 5,
+  "lr_factor": 0.1,
+  "early_stopping_patience": 20,
+  "seed": 777,
+  "tau_pct_error": 3.387053657460376,
+  "n_params": 6902337,
+  "inpaint": false
+}
