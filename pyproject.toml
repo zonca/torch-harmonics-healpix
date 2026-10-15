@@ -26,6 +26,10 @@ dev = [
     "pytest",
     "pytest-cov",
 ]
+test = [
+    "pytest",
+    "camb",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

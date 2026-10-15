@@ -142,17 +142,20 @@ def precompute_camb_spectra(
 
     print(f"  Computing {n_spectra} CAMB spectra with {n_workers} workers "
           f"(cache: {cache_file})...")
-    done = 0
-    with ProcessPoolExecutor(max_workers=n_workers) as ex:
-        for cl_ee, cl_bb in ex.map(
-            _camb_spectra_worker, [(t, lmax) for t in tau_values], chunksize=8
-        ):
-            i = done  # ex.map preserves order
-            cl_ee_array[i] = cl_ee
-            cl_bb_array[i] = cl_bb
-            done += 1
-            if done % 500 == 0:
-                print(f"  CAMB spectra: {done}/{n_spectra}")
+    jobs = [(t, lmax) for t in tau_values]
+    if n_workers <= 1:
+        # Serial in-process path: avoids fork overhead (and fork-safety
+        # deadlocks when embedded in processes that already spawned
+        # background threads, e.g. pytest with torch imported).
+        results = [_camb_spectra_worker(job) for job in jobs]
+    else:
+        with ProcessPoolExecutor(max_workers=n_workers) as ex:
+            results = list(ex.map(_camb_spectra_worker, jobs, chunksize=8))
+    for i, (cl_ee, cl_bb) in enumerate(results):
+        cl_ee_array[i] = cl_ee
+        cl_bb_array[i] = cl_bb
+        if (i + 1) % 500 == 0:
+            print(f"  CAMB spectra: {i + 1}/{n_spectra}")
 
     # Atomic write: dump to a temp file then rename. Pass a file object —
     # np.savez_compressed appends ".npz" to str/Path names that lack it,

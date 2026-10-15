@@ -1,5 +1,7 @@
 # torch-harmonics-healpix
 
+[![tests](https://github.com/zonca/torch-harmonics-healpix/actions/workflows/tests.yml/badge.svg)](https://github.com/zonca/torch-harmonics-healpix/actions/workflows/tests.yml)
+
 Bridge HEALPix to [torch-harmonics](https://github.com/NVIDIA/torch-harmonics) for spherical CNNs on CMB data.
 
 Reproduces the three CMB benchmarks of Krachmalnicoff & Tomasi (2019)
