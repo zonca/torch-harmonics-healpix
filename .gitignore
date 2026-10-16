@@ -32,3 +32,4 @@ venv/
 # Operational monitoring logs (kept locally, not tracked)
 results_v3/*.log
 results/*.log
+.coverage
