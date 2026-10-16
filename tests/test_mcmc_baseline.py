@@ -4,7 +4,10 @@ import numpy as np
 import pytest
 
 from torch_harmonics_healpix.data_generation import generate_map, NSIDE, LMAX, SIGMA_P
-from torch_harmonics_healpix.mcmc_baseline import mcmc_estimate_ell_p
+from torch_harmonics_healpix.mcmc_baseline import (
+    mcmc_estimate_ell_p,
+    evaluate_mcmc_baseline,
+)
 
 
 class TestMCMCBaseline:
@@ -32,3 +35,24 @@ class TestMCMCBaseline:
             m = generate_map(ell_p=ell_p_true, nside=NSIDE, noise_std=0.0, rng=np.random.default_rng(99))
             ell_p_est = mcmc_estimate_ell_p(m)
             assert 5.0 <= ell_p_est <= 20.0
+
+    def test_evaluate_mcmc_baseline_batch(self):
+        """Batch helper: mean |Δℓ_p|/ℓ_p percentage error over maps."""
+        true_values = [10.0, 12.0]
+        maps = [generate_map(ell_p=lp, nside=NSIDE, noise_std=0.0,
+                             rng=np.random.default_rng(42 + i))
+                for i, lp in enumerate(true_values)]
+        err = evaluate_mcmc_baseline(maps, ell_p_true=true_values,
+                                     sigma_p=SIGMA_P, lmax=LMAX,
+                                     noise_std=0.0, nside=NSIDE)
+        assert np.isfinite(err)
+        assert err >= 0
+        # Same map twice → identical to a single-map evaluation
+        single = evaluate_mcmc_baseline(maps[:1], ell_p_true=true_values[:1],
+                                        sigma_p=SIGMA_P, lmax=LMAX,
+                                        noise_std=0.0, nside=NSIDE)
+        twice = evaluate_mcmc_baseline([maps[0], maps[0]],
+                                       ell_p_true=true_values[:1] * 2,
+                                       sigma_p=SIGMA_P, lmax=LMAX,
+                                       noise_std=0.0, nside=NSIDE)
+        assert single == pytest.approx(twice)

@@ -13,6 +13,9 @@ Coverage:
   - evaluate_mcmc_test3: smoke test with a tiny grid
 """
 
+import sys
+import builtins
+
 import numpy as np
 import healpy as hp
 import pytest
@@ -32,7 +35,10 @@ from torch_harmonics_healpix.data_generation_test3 import (
 from torch_harmonics_healpix.data_generation_test4 import (
     generate_camb_spectra_r_tau,
     generate_r_tau_map,
+    precompute_camb_spectra_r_tau,
     R_MAX,
+    TAU_MIN as TAU4_MIN,
+    TAU_MAX as TAU4_MAX,
 )
 
 
@@ -200,6 +206,47 @@ class TestTauMapGeneration:
                                      cl_ee=cl_ee, cl_bb=cl_bb)
         assert np.var(q1) > np.var(q0), "Noise must raise the map variance"
 
+    def test_camb_spectra_generated_when_not_provided(self):
+        """cl_ee=None must trigger the internal CAMB call."""
+        q, u, _ = generate_tau_map(0.05, NSIDE, LMAX, 0.0, 1.0, None)
+        npix = hp.nside2npix(NSIDE)
+        assert q.shape == (npix,) and u.shape == (npix,)
+        assert np.isfinite(q).all() and np.isfinite(u).all()
+
+    def test_noise_without_rng_uses_legacy_global(self, ee_bb_tau_mid):
+        """rng=None + noise falls back to np.random; deterministic only
+        under an explicit global seed."""
+        cl_ee, cl_bb = ee_bb_tau_mid
+        np.random.seed(5)
+        q1, u1, _ = generate_tau_map(0.05, NSIDE, LMAX, 2.0, 1.0, None,
+                                     cl_ee=cl_ee, cl_bb=cl_bb)
+        np.random.seed(5)
+        q2, u2, _ = generate_tau_map(0.05, NSIDE, LMAX, 2.0, 1.0, None,
+                                     cl_ee=cl_ee, cl_bb=cl_bb)
+        np.testing.assert_array_equal(q1, q2)
+        np.testing.assert_array_equal(u1, u2)
+
+    def test_missing_bb_regenerates_only_bb(self, ee_bb_tau_mid, monkeypatch):
+        """cl_ee given, cl_bb=None: ONLY the missing BB may be regenerated —
+        the caller's EE must reach hp.synfast unmodified (regression guard:
+        a previous bug regenerated both and discarded the provided EE)."""
+        cl_ee, _ = ee_bb_tau_mid
+        captured = {}
+        real_synfast = hp.synfast
+
+        def recording_synfast(cl_full, **kwargs):
+            captured["ee_row"] = np.array(cl_full[1])
+            return real_synfast(cl_full, **kwargs)
+
+        monkeypatch.setattr(hp, "synfast", recording_synfast)
+        q, u, _ = generate_tau_map(0.05, NSIDE, LMAX, 0.0, 1.0,
+                                   np.random.default_rng(1),
+                                   cl_ee=cl_ee, cl_bb=None)
+        np.testing.assert_array_equal(captured["ee_row"], cl_ee), \
+            "Provided cl_ee was overwritten by the BB regeneration"
+        assert q.shape == (hp.nside2npix(NSIDE),)
+        assert np.isfinite(q).all()
+
 
 class TestRTauMapGeneration:
     """generate_r_tau_map with pre-computed spectra (no CAMB call)."""
@@ -221,6 +268,60 @@ class TestRTauMapGeneration:
                                             mask=mask_in)
         np.testing.assert_array_equal(mask_in, mask_out)
         assert np.all(q[mask_out == 0] == 0)
+
+    def test_camb_spectra_generated_when_not_provided(self):
+        """cl_ee=None must trigger the internal CAMB call (r=0, τ=0.05)."""
+        q, u, mask = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 0.0, 1.0, None)
+        npix = hp.nside2npix(NSIDE)
+        assert q.shape == (npix,) and u.shape == (npix,)
+        assert np.isfinite(q).all() and np.isfinite(u).all()
+
+    def test_rng_reproducible_and_global_state_preserved(self, ee_bb_r_zero):
+        """Same-seed Generators give identical maps, and hp.synfast's legacy
+        global RNG must be fully restored afterwards (save/restore contract)."""
+        cl_ee, cl_bb = ee_bb_r_zero
+        state_before = np.random.get_state()
+
+        q1, u1, _ = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 0.0, 1.0,
+                                       np.random.default_rng(7),
+                                       cl_ee=cl_ee, cl_bb=cl_bb)
+        q2, u2, _ = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 0.0, 1.0,
+                                       np.random.default_rng(7),
+                                       cl_ee=cl_ee, cl_bb=cl_bb)
+        np.testing.assert_array_equal(q1, q2)
+        np.testing.assert_array_equal(u1, u2)
+
+        state_after = np.random.get_state()
+        # MT19937 state tuple: (name, 624 keys, pos, has_gauss, cached)
+        name_a, keys_a, pos_a, has_gauss_a, _ = np.random.get_state()
+        name_b, keys_b, pos_b, has_gauss_b, _ = state_before
+        assert name_a == name_b
+        np.testing.assert_array_equal(keys_a, keys_b)
+        assert pos_a == pos_b and has_gauss_a == has_gauss_b
+
+    def test_noise_with_rng_increases_variance(self, ee_bb_r_zero):
+        cl_ee, cl_bb = ee_bb_r_zero
+        q0, u0, _ = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 0.0, 1.0,
+                                       np.random.default_rng(1),
+                                       cl_ee=cl_ee, cl_bb=cl_bb)
+        q1, u1, _ = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 2.0, 1.0,
+                                       np.random.default_rng(1),
+                                       cl_ee=cl_ee, cl_bb=cl_bb)
+        assert np.var(q1) > np.var(q0), "Noise must raise the map variance"
+        assert np.var(u1) > np.var(u0)
+
+    def test_noise_without_rng_uses_legacy_global(self, ee_bb_r_zero):
+        """rng=None + noise falls back to np.random; deterministic only
+        under an explicit global seed."""
+        cl_ee, cl_bb = ee_bb_r_zero
+        np.random.seed(3)
+        q1, u1, _ = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 2.0, 1.0,
+                                       None, cl_ee=cl_ee, cl_bb=cl_bb)
+        np.random.seed(3)
+        q2, u2, _ = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 2.0, 1.0,
+                                       None, cl_ee=cl_ee, cl_bb=cl_bb)
+        np.testing.assert_array_equal(q1, q2)
+        np.testing.assert_array_equal(u1, u2)
 
 
 class TestPrecomputeCache:
@@ -255,21 +356,30 @@ class TestPrecomputeCache:
         assert cache_file.exists(), "Env-var cache dir was not used"
 
     def test_pool_default_workers_subprocess(self, tiny_camb_cache):
-        """The multiprocessing pool path (n_workers>1) must work in a clean
-        process. Run in a subprocess because forking from pytest — which has
-        torch's thread pools loaded at collection time — can deadlock."""
+        """The multiprocessing pool path (default n_workers, cpu-based) must
+        work in a clean process. Run in a subprocess because forking from
+        pytest — which has torch's thread pools loaded at collection time —
+        can deadlock."""
         import subprocess
-        import sys
 
         script = (
             "from torch_harmonics_healpix.data_generation_test3 import "
             "precompute_camb_spectra, LMAX;"
             f"precompute_camb_spectra(n_spectra=2, lmax=LMAX, seed=21, "
-            f"n_workers=2, cache_dir={str(tiny_camb_cache)!r})"
+            f"cache_dir={str(tiny_camb_cache)!r})"
         )
         subprocess.run([sys.executable, "-c", script], check=True, timeout=300)
         cache_file = tiny_camb_cache / "camb_ee_bb_n2_lmax47_seed21.npz"
         assert cache_file.exists(), "Pool path did not write the cache"
+
+    def test_default_workers_serial_on_single_core(self, tiny_camb_cache,
+                                                   monkeypatch):
+        """n_workers=None resolves through os.cpu_count(); on a single-core
+        machine it must resolve to 1 → serial in-process path (no fork)."""
+        monkeypatch.setattr("os.cpu_count", lambda: 1)
+        precompute_camb_spectra(n_spectra=2, lmax=LMAX, seed=31)
+        cache_file = tiny_camb_cache / "camb_ee_bb_n2_lmax47_seed31.npz"
+        assert cache_file.exists(), "Single-core default did not run serially"
 
 
 class TestTest3Dataset:
@@ -299,3 +409,89 @@ class TestEvaluateMcmcTest3:
         assert np.isfinite(result["tau_pct_error"])
         assert result["tau_pct_error"] >= 0
         assert result["time_per_map"] > 0
+
+
+# ---------------------------------------------------------------------------
+# Error paths, defensive padding, and the r/τ precompute grid
+# ---------------------------------------------------------------------------
+
+class TestCambImportError:
+    """Without camb importable the generators must raise a clear ImportError
+    (not an opaque NameError from the failed import)."""
+
+    @pytest.fixture(autouse=True)
+    def _hide_camb(self, monkeypatch):
+        real_import = builtins.__import__
+
+        def fake_import(name, *args, **kwargs):
+            if name == "camb":
+                raise ImportError("simulated: camb not installed")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", fake_import)
+        monkeypatch.delitem(sys.modules, "camb", raising=False)
+
+    def test_test3_raises(self):
+        with pytest.raises(ImportError, match="CAMB is required for Test 3"):
+            generate_camb_spectra(tau=0.05, lmax=LMAX)
+
+    def test_test4_raises(self):
+        with pytest.raises(ImportError, match="CAMB is required for Test 4"):
+            generate_camb_spectra_r_tau(r=0.01, tau=0.05, lmax=LMAX)
+
+
+class TestSpectrumPadding:
+    """If CAMB ever returns fewer than lmax+1 rows, the generators must
+    zero-pad to the documented output length (defensive branch)."""
+
+    @pytest.fixture(autouse=True)
+    def _short_camb(self, monkeypatch):
+        class _ShortResults:
+            def get_total_cls(self, lmax, CMB_unit=None, raw_cl=False):
+                n = lmax - 5  # five rows short
+                rng = np.random.default_rng(0)
+                return rng.uniform(1e-8, 1e-6, size=(n, 4))
+
+        monkeypatch.setattr(camb, "get_results", lambda pars: _ShortResults())
+
+    def test_test3_pads_to_lmax_plus_one(self):
+        cl_ee, cl_bb = generate_camb_spectra(tau=0.05, lmax=LMAX)
+        assert cl_ee.shape == (LMAX + 1,)
+        assert cl_bb.shape == (LMAX + 1,)
+        np.testing.assert_array_equal(cl_ee[-5:], 0.0)
+        np.testing.assert_array_equal(cl_bb[-5:], 0.0)
+
+    def test_test4_pads_to_lmax_plus_one(self):
+        cl_ee, cl_bb = generate_camb_spectra_r_tau(r=0.01, tau=0.05, lmax=LMAX)
+        assert cl_ee.shape == (LMAX + 1,)
+        assert cl_bb.shape == (LMAX + 1,)
+        np.testing.assert_array_equal(cl_ee[-5:], 0.0)
+        np.testing.assert_array_equal(cl_bb[-5:], 0.0)
+
+
+class TestPrecomputeRTauGrid:
+    """precompute_camb_spectra_r_tau: (r, τ) sampling + per-pair CAMB loop."""
+
+    def test_shapes_ranges_reproducibility(self):
+        r, tau, ee, bb = precompute_camb_spectra_r_tau(
+            n_spectra=2, lmax=LMAX, seed=42)
+        assert r.shape == (2,) and tau.shape == (2,)
+        assert ee.shape == (2, LMAX + 1)
+        assert bb.shape == (2, LMAX + 1)
+        # r is sampled in log space over (0, R_MAX]; τ uniform in range
+        assert np.all((r >= 0) & (r <= R_MAX))
+        assert np.all((tau >= TAU4_MIN) & (tau <= TAU4_MAX))
+        assert np.all(np.isfinite(ee)) and np.all(bb >= 0)
+
+        # Same seed → bit-identical grid
+        r2, tau2, ee2, bb2 = precompute_camb_spectra_r_tau(
+            n_spectra=2, lmax=LMAX, seed=42)
+        np.testing.assert_array_equal(r, r2)
+        np.testing.assert_array_equal(tau, tau2)
+        np.testing.assert_array_equal(ee, ee2)
+        np.testing.assert_array_equal(bb, bb2)
+
+        # Different seed → different parameter draw
+        r3, _, _, _ = precompute_camb_spectra_r_tau(
+            n_spectra=2, lmax=LMAX, seed=7)
+        assert not np.allclose(r, r3), "different seeds must differ"

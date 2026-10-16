@@ -50,7 +50,7 @@ def generate_polarization_map(
     lmax: int = LMAX,
     sigma_p: float = SIGMA_P,
     noise_std: float = 0.0,
-    rng: np.random.Generator = None,
+    rng: np.random.Generator | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Generate Q/U polarization maps from E/B power spectra.
 
@@ -113,7 +113,7 @@ def generate_polarization_map(
 def create_sky_mask(
     f_sky: float,
     nside: int = NSIDE,
-    rng: np.random.Generator = None,
+    rng: np.random.Generator | None = None,
 ) -> np.ndarray:
     """Create a random sky mask with given sky fraction.
 
@@ -155,7 +155,8 @@ def create_sky_mask(
     # Find the angular radius that gives the desired f_sky
     # f_sky = (1 - cos(radius)) / 2 for a cap
     cos_radius = 1 - 2 * f_sky
-    if cos_radius < -1:
+    if cos_radius < -1:  # pragma: no cover -- unreachable: f_sky >= 1.0
+        # returns early above, so here f_sky < 1 and cos_radius > -1
         cos_radius = -1
     radius = np.arccos(cos_radius)
 

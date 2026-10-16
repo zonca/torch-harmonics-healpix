@@ -95,3 +95,16 @@ class TestGenerateDataset:
         maps2, ell_p2 = generate_dataset(n_maps=3, nside=NSIDE, seed=2)
         # Very unlikely to be exactly equal
         assert not np.array_equal(maps1, maps2)
+
+
+class TestLegacyRandomFallback:
+    """rng=None falls back to the legacy global np.random stream."""
+
+    def test_noise_without_rng_deterministic_under_global_seed(self):
+        np.random.seed(0)
+        m1 = generate_map(ell_p=10.0, nside=NSIDE, noise_std=3.0, rng=None)
+        np.random.seed(0)
+        m2 = generate_map(ell_p=10.0, nside=NSIDE, noise_std=3.0, rng=None)
+        np.testing.assert_array_equal(m1, m2)
+        assert m1.shape == (hp.nside2npix(NSIDE),)
+        assert np.isfinite(m1).all()

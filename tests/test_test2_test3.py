@@ -143,3 +143,36 @@ class TestTest3Dataset:
         assert cl_bb.shape == (LMAX + 1,)
         # EE should be non-zero at low ell (reionization bump)
         assert cl_ee[2] > 0
+
+
+class TestLegacyNoiseAndMaskEdgeCases:
+    """rng=None noise fallback and sky-mask boundary behavior."""
+
+    def test_polarization_noise_without_rng_deterministic(self):
+        """rng=None + noise uses the legacy global RNG: deterministic only
+        under an explicit np.random.seed."""
+        np.random.seed(2)
+        q1, u1 = generate_polarization_map(10.0, 5.0, NSIDE, LMAX, 5.0,
+                                           2.0, None)
+        np.random.seed(2)
+        q2, u2 = generate_polarization_map(10.0, 5.0, NSIDE, LMAX, 5.0,
+                                           2.0, None)
+        np.testing.assert_array_equal(q1, q2)
+        np.testing.assert_array_equal(u1, u2)
+
+    def test_polarization_noise_with_rng_reproducible(self):
+        """rng + noise: same-seed Generators give identical noisy maps."""
+        q1, u1 = generate_polarization_map(10.0, 5.0, NSIDE, LMAX, 5.0,
+                                           2.0, np.random.default_rng(9))
+        q2, u2 = generate_polarization_map(10.0, 5.0, NSIDE, LMAX, 5.0,
+                                           2.0, np.random.default_rng(9))
+        np.testing.assert_array_equal(q1, q2)
+        np.testing.assert_array_equal(u1, u2)
+
+    def test_sky_mask_fsky_above_one_returns_full_sky(self):
+        """f_sky > 1 must yield a full-sky mask (early return at
+        f_sky >= 1.0), not an empty or corrupted mask."""
+        mask = create_sky_mask(1.5, NSIDE, np.random.default_rng(0))
+        assert mask.dtype == bool
+        assert mask.shape == (hp.nside2npix(NSIDE),)
+        assert mask.mean() == 1.0, "f_sky>1 must give a full-sky mask"

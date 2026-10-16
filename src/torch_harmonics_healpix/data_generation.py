@@ -42,7 +42,7 @@ def generate_map(
     lmax: int = LMAX,
     sigma_p: float = SIGMA_P,
     noise_std: float = 0.0,
-    rng: np.random.Generator = None,
+    rng: np.random.Generator | None = None,
 ) -> np.ndarray:
     """Generate a single HEALPix map with given ℓ_p and optional noise.
 

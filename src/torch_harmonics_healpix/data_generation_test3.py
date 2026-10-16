@@ -148,7 +148,11 @@ def precompute_camb_spectra(
         # deadlocks when embedded in processes that already spawned
         # background threads, e.g. pytest with torch imported).
         results = [_camb_spectra_worker(job) for job in jobs]
-    else:
+    else:  # pragma: no cover -- subprocess-only branch
+        # Exercised by test_pool_default_workers_subprocess in a clean
+        # subprocess; forking this pool under pytest, which has torch's
+        # threads loaded at collection time, deadlocks, so the branch
+        # cannot run in-process under the test suite.
         with ProcessPoolExecutor(max_workers=n_workers) as ex:
             results = list(ex.map(_camb_spectra_worker, jobs, chunksize=8))
     for i, (cl_ee, cl_bb) in enumerate(results):
@@ -176,9 +180,9 @@ def generate_tau_map(
     lmax: int = LMAX,
     noise_std: float = 0.0,
     f_sky: float = 1.0,
-    rng: np.random.Generator = None,
-    cl_ee: np.ndarray = None,
-    cl_bb: np.ndarray = None,
+    rng: np.random.Generator | None = None,
+    cl_ee: np.ndarray | None = None,
+    cl_bb: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Generate Q/U maps from CAMB spectra with given τ.
 

@@ -173,6 +173,23 @@ class TestMultiResSpectralCNNcpu:
         with pytest.raises(AssertionError):
             MultiResSpectralCNN(nside=16, num_blocks=4, lmax_ratios=[1.0, 0.5])
 
+    def test_first_block_full_resolution_skips_downsampler(self):
+        """lmax_ratios[0] == 1.0 with lmax_base chosen so block 0 lands on
+        the base grid (nlat = 2·nside): no downsampler is stored (None) and
+        forward must skip the resampling step for that block."""
+        nside = 16
+        model = MultiResSpectralCNN(nside=nside, num_blocks=2,
+                                    lmax_base=2 * nside - 1,
+                                    lmax_ratios=[1.0, 0.5]).eval()
+        assert model.downsamplers[0] is None, \
+            "block 0 at the base grid must not need a downsampler"
+        assert model.downsamplers[1] is not None
+        x = torch.randn(2, hp.nside2npix(nside))
+        with torch.no_grad():
+            out = model(x)
+        assert out.shape == (2,)
+        assert torch.isfinite(out).all()
+
     def test_state_dict_roundtrip(self):
         nside = 16
         model = MultiResSpectralCNN(nside=nside, hidden_channels=32,

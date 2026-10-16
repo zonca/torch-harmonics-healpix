@@ -38,4 +38,4 @@ jobs:
           EOF
 
       - name: Run test suite
-        run: python -m pytest tests/ -o faulthandler_timeout=300
+        run: python -m pytest tests/ --cov=torch_harmonics_healpix --cov-report=term --cov-fail-under=95 -o faulthandler_timeout=300

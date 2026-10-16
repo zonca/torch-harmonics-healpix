@@ -71,8 +71,8 @@ def mcmc_estimate_ell_p(
 
 
 def evaluate_mcmc_baseline(
-    maps: np.ndarray,
-    ell_p_true: np.ndarray,
+    maps: "list[np.ndarray] | np.ndarray",
+    ell_p_true: "list[float] | np.ndarray",
     sigma_p: float = SIGMA_P,
     lmax: int = LMAX,
     noise_std: float = 0.0,

@@ -177,3 +177,25 @@ class TestMcmcRTau:
         )
         assert result["r_best"] in R_GRID
         assert result["tau_best"] in TAU_GRID
+
+    def test_spectrum_array_smaller_than_mesh(self, synthetic_grid):
+        """If the pre-computed spectrum array is shorter than the (r, τ)
+        mesh, the overflow cells must stay at +inf and the best fit must
+        come from the valid cells."""
+        cl_ee, cl_bb = synthetic_grid
+        n_trunc = cl_ee.shape[0] - 2  # mesh demands 2 more spectra
+        q, u = _synthetic_map(cl_ee[0], cl_bb[0], seed=3)
+        mask = np.ones(hp.nside2npix(NSIDE), dtype=np.float32)
+
+        result = mcmc_baseline_r_tau(
+            q, u, mask, R_GRID, TAU_GRID,
+            cl_ee[:n_trunc], cl_bb[:n_trunc],
+            noise_std=0.0, nside=NSIDE, lmax=LMAX,
+        )
+        chi2 = result["chi2_grid"]
+        assert chi2.shape == (len(TAU_GRID), len(R_GRID))
+        # Exactly the two tail cells of the flattened tau-major order
+        assert int(np.isinf(chi2).sum()) == 2
+        assert np.all(np.isinf(chi2[-1, -2:]))
+        assert result["r_best"] in R_GRID  # never lands in an overflow cell
+        assert result["tau_best"] in TAU_GRID
