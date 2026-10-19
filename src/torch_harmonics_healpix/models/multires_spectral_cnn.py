@@ -113,8 +113,8 @@ class MultiResSpectralCNN(nn.Module):
         num_blocks: int = 4,
         in_channels: int = 1,
         out_channels: int = 1,
-        lmax_base: int = None,
-        lmax_ratios: list = None,
+        lmax_base: int | None = None,
+        lmax_ratios: list | None = None,
     ):
         super().__init__()
         self.nside = nside
@@ -184,13 +184,14 @@ class MultiResSpectralCNN(nn.Module):
                 # First block: downsample from the base equiangular grid
                 # (nlat_base, nlon_base) to block_0's grid, but only if
                 # they differ (i.e., lmax_ratios[0] < 1.0).  When they
-                # match, no resampling is needed and we store None.
+                # match, no resampling is needed: store a no-op Identity
+                # (keeps downsamplers a homogeneous ModuleList[Module]).
                 if block_nlat != nlat_base or block_nlon != nlon_base:
                     self.downsamplers.append(
                         nn.Upsample(size=(block_nlat, block_nlon), mode='bilinear', align_corners=False)
                     )
                 else:
-                    self.downsamplers.append(None)
+                    self.downsamplers.append(nn.Identity())
 
             in_ch = out_ch
             prev_nlat = block_nlat

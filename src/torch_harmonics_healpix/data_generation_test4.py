@@ -166,7 +166,7 @@ def generate_r_tau_map(
     rng: np.random.Generator | None = None,
     cl_ee: np.ndarray | None = None,
     cl_bb: np.ndarray | None = None,
-    mask: np.ndarray = None,
+    mask: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Generate Q/U maps from CAMB spectra with given r and τ.
 

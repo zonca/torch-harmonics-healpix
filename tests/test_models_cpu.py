@@ -175,15 +175,16 @@ class TestMultiResSpectralCNNcpu:
 
     def test_first_block_full_resolution_skips_downsampler(self):
         """lmax_ratios[0] == 1.0 with lmax_base chosen so block 0 lands on
-        the base grid (nlat = 2·nside): no downsampler is stored (None) and
-        forward must skip the resampling step for that block."""
+        the base grid (nlat = 2·nside): the downsampler slot must hold a
+        no-op nn.Identity (not a resampling Upsample) and forward must
+        still run."""
         nside = 16
         model = MultiResSpectralCNN(nside=nside, num_blocks=2,
                                     lmax_base=2 * nside - 1,
                                     lmax_ratios=[1.0, 0.5]).eval()
-        assert model.downsamplers[0] is None, \
-            "block 0 at the base grid must not need a downsampler"
-        assert model.downsamplers[1] is not None
+        assert isinstance(model.downsamplers[0], torch.nn.Identity), \
+            "block 0 at the base grid must get a no-op Identity"
+        assert not isinstance(model.downsamplers[1], torch.nn.Identity)
         x = torch.randn(2, hp.nside2npix(nside))
         with torch.no_grad():
             out = model(x)

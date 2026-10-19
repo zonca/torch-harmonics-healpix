@@ -120,9 +120,9 @@ class SpectralCNN(nn.Module):
     def __init__(
         self,
         nside: int = 16,
-        nlat: int = None,
-        nlon: int = None,
-        lmax: int = None,
+        nlat: int | None = None,
+        nlon: int | None = None,
+        lmax: int | None = None,
         hidden_channels: int = 32,
         num_blocks: int = 3,
         in_channels: int = 1,

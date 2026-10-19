@@ -96,4 +96,4 @@ def evaluate_mcmc_baseline(
         for m in maps
     ])
     mean_pct_error = np.mean(np.abs(ell_p_pred - ell_p_true) / ell_p_true * 100)
-    return mean_pct_error
+    return float(mean_pct_error)

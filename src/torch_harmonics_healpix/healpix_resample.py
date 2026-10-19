@@ -27,7 +27,11 @@ class HealpixToEquiangular(nn.Module):
               Default: 2 * nlat.
     """
 
-    def __init__(self, nside: int, nlat: int = None, nlon: int = None):
+    # Registered in __init__ via register_buffer; declared for type checkers.
+    pixel_indices: torch.Tensor
+
+    def __init__(self, nside: int, nlat: int | None = None,
+                 nlon: int | None = None):
         super().__init__()
         self.nside = nside
         self.npix = hp.nside2npix(nside)
@@ -91,7 +95,12 @@ class EquiangularToHealpix(nn.Module):
               Default: 2 * nlat.
     """
 
-    def __init__(self, nside: int, nlat: int = None, nlon: int = None):
+    # Registered in __init__ via register_buffer; declared for type checkers.
+    lat_indices: torch.Tensor
+    lon_indices: torch.Tensor
+
+    def __init__(self, nside: int, nlat: int | None = None,
+                 nlon: int | None = None):
         super().__init__()
         self.nside = nside
         self.npix = hp.nside2npix(nside)

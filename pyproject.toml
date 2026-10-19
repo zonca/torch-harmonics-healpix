@@ -25,6 +25,7 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
+    "mypy",
 ]
 test = [
     "pytest",
@@ -34,6 +35,15 @@ test = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+torch_harmonics_healpix = ["py.typed"]
+
+[tool.mypy]
+files = ["src"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
