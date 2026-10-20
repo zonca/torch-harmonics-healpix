@@ -40,13 +40,14 @@ from .data_generation_test2 import (
 )
 
 
-def _exact_nll(cl_obs, cl_model, ell, f_sky=1.0):
+def _exact_nll(cl_obs: np.ndarray, cl_model: np.ndarray,
+               ell: np.ndarray, f_sky: float = 1.0) -> float:
     """Exact Gaussian -2lnL for one auto-spectrum, with f_sky mode scaling.
 
     -2 ln L = Σ_ℓ (2ℓ+1) f_sky [ln(C_model/C_obs) + C_obs/C_model - 1]
     """
     n_modes = (2 * ell + 1) * f_sky
-    return np.sum(n_modes * (np.log(cl_model / cl_obs) + cl_obs / cl_model - 1))
+    return float(np.sum(n_modes * (np.log(cl_model / cl_obs) + cl_obs / cl_model - 1)))
 
 
 def mcmc_estimate_ell_ep_bp(
@@ -56,7 +57,7 @@ def mcmc_estimate_ell_ep_bp(
     lmax: int = LMAX,
     nside: int = NSIDE,
     f_sky: float = 1.0,
-) -> tuple:
+) -> tuple[float, float]:
     """Estimate ℓ_Ep and ℓ_Bp from Q/U maps using maximum likelihood.
 
     Computes EE and BB pseudo-power spectra, applies the f_sky correction,
@@ -87,11 +88,11 @@ def mcmc_estimate_ell_ep_bp(
     cl_ee = np.maximum(cl_ee[2: lmax_fit + 1], 1e-30)
     cl_bb = np.maximum(cl_bb[2: lmax_fit + 1], 1e-30)
 
-    def nll_ee(ell_ep):
+    def nll_ee(ell_ep: float) -> float:
         cl_model = np.exp(-((ell - ell_ep) ** 2) / (2 * sigma_p**2)) + 1e-5
         return _exact_nll(cl_ee, cl_model, ell, f_sky)
 
-    def nll_bb(ell_bp):
+    def nll_bb(ell_bp: float) -> float:
         cl_model = np.exp(-((ell - ell_bp) ** 2) / (2 * sigma_p**2)) + 1e-5
         return _exact_nll(cl_bb, cl_model, ell, f_sky)
 
@@ -161,7 +162,7 @@ def evaluate_mcmc_test2(
         ep_errors.append(ep_pct)
         bp_errors.append(bp_pct)
 
-        if (i + 1) % 100 == 0:
+        if (i + 1) % 100 == 0:  # pragma: no cover -- progress print
             print(f"  MCMC Test 2: {i+1}/{n_maps} maps done")
 
     elapsed = time.time() - t0
@@ -254,7 +255,7 @@ def evaluate_mcmc_test3(
         tau_pct = abs(best_tau - tau_true[i]) / max(tau_true[i], 0.01) * 100
         tau_errors.append(tau_pct)
 
-        if (i + 1) % 100 == 0:
+        if (i + 1) % 100 == 0:  # pragma: no cover -- progress print
             print(f"  MCMC Test 3: {i+1}/{n_maps} maps done")
 
     elapsed = time.time() - t0

@@ -32,7 +32,7 @@ def generate_power_spectrum(
         1D array of C_ℓ values, length lmax+1.
     """
     ell = np.arange(lmax + 1)
-    cl = np.exp(-((ell - ell_p) ** 2) / (2 * sigma_p**2)) + 1e-5
+    cl: np.ndarray = np.exp(-((ell - ell_p) ** 2) / (2 * sigma_p**2)) + 1e-5
     return cl
 
 
@@ -67,7 +67,7 @@ def generate_map(
         seed = int(rng.integers(0, 2**31))
         np.random.seed(seed)
 
-    m = hp.synfast(cl, nside=nside, lmax=lmax)
+    m: np.ndarray = hp.synfast(cl, nside=nside, lmax=lmax)
 
     if rng is not None:
         np.random.set_state(rand_state)

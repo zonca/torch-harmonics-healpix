@@ -23,6 +23,7 @@ import pytest
 camb = pytest.importorskip("camb", reason="camb not installed")
 
 import torch_harmonics_healpix.data_generation_test3 as dg3
+import torch_harmonics_healpix.data_generation_test4 as dg4
 from torch_harmonics_healpix.data_generation_test3 import (
     generate_camb_spectra,
     generate_tau_map,
@@ -322,6 +323,99 @@ class TestRTauMapGeneration:
                                        None, cl_ee=cl_ee, cl_bb=cl_bb)
         np.testing.assert_array_equal(q1, q2)
         np.testing.assert_array_equal(u1, u2)
+
+
+class TestPartialSpectrumProvision:
+    """Partial spectrum provision: only the missing spectrum is regenerated.
+
+    Regression tests: generate_r_tau_map used to regenerate BOTH spectra
+    whenever either was missing (silently discarding the one provided), and
+    generate_tau_map discarded a provided cl_bb when cl_ee was missing.
+    CAMB is monkeypatched with an amplitude sentinel: a regenerated
+    spectrum is tiny (1e-6), so any visible map power proves the provided
+    (unit-amplitude) spectrum was the one actually used.
+    """
+
+    def _spectra(self, amp):
+        ell = np.arange(LMAX + 1)
+        cl = amp * np.exp(-((ell - 8.0) ** 2) / (2 * 4.0**2)) + 1e-8
+        return cl
+
+    def test_tau_map_provided_ee(self, monkeypatch):
+        calls = []
+
+        def fake_gen(tau, lmax):
+            calls.append(tau)
+            return self._spectra(1e-6), self._spectra(1e-6)
+
+        monkeypatch.setattr(dg3, "generate_camb_spectra", fake_gen)
+        q, u, _ = generate_tau_map(0.05, NSIDE, LMAX, 0.0, 1.0, None,
+                                   cl_ee=self._spectra(1.0), cl_bb=None)
+        assert len(calls) == 1, "must regenerate only the missing BB"
+        assert np.std(q) > 0.05 and np.std(u) > 0.05, \
+            "provided EE must drive the map power"
+
+    def test_tau_map_provided_bb(self, monkeypatch):
+        calls = []
+
+        def fake_gen(tau, lmax):
+            calls.append(tau)
+            return self._spectra(1e-6), self._spectra(1e-6)
+
+        monkeypatch.setattr(dg3, "generate_camb_spectra", fake_gen)
+        q, u, _ = generate_tau_map(0.05, NSIDE, LMAX, 0.0, 1.0, None,
+                                   cl_ee=None, cl_bb=self._spectra(1.0))
+        assert len(calls) == 1, "must regenerate only the missing EE"
+        assert np.std(q) > 0.05 and np.std(u) > 0.05, \
+            "provided BB must drive the map power"
+
+    def test_tau_map_both_provided_no_camb(self, monkeypatch):
+        def fail_gen(tau, lmax):
+            raise AssertionError("CAMB must not be called when both "
+                                 "spectra are provided")
+
+        monkeypatch.setattr(dg3, "generate_camb_spectra", fail_gen)
+        q, u, _ = generate_tau_map(0.05, NSIDE, LMAX, 0.0, 1.0, None,
+                                   cl_ee=self._spectra(1.0),
+                                   cl_bb=self._spectra(1.0))
+        assert np.std(q) > 0.05
+
+    def test_r_tau_map_provided_ee(self, monkeypatch):
+        calls = []
+
+        def fake_gen(r, tau, lmax):
+            calls.append((r, tau))
+            return self._spectra(1e-6), self._spectra(1e-6)
+
+        monkeypatch.setattr(dg4, "generate_camb_spectra_r_tau", fake_gen)
+        q, u, _ = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 0.0, 1.0, None,
+                                     cl_ee=self._spectra(1.0), cl_bb=None)
+        assert len(calls) == 1, "must regenerate only the missing BB"
+        assert np.std(q) > 0.05, "provided EE must drive the map power"
+
+    def test_r_tau_map_provided_bb(self, monkeypatch):
+        calls = []
+
+        def fake_gen(r, tau, lmax):
+            calls.append((r, tau))
+            return self._spectra(1e-6), self._spectra(1e-6)
+
+        monkeypatch.setattr(dg4, "generate_camb_spectra_r_tau", fake_gen)
+        q, u, _ = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 0.0, 1.0, None,
+                                     cl_ee=None, cl_bb=self._spectra(1.0))
+        assert len(calls) == 1, "must regenerate only the missing EE"
+        assert np.std(q) > 0.05, "provided BB must drive the map power"
+
+    def test_r_tau_map_both_provided_no_camb(self, monkeypatch):
+        def fail_gen(r, tau, lmax):
+            raise AssertionError("CAMB must not be called when both "
+                                 "spectra are provided")
+
+        monkeypatch.setattr(dg4, "generate_camb_spectra_r_tau", fail_gen)
+        q, u, _ = generate_r_tau_map(0.0, 0.05, NSIDE, LMAX, 0.0, 1.0, None,
+                                     cl_ee=self._spectra(1.0),
+                                     cl_bb=self._spectra(1.0))
+        assert np.std(q) > 0.05
 
 
 class TestPrecomputeCache:

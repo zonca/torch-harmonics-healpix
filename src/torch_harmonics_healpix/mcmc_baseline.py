@@ -25,7 +25,7 @@ import numpy as np
 import healpy as hp
 from scipy.optimize import minimize_scalar
 
-from .data_generation import NSIDE, LMAX, SIGMA_P
+from .data_generation import NSIDE, LMAX, SIGMA_P, LP_MIN, LP_MAX
 
 
 def mcmc_estimate_ell_p(
@@ -34,7 +34,7 @@ def mcmc_estimate_ell_p(
     lmax: int = LMAX,
     noise_std: float = 0.0,
     nside: int = NSIDE,
-    lmax_fit: "int | None" = None,
+    lmax_fit: int | None = None,
 ) -> float:
     """Estimate ℓ_p from a single HEALPix map using maximum likelihood.
 
@@ -60,19 +60,19 @@ def mcmc_estimate_ell_p(
     ell = np.arange(lmax_fit + 1)
     n_ell = 4 * np.pi * noise_std**2 / hp.nside2npix(nside) if noise_std > 0 else 0.0
 
-    def neg_log_likelihood(ell_p):
+    def neg_log_likelihood(ell_p: float) -> float:
         cl_model = np.exp(-((ell - ell_p) ** 2) / (2 * sigma_p**2)) + 1e-5 + n_ell
         # Exact Gaussian (Wishart) likelihood for one observed C_ℓ:
         # -2 ln L = Σ_ℓ (2ℓ+1) [ln(C_model/C_obs) + C_obs/C_model - 1]
-        return np.sum((2 * ell + 1) * (np.log(cl_model / cl_obs) + cl_obs / cl_model - 1))
+        return float(np.sum((2 * ell + 1) * (np.log(cl_model / cl_obs) + cl_obs / cl_model - 1)))
 
-    result = minimize_scalar(neg_log_likelihood, bounds=(5, 20), method="bounded")
-    return result.x
+    result = minimize_scalar(neg_log_likelihood, bounds=(LP_MIN, LP_MAX), method="bounded")
+    return float(result.x)
 
 
 def evaluate_mcmc_baseline(
-    maps: "list[np.ndarray] | np.ndarray",
-    ell_p_true: "list[float] | np.ndarray",
+    maps: list[np.ndarray] | np.ndarray,
+    ell_p_true: list[float] | np.ndarray,
     sigma_p: float = SIGMA_P,
     lmax: int = LMAX,
     noise_std: float = 0.0,

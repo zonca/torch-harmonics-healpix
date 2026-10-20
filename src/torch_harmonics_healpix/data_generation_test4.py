@@ -145,7 +145,7 @@ def precompute_camb_spectra_r_tau(
         cl_ee, cl_bb = generate_camb_spectra_r_tau(r_values[i], tau_values[i], lmax)
         cl_ee_array[i] = cl_ee
         cl_bb_array[i] = cl_bb
-        if (i + 1) % 500 == 0:
+        if (i + 1) % 500 == 0:  # pragma: no cover -- progress print
             print(f"  CAMB spectra: {i + 1}/{n_spectra}")
 
     return (
@@ -188,8 +188,12 @@ def generate_r_tau_map(
     Returns:
         Tuple of (q_map, u_map, mask), each 1D HEALPix array.
     """
-    if cl_ee is None or cl_bb is None:
+    if cl_ee is None and cl_bb is None:
         cl_ee, cl_bb = generate_camb_spectra_r_tau(r, tau, lmax)
+    elif cl_ee is None:
+        cl_ee, _ = generate_camb_spectra_r_tau(r, tau, lmax)
+    elif cl_bb is None:
+        _, cl_bb = generate_camb_spectra_r_tau(r, tau, lmax)
 
     # Build full TEB power spectrum
     cl_tt = np.full(lmax + 1, 1e-5)  # placeholder T signal (not used for Q/U estimation, but required by hp.synfast)

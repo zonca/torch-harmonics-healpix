@@ -81,7 +81,7 @@ class SpectralConvBlock(nn.Module):
         coeff_out = torch.einsum("bilm,oilm->bolm", coeff, weight)
 
         # ISHT inverse: complex [batch, out_channels, L, M] -> [batch, out_channels, nlat, nlon]
-        out = self.inverse_transform(coeff_out)
+        out: torch.Tensor = self.inverse_transform(coeff_out)
         return out
 
 
@@ -243,11 +243,17 @@ class SpectralCNN(nn.Module):
             # Single-channel input: [batch, npix] → [batch, 1, npix]
             healpix_map = healpix_map.unsqueeze(1)
 
+        if healpix_map.shape[-1] != self.to_equi.npix:
+            raise ValueError(
+                f"Expected {self.to_equi.npix} pixels (nside={self.nside}), "
+                f"got {healpix_map.shape[-1]}"
+            )
+
         # HEALPix → equiangular for each channel
         # to_equi expects [batch, npix] → [batch, nlat, nlon]
         # Apply per-channel then stack
         if self.in_channels == 1:
-            x = self.to_equi(healpix_map.squeeze(1))  # [batch, nlat, nlon]
+            x: torch.Tensor = self.to_equi(healpix_map.squeeze(1))  # [batch, nlat, nlon]
             x = x.unsqueeze(1)  # [batch, 1, nlat, nlon]
         else:
             # Multi-channel: resample each channel separately

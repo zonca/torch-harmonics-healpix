@@ -84,7 +84,7 @@ class SpectralConvBlock(nn.Module):
         coeff_out = torch.einsum("bilm,oilm->bolm", coeff, weight)
 
         # ISHT inverse: complex [batch, out_channels, L, M] -> [batch, out_channels, nlat, nlon]
-        out = self.inverse_transform(coeff_out)
+        out: torch.Tensor = self.inverse_transform(coeff_out)
         return out
 
 
@@ -114,7 +114,7 @@ class MultiResSpectralCNN(nn.Module):
         in_channels: int = 1,
         out_channels: int = 1,
         lmax_base: int | None = None,
-        lmax_ratios: list | None = None,
+        lmax_ratios: list[float] | None = None,
     ):
         super().__init__()
         self.nside = nside
@@ -131,8 +131,11 @@ class MultiResSpectralCNN(nn.Module):
 
         # Each block i uses lmax_ratios[i] to scale the base ℓ_max, so we need
         # at least num_blocks entries. Fewer entries would cause an IndexError later.
-        assert len(lmax_ratios) >= num_blocks, \
-            f"Need at least {num_blocks} lmax_ratios, got {len(lmax_ratios)}"
+        # (A real exception, not assert: asserts are stripped under python -O.)
+        if len(lmax_ratios) < num_blocks:
+            raise ValueError(
+                f"Need at least {num_blocks} lmax_ratios, got {len(lmax_ratios)}"
+            )
 
         # HEALPix → equiangular conversion (for initial input)
         nlat_base = 2 * nside
@@ -145,8 +148,6 @@ class MultiResSpectralCNN(nn.Module):
         self.downsamplers = nn.ModuleList()  # Spatial interpolation between blocks
 
         in_ch = in_channels
-        prev_nlat = nlat_base
-        prev_nlon = nlon_base
 
         for i in range(num_blocks):
             # Compute spectral/spatial resolution for this block.
@@ -194,8 +195,6 @@ class MultiResSpectralCNN(nn.Module):
                     self.downsamplers.append(nn.Identity())
 
             in_ch = out_ch
-            prev_nlat = block_nlat
-            prev_nlon = block_nlon
 
         self.relu = nn.ReLU()
 
@@ -221,9 +220,15 @@ class MultiResSpectralCNN(nn.Module):
         if healpix_map.dim() == 2:
             healpix_map = healpix_map.unsqueeze(1)
 
+        if healpix_map.shape[-1] != self.to_equi.npix:
+            raise ValueError(
+                f"Expected {self.to_equi.npix} pixels (nside={self.nside}), "
+                f"got {healpix_map.shape[-1]}"
+            )
+
         # HEALPix → equiangular for each channel
         if self.in_channels == 1:
-            x = self.to_equi(healpix_map.squeeze(1))
+            x: torch.Tensor = self.to_equi(healpix_map.squeeze(1))
             x = x.unsqueeze(1)
         else:
             channels = []
@@ -234,10 +239,9 @@ class MultiResSpectralCNN(nn.Module):
 
         # Spectral convolution blocks with decreasing resolution
         for i, (block, bn) in enumerate(zip(self.blocks, self.batchnorms)):
-            # Downsample to this block's spatial resolution
-            downsampler = self.downsamplers[i]
-            if downsampler is not None:
-                x = downsampler(x)
+            # Resample to this block's spatial resolution. Slot i is either a
+            # real Upsample or a no-op nn.Identity (block 0 at base resolution).
+            x = self.downsamplers[i](x)
 
             x = block(x)
             x = bn(x)

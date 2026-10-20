@@ -126,6 +126,14 @@ class TestSpectralCNNcpu:
         assert out.shape == (2,)
         assert torch.isfinite(out).all()
 
+    def test_forward_rejects_wrong_npix(self):
+        """Wrong input size fails with a clear ValueError, not an IndexError."""
+        model = SpectralCNN(nside=16, hidden_channels=4, num_blocks=1).eval()
+        with pytest.raises(ValueError, match="Expected 3072 pixels"):
+            model(torch.randn(2, 1000))
+        with pytest.raises(ValueError, match="Expected 3072 pixels"):
+            model(torch.randn(2, 3, 1000))
+
 
 class TestMultiResSpectralCNNcpu:
     """MultiResSpectralCNN forward/backward/serialization on CPU."""
@@ -169,8 +177,9 @@ class TestMultiResSpectralCNNcpu:
             )
 
     def test_lmax_ratios_validation(self):
-        """Too few lmax_ratios for num_blocks must fail loudly (assert)."""
-        with pytest.raises(AssertionError):
+        """Too few lmax_ratios for num_blocks must fail loudly with a real
+        ValueError (not assert — asserts are stripped under python -O)."""
+        with pytest.raises(ValueError, match="lmax_ratios"):
             MultiResSpectralCNN(nside=16, num_blocks=4, lmax_ratios=[1.0, 0.5])
 
     def test_first_block_full_resolution_skips_downsampler(self):
@@ -212,6 +221,13 @@ class TestMultiResSpectralCNNcpu:
                                     in_channels=1, out_channels=1)
         n = sum(p.numel() for p in model.parameters())
         assert n == 1_525_665, f"Parameter count drifted: {n} != 1,525,665"
+
+    def test_forward_rejects_wrong_npix(self):
+        """Wrong input size fails with a clear ValueError, not an IndexError."""
+        model = MultiResSpectralCNN(nside=16, hidden_channels=4,
+                                    num_blocks=2).eval()
+        with pytest.raises(ValueError, match="Expected 3072 pixels"):
+            model(torch.randn(2, 1000))
 
 
 class TestInpaintingEndToEndCPU:

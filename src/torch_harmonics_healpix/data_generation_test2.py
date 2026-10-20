@@ -160,7 +160,7 @@ def create_sky_mask(
         cos_radius = -1
     radius = np.arccos(cos_radius)
 
-    mask = ang_dist <= radius
+    mask: np.ndarray = ang_dist <= radius
     return mask
 
 

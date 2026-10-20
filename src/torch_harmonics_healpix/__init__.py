@@ -1,5 +1,7 @@
 """torch-harmonics-healpix: Bridge HEALPix to torch-harmonics for spherical CNNs."""
 
+from typing import Any
+
 __version__ = "0.1.0"
 
 from .healpix_resample import HealpixToEquiangular, EquiangularToHealpix
@@ -19,7 +21,7 @@ from .mcmc_baselines_test2_3 import (
 )
 
 # Model imports are lazy to avoid requiring torch-harmonics for basic usage
-def __getattr__(name):
+def __getattr__(name: str) -> Any:
     if name == "SpectralCNN":
         from .models import SpectralCNN
         return SpectralCNN

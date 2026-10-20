@@ -77,7 +77,7 @@ def generate_camb_spectra(tau: float, lmax: int = LMAX) -> tuple[np.ndarray, np.
     return cl_ee, cl_bb
 
 
-def _camb_spectra_worker(tau_lmax):
+def _camb_spectra_worker(tau_lmax: tuple[float, int]) -> tuple[np.ndarray, np.ndarray]:
     """Module-level worker for precompute_camb_spectra (must pickle)."""
     tau, lmax = tau_lmax
     return generate_camb_spectra(tau, lmax)
@@ -87,8 +87,8 @@ def precompute_camb_spectra(
     n_spectra: int = N_CAMB_SPECTRA,
     lmax: int = LMAX,
     seed: int = 12345,
-    n_workers: "int | None" = None,
-    cache_dir: "str | None" = None,
+    n_workers: int | None = None,
+    cache_dir: str | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Pre-compute CAMB spectra for N different τ values (paper: 5000).
 
@@ -158,7 +158,7 @@ def precompute_camb_spectra(
     for i, (cl_ee, cl_bb) in enumerate(results):
         cl_ee_array[i] = cl_ee
         cl_bb_array[i] = cl_bb
-        if (i + 1) % 500 == 0:
+        if (i + 1) % 500 == 0:  # pragma: no cover -- progress print
             print(f"  CAMB spectra: {i + 1}/{n_spectra}")
 
     # Atomic write: dump to a temp file then rename. Pass a file object —
@@ -198,14 +198,15 @@ def generate_tau_map(
 
     Returns:
         Tuple of (q_map, u_map, mask), each 1D HEALPix array.
+    Only the spectra that are missing are computed; any spectrum the caller
+    provides is used as-is (previously a lone cl_bb or cl_ee was silently
+    overwritten by a full CAMB call that discarded the provided one).
     """
-    if cl_ee is None:
+    if cl_ee is None and cl_bb is None:
         cl_ee, cl_bb = generate_camb_spectra(tau, lmax)
+    elif cl_ee is None:
+        cl_ee, _ = generate_camb_spectra(tau, lmax)
     elif cl_bb is None:
-        # EE was provided (e.g. from a pre-computed grid) but BB was not:
-        # generate ONLY the missing BB spectrum. (Previously a missing BB
-        # triggered a full CAMB call that overwrote the provided EE too,
-        # silently discarding the caller's spectrum.)
         _, cl_bb = generate_camb_spectra(tau, lmax)
 
     # Build full TEB power spectrum
